@@ -19,8 +19,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Cadivity",
-  description: "Professional platform for CAD training and engineering courses",
+  title: "CAD Automation Services & Training | Creo, SolidWorks API - Cadivity",
+  description: "Cadivity provides CAD automation services, Creo Toolkit development, SolidWorks API programming, and industry-level CAD automation training with real-world projects.",
   keywords: ["CAD Automation Services",
     "CAD Automation Course Online",
     "CAD API Programming",

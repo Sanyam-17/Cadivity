@@ -98,13 +98,15 @@ export function Navbar() {
               </button>
             </div>
           ) : (
-            <Button
-              onClick={open}
-              size="sm"
-              className="text-white shadow-md rounded-full px-6 hover:scale-105 transition-transform"
-            >
-              Login
-            </Button>
+            <Link href="/login">
+              <Button
+                onClick={open}
+                size="sm"
+                className="text-white shadow-md rounded-full px-6 hover:scale-105 transition-transform"
+              >
+                Login
+              </Button>
+            </Link>
           )}
         </div>
 
@@ -157,12 +159,14 @@ export function Navbar() {
                   </button>
                 </div>
               ) : (
-                <Button
-                  onClick={() => { setMobileMenuOpen(false); open(); }}
-                  className="mt-2 w-full bg-primary text-white rounded-full"
-                >
-                  Login
-                </Button>
+                <Link href="/login" className="w-full">
+                  <Button
+                    onClick={() => { setMobileMenuOpen(false); open(); }}
+                    className="mt-2 w-full bg-primary text-white rounded-full"
+                  >
+                    Login
+                  </Button>
+                </Link>
               )}
             </div>
           </div>
