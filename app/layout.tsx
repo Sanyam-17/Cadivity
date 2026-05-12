@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import "./globals.css";
 import { Inter, Space_Grotesk } from "next/font/google";
 import LoginModal from "@/components/auth/LoginModal";
 import { BfcacheGuard } from "@/components/auth/BfcacheGuard";
 import { Toaster } from "@/components/ui/sonner";
-
+import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],

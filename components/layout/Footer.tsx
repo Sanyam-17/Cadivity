@@ -25,7 +25,7 @@ export function Footer() {
               alt="Cadivity"
               width={160}
               height={64}
-              className="h-12 sm:h-14 w-auto bg-white rounded-xl shadow-sm"
+              className="h-12 sm:h-14 w-auto bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300"
             />
 
             <p className="text-sm text-slate-400 max-w-sm leading-relaxed">
@@ -49,7 +49,7 @@ export function Footer() {
                 <li key={item}>
                   <Link
                     href="/services"
-                    className="hover:text-accent transition-colors"
+                    className="hover:text-accent hover:translate-x-1 transition-all duration-300 inline-block"
                   >
                     {item}
                   </Link>
@@ -73,7 +73,7 @@ export function Footer() {
                 <li key={item}>
                   <Link
                     href="/courses"
-                    className="hover:text-accent transition-colors"
+                    className="hover:text-accent hover:translate-x-1 transition-all duration-300 inline-block"
                   >
                     {item}
                   </Link>
@@ -89,28 +89,28 @@ export function Footer() {
             </h3>
 
             <ul className="space-y-4 text-sm text-slate-400">
-              <li className="flex items-start gap-3">
-                <Mail className="h-5 w-5 text-accent mt-0.5 shrink-0" />
+              <li className="flex items-start gap-3 group">
+                <Mail className="h-5 w-5 text-accent mt-0.5 shrink-0 group-hover:scale-110 transition-transform duration-300" />
                 <a
                   href="mailto:enquiry@cadivity.com"
-                  className="hover:text-white transition-colors break-all"
+                  className="hover:text-white transition-colors duration-300 break-all"
                 >
                   enquiry@cadivity.com
                 </a>
               </li>
 
-              <li className="flex items-start gap-3">
-                <Phone className="h-5 w-5 text-accent mt-0.5 shrink-0" />
+              <li className="flex items-start gap-3 group">
+                <Phone className="h-5 w-5 text-accent mt-0.5 shrink-0 group-hover:scale-110 transition-transform duration-300" />
                 <a
                   href="tel:+916372495858"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-white transition-colors duration-300"
                 >
                   +91-6372495858
                 </a>
               </li>
 
-              <li className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-accent mt-0.5 shrink-0" />
+              <li className="flex items-start gap-3 group">
+                <MapPin className="h-5 w-5 text-accent mt-0.5 shrink-0 group-hover:scale-110 transition-transform duration-300" />
                 <span>Available Worldwide</span>
               </li>
             </ul>
@@ -121,7 +121,7 @@ export function Footer() {
                 href="https://www.linkedin.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-accent hover:text-white transition-colors"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-accent hover:text-white hover:scale-110 transition-all duration-300"
               >
                 <Linkedin className="h-4 w-4" />
               </a>
@@ -130,7 +130,7 @@ export function Footer() {
                 href="https://www.instagram.com/cadivitysolutions?igsh=OW9jazI0NTNyM3B2"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-accent hover:text-white transition-colors"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-accent hover:text-white hover:scale-110 transition-all duration-300"
               >
                 <Instagram className="h-4 w-4" />
               </a>
@@ -145,10 +145,10 @@ export function Footer() {
           </p>
 
           <div className="flex justify-center sm:justify-end gap-6">
-            <Link href="/privacy-policy" className="hover:text-white">
+            <Link href="/privacy-policy" className="hover:text-white transition-colors duration-300">
               Privacy Policy
             </Link>
-            <Link href="/terms" className="hover:text-white">
+            <Link href="/terms" className="hover:text-white transition-colors duration-300">
               Terms of Service
             </Link>
           </div>

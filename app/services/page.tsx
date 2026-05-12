@@ -13,11 +13,18 @@ import {
   FileSpreadsheet,
   Layout,
   MonitorPlay,
+  ArrowRight,
 } from "lucide-react";
+import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 
 import servicesHero from "@/public/generated_images/Background_img1.png";
 
 export default function ServicesPage() {
+  const heroReveal = useScrollReveal();
+  const capabilitiesReveal = useScrollReveal();
+  const platformsReveal = useScrollReveal();
+  const ctaReveal = useScrollReveal();
+
   const capabilities = [
     {
       icon: <Layout className="h-8 w-8 text-primary" />,
@@ -56,15 +63,21 @@ export default function ServicesPage() {
       <Navbar />
 
       {/* Hero */}
-      <section className="relative bg-slate-900 text-white py-24">
+      <section className="relative bg-slate-900 text-white py-24 overflow-hidden">
         <Image
           src={servicesHero}
           alt="Services"
           fill
           priority
-          className="object-cover opacity-15"
+          className="object-cover opacity-15 transition-transform duration-[2000ms] hover:scale-105"
         />
-        <div className="container relative z-10 mx-auto px-4">
+        {/* Floating shapes */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+          <div className="absolute top-16 right-[12%] w-14 h-14 rounded-2xl bg-white/5 border border-white/10 animate-float" style={{ animationDuration: "10s" }} />
+          <div className="absolute bottom-20 left-[15%] w-10 h-10 rounded-full bg-white/5 border border-white/10 animate-float delay-500" style={{ animationDuration: "12s" }} />
+        </div>
+
+        <div ref={heroReveal.ref} className={`container relative z-10 mx-auto px-4 transition-all duration-700 ${heroReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
           <div className="max-w-3xl">
             <h5 className="text-accent font-semibold tracking-wide uppercase mb-4">
               Our Expertise
@@ -82,9 +95,9 @@ export default function ServicesPage() {
       </section>
 
       {/* Capabilities */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-4">
-          <h2 className="font-display text-3xl font-bold text-center mb-16 text-slate-900">
+      <section className="py-24 bg-white overflow-hidden">
+        <div ref={capabilitiesReveal.ref} className="container mx-auto px-4">
+          <h2 className={`font-display text-3xl font-bold text-center mb-16 text-slate-900 transition-all duration-700 ${capabilitiesReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
             Our Capabilities
           </h2>
 
@@ -92,13 +105,14 @@ export default function ServicesPage() {
             {capabilities.map((feature, i) => (
               <Card
                 key={i}
-                className="border-slate-100 shadow-sm hover:shadow-lg transition-shadow group"
+                className={`border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 group hover:-translate-y-1 ${capabilitiesReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}
+                style={{ animationDelay: `${i * 100 + 100}ms` }}
               >
                 <CardContent className="pt-8">
-                  <div className="mb-6 bg-slate-50 w-16 h-16 rounded-2xl flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                  <div className="mb-6 bg-slate-50 w-16 h-16 rounded-2xl flex items-center justify-center group-hover:bg-primary/10 group-hover:scale-110 transition-all duration-300">
                     {feature.icon}
                   </div>
-                  <h3 className="font-display text-xl font-bold mb-3 text-slate-900">
+                  <h3 className="font-display text-xl font-bold mb-3 text-slate-900 group-hover:text-primary transition-colors duration-300">
                     {feature.title}
                   </h3>
                   <p className="text-slate-600 leading-relaxed">
@@ -112,18 +126,19 @@ export default function ServicesPage() {
       </section>
 
       {/* Supported Platforms */}
-      <section className="py-24 bg-slate-50">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="font-display text-3xl font-bold mb-12 text-slate-900">
+      <section className="py-24 bg-slate-50 overflow-hidden">
+        <div ref={platformsReveal.ref} className="container mx-auto px-4 text-center">
+          <h2 className={`font-display text-3xl font-bold mb-12 text-slate-900 transition-all duration-700 ${platformsReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
             Supported Platforms
           </h2>
 
           <div className="flex flex-wrap justify-center gap-6">
             {["Creo", "SolidWorks", "Siemens NX", "CATIA CAA", "AutoCAD"].map(
-              (platform) => (
+              (platform, i) => (
                 <div
                   key={platform}
-                  className="bg-white px-8 py-4 rounded-xl shadow-sm border border-slate-100 font-display font-bold text-xl text-slate-700"
+                  className={`bg-white px-8 py-4 rounded-xl shadow-sm border border-slate-100 font-display font-bold text-xl text-slate-700 hover:shadow-lg hover:-translate-y-1 hover:border-primary/20 transition-all duration-300 cursor-default ${platformsReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}
+                  style={{ animationDelay: `${i * 100 + 100}ms` }}
                 >
                   {platform}
                 </div>
@@ -134,8 +149,8 @@ export default function ServicesPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-24 bg-primary text-white">
-        <div className="container mx-auto px-4 text-center max-w-2xl">
+      <section className="py-24 bg-primary text-white overflow-hidden">
+        <div ref={ctaReveal.ref} className={`container mx-auto px-4 text-center max-w-2xl transition-all duration-700 ${ctaReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
           <h2 className="font-display text-3xl font-bold mb-6">
             Ready to optimize your workflow?
           </h2>
@@ -146,9 +161,10 @@ export default function ServicesPage() {
           <Link href="/contact">
             <Button
               size="lg"
-              className="bg-accent hover:bg-accent/90 text-white font-semibold h-12 px-8 rounded-full"
+              className="bg-accent hover:bg-accent/90 text-white font-semibold h-12 px-8 rounded-full group transition-all duration-300 hover:shadow-xl hover:shadow-accent/30 hover:scale-[1.02]"
             >
               Get Free Consultation
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
             </Button>
           </Link>
         </div>

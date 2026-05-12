@@ -10,8 +10,13 @@ import {
   TrendingUp,
   LifeBuoy,
 } from "lucide-react";
+import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 
 export default function AboutPage() {
+  const headerReveal = useScrollReveal();
+  const missionReveal = useScrollReveal();
+  const principlesReveal = useScrollReveal();
+
   const features = [
     { title: "Precision", icon: Target },
     { title: "Practicality", icon: Wrench },
@@ -26,8 +31,11 @@ export default function AboutPage() {
 
       <main className="grow">
         {/* Header */}
-        <section className="bg-slate-50 py-24 border-b border-slate-100">
-          <div className="container mx-auto px-4 text-center max-w-4xl">
+        <section className="bg-slate-50 py-24 border-b border-slate-100 overflow-hidden">
+          <div
+            ref={headerReveal.ref}
+            className={`container mx-auto px-4 text-center max-w-4xl transition-all duration-700 ${headerReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}
+          >
             <h1 className="font-display text-4xl md:text-5xl font-bold text-slate-900 mb-8">
               We Enable Industry to Transform <br />
               <span className="text-primary">
@@ -44,12 +52,12 @@ export default function AboutPage() {
         </section>
 
         {/* Mission / Vision */}
-        <section className="py-24 bg-white">
-          <div className="container mx-auto px-4">
+        <section className="py-24 bg-white overflow-hidden">
+          <div ref={missionReveal.ref} className="container mx-auto px-4">
             <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
               {/* Mission */}
-              <div className="bg-blue-50/50 p-10 rounded-2xl border border-blue-100">
-                <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
+              <div className={`bg-blue-50/50 p-10 rounded-2xl border border-blue-100 hover:shadow-xl transition-all duration-500 hover:-translate-y-1 group ${missionReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
+                <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                   <Target className="h-6 w-6 text-primary" />
                 </div>
 
@@ -64,8 +72,8 @@ export default function AboutPage() {
               </div>
 
               {/* Vision */}
-              <div className="bg-green-50/50 p-10 rounded-2xl border border-green-100">
-                <div className="h-12 w-12 bg-green-500/10 rounded-xl flex items-center justify-center mb-6">
+              <div className={`bg-green-50/50 p-10 rounded-2xl border border-green-100 hover:shadow-xl transition-all duration-500 hover:-translate-y-1 group ${missionReveal.visible ? "animate-fade-in-up delay-200" : "opacity-0"}`}>
+                <div className="h-12 w-12 bg-green-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                   <Lightbulb className="h-6 w-6 text-green-600" />
                 </div>
 
@@ -83,21 +91,22 @@ export default function AboutPage() {
         </section>
 
         {/* Core Principles */}
-        <section className="py-24 bg-slate-900 text-white">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="font-display text-3xl font-bold mb-16">
+        <section className="py-24 bg-slate-900 text-white overflow-hidden">
+          <div ref={principlesReveal.ref} className="container mx-auto px-4 text-center">
+            <h2 className={`font-display text-3xl font-bold mb-16 transition-all duration-700 ${principlesReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
               Core Principles
             </h2>
 
             <div className="flex flex-wrap justify-center gap-8 md:gap-16">
-              {features.map((feature) => {
+              {features.map((feature, i) => {
                 const Icon = feature.icon;
                 return (
                   <div
                     key={feature.title}
-                    className="flex flex-col items-center gap-4"
+                    className={`flex flex-col items-center gap-4 group transition-all duration-700 ${principlesReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}
+                    style={{ animationDelay: `${i * 120 + 200}ms` }}
                   >
-                    <div className="h-16 w-16 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
+                    <div className="h-16 w-16 rounded-full bg-white/10 flex items-center justify-center border border-white/20 group-hover:bg-white/20 group-hover:scale-110 transition-all duration-300">
                       <Icon className="h-8 w-8 text-accent" />
                     </div>
 

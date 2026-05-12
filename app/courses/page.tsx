@@ -18,11 +18,15 @@ import {
   Star,
   Download,
 } from "lucide-react";
+import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 
 import coursesHero from "@/public/generated_images/Background_img2.png";
 import { courses } from "@/lib/courseData";
 
 export default function Courses() {
+  const heroReveal = useScrollReveal();
+  const programsReveal = useScrollReveal();
+  const comparisonReveal = useScrollReveal();
 
   const comparisonData = [
     {
@@ -72,7 +76,7 @@ export default function Courses() {
      <Navbar />
 
       {/* Hero */}
-      <section className="relative bg-slate-900 text-white py-20">
+      <section className="relative bg-slate-900 text-white py-20 overflow-hidden">
         <div
           className="absolute inset-0 z-0 opacity-20"
           style={{
@@ -81,7 +85,13 @@ export default function Courses() {
             backgroundPosition: "center",
           }}
         />
-        <div className="container relative z-10 mx-auto px-4">
+        {/* Floating shapes */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+          <div className="absolute top-12 right-[10%] w-14 h-14 rounded-2xl bg-white/5 border border-white/10 animate-float" style={{ animationDuration: "10s" }} />
+          <div className="absolute bottom-16 left-[12%] w-10 h-10 rounded-full bg-white/5 border border-white/10 animate-float delay-500" style={{ animationDuration: "12s" }} />
+        </div>
+
+        <div ref={heroReveal.ref} className={`container relative z-10 mx-auto px-4 transition-all duration-700 ${heroReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
           <div className="max-w-3xl">
             <h5 className="text-accent font-semibold tracking-wide uppercase mb-4">
               Training Programs
@@ -98,17 +108,15 @@ export default function Courses() {
       </section>
 
       {/* Program Highlights */}
-   
-     <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
+     <section className="py-20 bg-white overflow-hidden">
+        <div ref={programsReveal.ref} className="container mx-auto px-4">
+          <div className={`text-center mb-16 transition-all duration-700 ${programsReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
             <h2 className="font-display text-3xl font-bold text-slate-900 mb-4">
               Our Training Programs
             </h2>
             <p className="text-slate-600 max-w-2xl mx-auto">
               Our training focuses on practical implementation, automation
               thinking, and real-world engineering tasks.
-
             </p>
           </div>
 
@@ -116,7 +124,8 @@ export default function Courses() {
             {courses.map((course, i) => (
               <Card
                 key={i}
-                className="flex flex-col overflow-hidden border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 group"
+                className={`flex flex-col overflow-hidden border-slate-200 shadow-sm hover:shadow-xl transition-all duration-500 group hover:-translate-y-1 ${programsReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}
+                style={{ animationDelay: `${i * 100 + 100}ms` }}
               >
                 <CardHeader className="bg-slate-50 border-b border-slate-100 ">
                   <div className="flex justify-between items-start mb-4">
@@ -138,7 +147,7 @@ export default function Courses() {
                       {course.level}
                     </Badge>
                   </div>
-                  <h3 className="font-display text-xl font-bold text-slate-900 group-hover:text-primary transition-colors">
+                  <h3 className="font-display text-xl font-bold text-slate-900 group-hover:text-primary transition-colors duration-300">
                     {course.title}
                   </h3>
                   <p className="text-sm font-medium text-accent">
@@ -156,8 +165,8 @@ export default function Courses() {
                       </h4>
                       <ul className="text-sm text-slate-600 space-y-1">
                         {course.cardIncludes.map((item, idx) => (
-                          <li key={idx} className="flex items-start">
-                            <Check className="h-3 w-3 text-green-500 mr-2 mt-0.5" />
+                          <li key={idx} className="flex items-start group/item">
+                            <Check className="h-3 w-3 text-green-500 mr-2 mt-0.5 transition-transform duration-300 group-hover/item:scale-125" />
                             {item}
                           </li>
                         ))}
@@ -170,13 +179,13 @@ export default function Courses() {
                     {/* PRIMARY BUTTON */}
                     {course.isCustom ? (
                       <Link href="/contact" className="flex-1">
-                        <Button className="w-full bg-primary hover:bg-primary/90">
+                        <Button className="w-full bg-primary hover:bg-primary/90 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20">
                           Contact Now
                         </Button>
                       </Link>
                     ) : course.isActive ? (
                       <Link href="/contact" className="flex-1">
-                        <Button className="w-full bg-primary hover:bg-primary/90">
+                        <Button className="w-full bg-primary hover:bg-primary/90 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20">
                           Enroll Now
                         </Button>
                       </Link>
@@ -197,6 +206,7 @@ export default function Courses() {
                             variant="outline"
                             size="icon"
                             title="Download Syllabus"
+                            className="hover:scale-110 transition-transform duration-300"
                             >
                             <Download className="h-4 w-4" />
                           </Button>
@@ -221,12 +231,12 @@ export default function Courses() {
             </section>
             
             {/* Comparison Matrix */}
-              <section className="py-20 bg-slate-50">
-              <div className="container mx-auto px-4">
-              <h2 className="font-display text-3xl font-bold text-slate-900 mb-12 text-center">
+              <section className="py-20 bg-slate-50 overflow-hidden">
+              <div ref={comparisonReveal.ref} className="container mx-auto px-4">
+              <h2 className={`font-display text-3xl font-bold text-slate-900 mb-12 text-center transition-all duration-700 ${comparisonReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
               Program Comparison
               </h2>
-              <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-slate-200">
+              <div className={`overflow-x-auto bg-white rounded-xl shadow-sm border border-slate-200 transition-all duration-700 ${comparisonReveal.visible ? "animate-fade-in-up delay-200" : "opacity-0"}`}>
               <table className="w-full text-sm text-left">
               <thead className="bg-slate-900 text-white uppercase text-xs font-bold tracking-wider">
               <tr>
@@ -243,7 +253,7 @@ export default function Courses() {
               {comparisonData.map((row, i) => (
                 <tr
                 key={i}
-                className="hover:bg-slate-50/50 transition-colors"
+                className="hover:bg-slate-50/50 transition-colors duration-200"
                 >
                 <td className="px-6 py-4 font-bold text-primary">
                 {row.name}
@@ -282,4 +292,3 @@ export default function Courses() {
     </div>
   );
 }
-

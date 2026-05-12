@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import nodemailer from "nodemailer";
+import { resend } from "@/lib/resend";
+import { getContactNotificationEmailHtml } from "@/lib/emails/contact-notification-email";
+import { getAutoReplyEmailHtml } from "@/lib/emails/auto-reply-email";
 
 const schema = z.object({
   name: z.string().min(2),
@@ -15,32 +17,54 @@ export async function POST(req: Request) {
     const body = await req.json();
     const data = schema.parse(body);
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT),
-      secure: true,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
-
-    await transporter.sendMail({
-      from: `"Cadivity Website" <${process.env.SMTP_USER}>`,
-      to: "enquiry@cadivity.com",
+    // 1. Send notification email to Cadivity team
+    const { data: result, error } = await resend.emails.send({
+      from: "Cadivity <noreply@contact.cadivity.com>",
+      to: ["enquiry@cadivity.com"],
       replyTo: data.email,
-      subject: data.subject,
-      html: `
-        <h3>New Contact Form Submission</h3>
-        <p><b>Name:</b> ${data.name}</p>
-        <p><b>Email:</b> ${data.email}</p>
-        <p><b>Phone:</b> ${data.phone}</p>
-        <p>${data.message}</p>
-      `,
+      subject: `[Contact Form] ${data.subject}`,
+      html: getContactNotificationEmailHtml({
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        subject: data.subject,
+        message: data.message,
+      }),
     });
 
-    return NextResponse.json({ success: true });
+    if (error) {
+      console.error("Resend error:", error);
+
+      return NextResponse.json(
+        { error: error.message || "Failed to send message" },
+        { status: 500 }
+      );
+    }
+
+    // 2. Send auto-reply confirmation to user (fire-and-forget)
+    resend.emails
+      .send({
+        from: "Cadivity <noreply@contact.cadivity.com>",
+        to: [data.email],
+        subject: `Thanks for contacting Cadivity — ${data.subject}`,
+        html: getAutoReplyEmailHtml({
+          name: data.name,
+          subject: data.subject,
+        }),
+      })
+      .catch((err) => {
+        // Log but don't fail the request if auto-reply fails
+        console.error("Auto-reply email error:", err);
+      });
+
+    return NextResponse.json({
+      success: true,
+      id: result?.id,
+    });
+
   } catch (err) {
+    console.error("Contact form error:", err);
+
     return NextResponse.json(
       { error: "Failed to send message" },
       { status: 400 }
