@@ -11,7 +11,7 @@ export default async function AdminDashboard() {
         {/* Profile Card */}
         <div className="relative overflow-hidden bg-white rounded-3xl shadow-xl border border-slate-100">
           {/* Gradient Header Strip */}
-          <div className="h-32 bg-gradient-to-br from-emerald-600 via-teal-500 to-cyan-600 relative">
+          <div className="h-32 bg-linear-to-br from-emerald-600 via-teal-500 to-cyan-600 relative">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.15),transparent_60%)]" />
             <div className="absolute -bottom-px left-0 right-0 h-8 bg-white rounded-t-3xl" />
           </div>
