@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X, Loader2 } from "lucide-react";
 import { useAuthModal } from "@/hooks/use-auth-modal";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 
 import { toast } from "sonner";
 import { authClient } from "@/lib/client/auth-client";
@@ -35,6 +35,17 @@ export function LoginForm() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

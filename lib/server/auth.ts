@@ -2,11 +2,15 @@ import "server-only";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./db";
-import { env } from "./env";
 import { emailOTP } from "better-auth/plugins";
 import { resend } from "./resend";
 
 export const auth = betterAuth({
+  trustHost: true,
+  trustedOrigins: [
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "",
+    "https://cadivity.vercel.app"
+  ].filter(Boolean),
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
@@ -14,7 +18,7 @@ export const auth = betterAuth({
     enabled: true,
     sendVerificationOnSignUp: true,
   },
-  
+
   user: {
     additionalFields: {
       role: {
