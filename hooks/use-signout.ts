@@ -1,6 +1,6 @@
 "use client"
 
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/lib/client/auth-client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 

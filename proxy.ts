@@ -26,7 +26,7 @@ export async function proxy(request: NextRequest) {
   if (!sessionToken) {
     if (
       pathname.startsWith("/dashboard") ||
-      pathname.startsWith("/admin")
+      pathname.startsWith("/dashboard/admin")
     ) {
       return withNoCacheHeaders(NextResponse.redirect(new URL("/", request.url)));
     }
@@ -49,7 +49,7 @@ export async function proxy(request: NextRequest) {
       // Session invalid — redirect to home for protected routes
       if (
         pathname.startsWith("/dashboard") ||
-        pathname.startsWith("/admin")
+        pathname.startsWith("/dashboard/admin")
       ) {
         return withNoCacheHeaders(NextResponse.redirect(new URL("/", request.url)));
       }
@@ -60,7 +60,7 @@ export async function proxy(request: NextRequest) {
     const role = session?.user?.role || "student";
 
     // Admin routes — admin only
-    if (pathname.startsWith("/admin")) {
+    if (pathname.startsWith("/dashboard/admin")) {
       if (role !== "admin") {
         const dest =
           role === "instructor"
@@ -74,7 +74,7 @@ export async function proxy(request: NextRequest) {
     if (pathname.startsWith("/dashboard/instructor")) {
       if (role !== "instructor" && role !== "admin") {
         const dest =
-          role === "admin" ? "/admin" : "/dashboard/student";
+          role === "admin" ? "/dashboard/admin" : "/dashboard/student";
         return withNoCacheHeaders(NextResponse.redirect(new URL(dest, request.url)));
       }
     }
@@ -84,7 +84,7 @@ export async function proxy(request: NextRequest) {
       if (role !== "student") {
         const dest =
           role === "admin"
-            ? "/admin"
+            ? "/dashboard/admin"
             : `/dashboard/${role}`;
         return withNoCacheHeaders(NextResponse.redirect(new URL(dest, request.url)));
       }
@@ -98,5 +98,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*"],
+  matcher: ["/dashboard/:path*", "/dashboard/admin/:path*"],
 };

@@ -1,5 +1,4 @@
-import { courses } from "@/lib/courseData";
-import { prisma } from "../db";
+import { prisma } from "../server/db";
 
 export class AdminService {
   /**
@@ -7,15 +6,16 @@ export class AdminService {
    */
   static async getDashboardStats() {
     try {
-      const [studentCount, instructorCount] = await Promise.all([
+      const [studentCount, instructorCount, courseCount] = await Promise.all([
         prisma.user.count({ where: { role: "student" } }),
         prisma.user.count({ where: { role: "instructor" } }),
+        prisma.course.count(),
       ]);
 
       return {
         totalStudents: studentCount,
         totalInstructors: instructorCount,
-        totalCourses: courses.length,
+        totalCourses: courseCount,
         totalRevenue: 0, 
       };
     } catch (error) {

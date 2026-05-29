@@ -1,60 +1,80 @@
-import { requireRole } from "@/lib/auth-guard";
-import { Mail, Shield } from "lucide-react";
-import { LogoutButton } from "@/components/dashboard/LogoutButton";
+"use client"
 
-export default async function InstructorDashboard() {
-  const session = await requireRole("instructor");
+import * as React from "react"
+import { InstructorLayout } from "@/components/instructor/layout/instructor-layout"
+import { StatCard } from "@/components/shared/stat-card"
+import { MyCoursesPreview } from "@/components/instructor/dashboard/my-courses-preview"
+import { RecentActivity } from "@/components/instructor/dashboard/recent-activity"
+import { EnrollmentChart } from "@/components/instructor/dashboard/enrollment-chart"
+import { PageHeader } from "@/components/shared/page-header"
+import { useApi } from "@/hooks/use-api"
+import { BookOpen, Users, TrendingUp, HelpCircle } from "lucide-react"
+
+interface InstructorStats {
+  courseCount: number
+  studentCount: number
+  avgCompletionRate: number
+  pendingCount: number
+}
+
+export default function InstructorDashboardPage() {
+  const {
+    data: stats,
+    loading: statsLoading,
+  } = useApi<InstructorStats>({ url: "/api/instructor/dashboard/stats" })
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
-        {/* Profile Card */}
-        <div className="relative overflow-hidden bg-white rounded-3xl shadow-xl border border-slate-100">
-          {/* Gradient Header Strip */}
-          <div className="h-32 bg-gradient-to-br from-indigo-600 via-indigo-500 to-purple-600 relative">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.15),transparent_60%)]" />
-            <div className="absolute -bottom-px left-0 right-0 h-8 bg-white rounded-t-3xl" />
+    <InstructorLayout>
+      <div className="space-y-6">
+        <PageHeader
+          title="Dashboard"
+          description="Welcome back! Here's an overview of your courses."
+        />
+
+        {/* Stats Grid */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            title="My Courses"
+            value={statsLoading ? "—" : stats?.courseCount?.toLocaleString() || "0"}
+            icon={BookOpen}
+            loading={statsLoading}
+          />
+          <StatCard
+            title="Total Students"
+            value={statsLoading ? "—" : stats?.studentCount?.toLocaleString() || "0"}
+            icon={Users}
+            iconColor="text-info"
+            loading={statsLoading}
+          />
+          <StatCard
+            title="Avg Completion"
+            value={statsLoading ? "—" : `${stats?.avgCompletionRate || 0}%`}
+            icon={TrendingUp}
+            iconColor="text-success"
+            loading={statsLoading}
+          />
+          <StatCard
+            title="Pending Questions"
+            value={statsLoading ? "—" : stats?.pendingCount?.toLocaleString() || "0"}
+            icon={HelpCircle}
+            iconColor="text-warning"
+            loading={statsLoading}
+          />
+        </div>
+
+        {/* Enrollment Trend + Activity Feed */}
+        <div className="grid gap-6 lg:grid-cols-5">
+          <div className="lg:col-span-3">
+            <EnrollmentChart />
           </div>
-
-          {/* Avatar */}
-          <div className="flex justify-center -mt-16 relative z-10">
-            <div className="h-24 w-24 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg shadow-indigo-500/30 ring-4 ring-white">
-              {session.user.name?.charAt(0)?.toUpperCase() || "I"}
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="px-8 pt-5 pb-8 text-center space-y-6">
-            <div>
-              <h2 className="text-xl font-bold text-slate-900">
-                {session.user.name}
-              </h2>
-              <div className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold uppercase tracking-wider">
-                <Shield className="h-3 w-3" />
-                Instructor
-              </div>
-            </div>
-
-            {/* Email Info */}
-            <div className="bg-slate-50 rounded-2xl p-4 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0">
-                <Mail className="h-5 w-5 text-indigo-600" />
-              </div>
-              <div className="text-left min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Email Address
-                </p>
-                <p className="text-sm font-semibold text-slate-800 truncate">
-                  {session.user.email}
-                </p>
-              </div>
-            </div>
-
-            {/* Logout */}
-            <LogoutButton />
+          <div className="lg:col-span-2">
+            <RecentActivity />
           </div>
         </div>
+
+        {/* My Courses Preview */}
+        <MyCoursesPreview />
       </div>
-    </div>
-  );
+    </InstructorLayout>
+  )
 }

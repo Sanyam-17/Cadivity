@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/server/db";
+import { auth } from "@/lib/server/auth";
 import { headers } from "next/headers";
 import { logAdminAction } from "@/lib/services/audit.service";
 import { ROLES, isValidRole } from "@/lib/roles";

@@ -1,0 +1,40 @@
+import "server-only"
+import { NextRequest, NextResponse } from "next/server"
+import { auth } from "@/lib/server/auth"
+import { headers } from "next/headers"
+import { InstructorService } from "@/lib/services/instructor.service"
+
+// GET /api/instructor/students
+export async function GET(request: NextRequest) {
+  const session = await auth.api.getSession({ headers: await headers() })
+  if (!session || (session.user as any).role !== "instructor") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  }
+
+  try {
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get("page") || "1", 10)
+    const limit = parseInt(searchParams.get("limit") || "20", 10)
+    const courseId = searchParams.get("courseId") || undefined
+    const progressRange = searchParams.get("progressRange") || undefined
+    const lastActive = searchParams.get("lastActive") || undefined
+    const search = searchParams.get("search") || undefined
+
+    const result = await InstructorService.getStudents(session.user.id, {
+      page,
+      limit,
+      courseId,
+      progressRange,
+      lastActive,
+      search,
+    })
+
+    return NextResponse.json(result)
+  } catch (error) {
+    console.error("Instructor students error:", error)
+    return NextResponse.json(
+      { error: "Failed to fetch students" },
+      { status: 500 }
+    )
+  }
+}

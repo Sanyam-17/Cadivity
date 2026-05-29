@@ -1,5 +1,5 @@
-import { HeroSlider } from "@/components/home/HeroSlider";
-import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/common/Footer";
+import { Navbar } from "@/components/common/Navbar";
 import { ReactNode } from "react";
 
 export default function LayoutPublic({ children }: { children: ReactNode }) {
@@ -7,6 +7,7 @@ export default function LayoutPublic({ children }: { children: ReactNode }) {
        <div>
           <Navbar />
           {children}
+           <Footer />
        </div>
      )
 }

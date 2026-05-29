@@ -1,6 +1,6 @@
 "use client";
 
-import { Footer } from "@/components/layout/Footer";
+import { Footer } from "@/components/common/Footer";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { CheckCircle2, Factory, Target, ArrowRight } from "lucide-react";
@@ -142,7 +142,7 @@ export function HomePageContent() {
         </div>
       </section>
 
-      <Footer />
+     
     </div>
   );
 }

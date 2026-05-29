@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { resend } from "@/lib/resend";
-import { getContactNotificationEmailHtml } from "@/lib/emails/contact-notification-email";
-import { getAutoReplyEmailHtml } from "@/lib/emails/auto-reply-email";
+import { resend } from "@/lib/server/resend";
+import { getContactNotificationEmailHtml } from "@/lib/server/emails/contact-notification-email";
+import { getAutoReplyEmailHtml } from "@/lib/server/emails/auto-reply-email";
 
 const schema = z.object({
   name: z.string().min(2),

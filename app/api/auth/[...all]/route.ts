@@ -1,5 +1,5 @@
-import  arcjet from "@/lib/arcjet";
-import { auth } from "@/lib/auth";
+import  arcjet from "@/lib/server/arcjet";
+import { auth } from "@/lib/server/auth";
 import ip from "@arcjet/ip";
 import  {
  type ArcjetDecision,

@@ -2,8 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthModal } from "@/components/auth/useAuthModal";
-import { authClient } from "@/lib/auth-client";
+import { useAuthModal } from "@/hooks/use-auth-modal";
+import { authClient } from "@/lib/client/auth-client";
 
 /**
  * Thin client component that:
@@ -29,7 +29,7 @@ export function LoginModalTrigger() {
     if (session) {
       // Already signed in — send to the correct dashboard
       const role = (session.user as any)?.role;
-      if (role === "admin") router.replace("/admin");
+      if (role === "admin") router.replace("/dashboard/admin");
       else if (role === "instructor") router.replace("/dashboard/instructor");
       else router.replace("/dashboard/student");
       return;
@@ -51,3 +51,5 @@ export function LoginModalTrigger() {
 
   return null; // renders nothing — modal is in layout
 }
+
+

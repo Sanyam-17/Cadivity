@@ -1,6 +1,6 @@
 "use client";
 
-import { LoginForm } from "../home/LoginForm";
+import { LoginForm } from "./login-form";
 
 export default function LoginModal() {
   return <LoginForm />;

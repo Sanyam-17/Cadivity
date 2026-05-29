@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/server/db";
 
 interface LogAdminActionParams {
   adminId: string;
@@ -27,3 +27,4 @@ export async function logAdminAction({
     console.error("[AuditLog] Failed to write audit entry:", err);
   }
 }
+
