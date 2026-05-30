@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { base64url } from "zod";
 
-/**
- * Adds no-cache headers to prevent browser back-button from showing
- * stale protected pages after logout or role switch.
- */
 function withNoCacheHeaders(response: NextResponse): NextResponse {
-  response.headers.set(
-    "Cache-Control",
-    "no-store, no-cache, must-revalidate, proxy-revalidate"
-  );
+  response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
   response.headers.set("Pragma", "no-cache");
   response.headers.set("Expires", "0");
   return response;
@@ -18,42 +10,25 @@ function withNoCacheHeaders(response: NextResponse): NextResponse {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Read session token from cookies (better-auth stores it as "better-auth.session_token")
   const sessionToken =
     request.cookies.get("better-auth.session_token")?.value ||
     request.cookies.get("__Secure-better-auth.session_token")?.value;
 
-  // If no session token, redirect protected routes to home
   if (!sessionToken) {
-    if (
-      pathname.startsWith("/dashboard") ||
-      pathname.startsWith("/dashboard/admin")
-    ) {
+    if (pathname.startsWith("/dashboard")) {
       return withNoCacheHeaders(NextResponse.redirect(new URL("/", request.url)));
     }
     return withNoCacheHeaders(NextResponse.next());
   }
 
-  // For authenticated users, fetch session to get role
-  // Use the internal API to validate the session
   try {
-   const baseUrl = process.env.BETTER_AUTH_URL || request.nextUrl.origin;
-
-const sessionRes = await fetch(
-  `${baseUrl}/api/auth/get-session`,
-  {
-    headers: {
-      cookie: request.headers.get("cookie") || "",
-    },
-  }
-);
+    const baseUrl = process.env.BETTER_AUTH_URL || request.nextUrl.origin;
+    const sessionRes = await fetch(`${baseUrl}/api/auth/get-session`, {
+      headers: { cookie: request.headers.get("cookie") || "" },
+    });
 
     if (!sessionRes.ok) {
-      // Session invalid — redirect to home for protected routes
-      if (
-        pathname.startsWith("/dashboard") ||
-        pathname.startsWith("/dashboard/admin")
-      ) {
+      if (pathname.startsWith("/dashboard")) {
         return withNoCacheHeaders(NextResponse.redirect(new URL("/", request.url)));
       }
       return withNoCacheHeaders(NextResponse.next());
@@ -62,38 +37,40 @@ const sessionRes = await fetch(
     const session = await sessionRes.json();
     const role = session?.user?.role || "student";
 
-    // Admin routes — admin only
-    if (pathname.startsWith("/dashboard/admin")) {
-      if (role !== "admin") {
-        const dest =
-          role === "instructor"
-            ? "/dashboard/instructor"
-            : "/dashboard/student";
-        return withNoCacheHeaders(NextResponse.redirect(new URL(dest, request.url)));
-      }
+    // ✅ Root /dashboard redirect — routes user based on role
+    if (pathname === "/dashboard" || pathname === "/dashboard/") {
+      const dest =
+        role === "admin"
+          ? "/dashboard/admin"
+          : role === "instructor"
+          ? "/dashboard/instructor"
+          : "/dashboard/student";
+      return withNoCacheHeaders(NextResponse.redirect(new URL(dest, request.url)));
     }
 
-    // Instructor dashboard — instructor or admin
-    if (pathname.startsWith("/dashboard/instructor")) {
-      if (role !== "instructor" && role !== "admin") {
-        const dest =
-          role === "admin" ? "/dashboard/admin" : "/dashboard/student";
-        return withNoCacheHeaders(NextResponse.redirect(new URL(dest, request.url)));
-      }
+    // Admin routes
+    if (pathname.startsWith("/dashboard/admin") && role !== "admin") {
+      const dest = role === "instructor" ? "/dashboard/instructor" : "/dashboard/student";
+      return withNoCacheHeaders(NextResponse.redirect(new URL(dest, request.url)));
     }
 
-    // Student dashboard — student only
-    if (pathname.startsWith("/dashboard/student")) {
-      if (role !== "student") {
-        const dest =
-          role === "admin"
-            ? "/dashboard/admin"
-            : `/dashboard/${role}`;
-        return withNoCacheHeaders(NextResponse.redirect(new URL(dest, request.url)));
-      }
+    // Instructor routes
+    if (pathname.startsWith("/dashboard/instructor") && role !== "instructor" && role !== "admin") {
+      return withNoCacheHeaders(NextResponse.redirect(new URL("/dashboard/student", request.url)));
     }
-  } catch {
-    // If session fetch fails, let the page-level guards handle it
+
+    // Student routes
+    if (pathname.startsWith("/dashboard/student") && role !== "student") {
+      const dest = role === "admin" ? "/dashboard/admin" : `/dashboard/${role}`;
+      return withNoCacheHeaders(NextResponse.redirect(new URL(dest, request.url)));
+    }
+
+  } catch (error) {
+    // ✅ Log errors so you can debug in Vercel logs
+    console.error("[proxy] Session fetch failed:", error);
+    if (pathname.startsWith("/dashboard")) {
+      return withNoCacheHeaders(NextResponse.redirect(new URL("/", request.url)));
+    }
     return withNoCacheHeaders(NextResponse.next());
   }
 
@@ -101,5 +78,5 @@ const sessionRes = await fetch(
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/dashboard/admin/:path*"],
+  matcher: ["/dashboard/:path*"],
 };
