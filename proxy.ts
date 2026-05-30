@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { base64url } from "zod";
 
 /**
  * Adds no-cache headers to prevent browser back-button from showing
@@ -36,14 +37,16 @@ export async function proxy(request: NextRequest) {
   // For authenticated users, fetch session to get role
   // Use the internal API to validate the session
   try {
-    const sessionRes = await fetch(
-      `${request.nextUrl.origin}/api/auth/get-session`,
-      {
-        headers: {
-          cookie: request.headers.get("cookie") || "",
-        },
-      }
-    );
+   const baseUrl = process.env.BETTER_AUTH_URL || request.nextUrl.origin;
+
+const sessionRes = await fetch(
+  `${baseUrl}/api/auth/get-session`,
+  {
+    headers: {
+      cookie: request.headers.get("cookie") || "",
+    },
+  }
+);
 
     if (!sessionRes.ok) {
       // Session invalid — redirect to home for protected routes

@@ -38,7 +38,7 @@ export async function requireRole(role: UserRole) {
   // Allow access if the user's level is >= the required level (e.g. admin can
   // pass an instructor-gated route).
   if (ROLE_HIERARCHY[userRole] < ROLE_HIERARCHY[role]) {
-    if (userRole === ROLES.ADMIN) redirect("/dashboard/admin");
+    if (userRole === ROLES.ADMIN) redirect("/admin");
     redirect(`/dashboard/${userRole}`);
   }
 

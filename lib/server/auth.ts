@@ -6,7 +6,15 @@ import { emailOTP } from "better-auth/plugins";
 import { resend } from "./resend";
 
 export const auth = betterAuth({
- baseURL: process.env.BETTER_AUTH_URL || "https://cadivity-idrz.vercel.app/",
+  baseURL: process.env.BETTER_AUTH_URL || "https://cadivity-idrz.vercel.app/",
+
+  trustedOrigins: [
+    "https://cadivity.vercel.app",
+    "https://www.cadivity.com",        // if you have a custom domain
+    "https://cadivity.com",            // both www and non-www
+    "http://localhost:3000",           // for local dev
+  ],
+
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
