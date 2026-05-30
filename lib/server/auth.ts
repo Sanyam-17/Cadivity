@@ -10,7 +10,7 @@ export const auth = betterAuth({
 
   trustedOrigins: [
     "https://cadivity-idrz.vercel.app", 
-    "https://cadivity.vercel.app",
+    "https://cadivity-idrz-1qjual0xg-sanyam-17s-projects.vercel.app",
     "https://www.cadivity.com",
     "https://cadivity.com",
     "http://localhost:3000",
