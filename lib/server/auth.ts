@@ -8,9 +8,7 @@ import { getTrustedOrigins } from "../env";
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL!,
-
   trustedOrigins: getTrustedOrigins(),
-
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   emailAndPassword: {
     enabled: true,
@@ -46,4 +44,4 @@ export const auth = betterAuth({
   ],
 });
 
-export type Session = typeof auth.$Infer.Session;
+export type Session = typeof auth.$Infer.Session
