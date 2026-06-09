@@ -18,7 +18,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://cadivity.com"),
+  metadataBase: new URL("https://www.cadivity.com"),
   title: "CAD Automation Services & Training | Creo, SolidWorks API - Cadivity",
   description:
     "Cadivity provides CAD automation services, Creo Toolkit development, SolidWorks API programming, and industry-level CAD automation training with real-world projects.",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     title: "CAD Automation Services & Training | Cadivity",
     description:
       "Cadivity provides CAD automation services, Creo Toolkit development, SolidWorks API programming, and industry-level CAD automation training with real-world projects.",
-    url: "https://cadivity.com",
+    url: "https://www.cadivity.com",
     siteName: "Cadivity",
     images: [
       {

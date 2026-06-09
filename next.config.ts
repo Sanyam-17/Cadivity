@@ -1,10 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   typescript: {
     ignoreBuildErrors: false,
   },
+
   async headers() {
     return [
       {
@@ -21,16 +21,30 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+
   async redirects() {
     return [
+      // Redirect non-www -> www
       {
-        source: '/admin/:path*',
-        destination: '/dashboard/admin/:path*',
+        source: "/:path*",
+        has: [
+          {
+            type: "host",
+            value: "cadivity.com",
+          },
+        ],
+        destination: "https://www.cadivity.com/:path*",
+        permanent: true,
+      },
+
+      {
+        source: "/admin/:path*",
+        destination: "/dashboard/admin/:path*",
         permanent: true,
       },
       {
-        source: '/admin',
-        destination: '/dashboard/admin',
+        source: "/admin",
+        destination: "/dashboard/admin",
         permanent: true,
       },
     ];

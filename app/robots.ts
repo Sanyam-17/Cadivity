@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/dashboard", "/api", "/checkout"],
       },
     ],
-    sitemap: "https://cadivity.com/sitemap.xml",
+    sitemap: "https://www.cadivity.com/sitemap.xml",
   };
 }
