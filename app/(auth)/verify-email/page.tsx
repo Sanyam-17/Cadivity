@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { authClient } from "@/lib/client/auth-client"
+import { authClient } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
 import { Loader2, MailCheck, AlertCircle } from "lucide-react"
 import Link from "next/link"

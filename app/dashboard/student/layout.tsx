@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next'
-import { requireRole } from '@/lib/server/auth-guard'
+import { requireExactRole } from '@/lib/server/auth-guard'
+import { Navbar } from '@/components/layout/Navbar'
+import { Footer } from '@/components/layout/Footer'
 import "@/app/styles/student.css"
 
 export const metadata: Metadata = {
@@ -19,7 +21,13 @@ export default async function StudentLayout({
   children: React.ReactNode
 }>) {
   // Server-side guard — redirects non-student users
-  await requireRole("student");
+  await requireExactRole("student");
 
-  return <>{children}</>;
+  return (
+    <div>
+      <Navbar />
+      {children}
+      <Footer />
+    </div>
+  );
 }

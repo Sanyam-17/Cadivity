@@ -182,35 +182,31 @@ export class InstructorService {
       prisma.course.count({ where }),
     ]);
 
-    // Compute completion rates per course
-    const courseData = await Promise.all(
-      courses.map(async (course) => {
-        const enrollments = await prisma.enrollment.findMany({
-          where: { courseId: course.id },
-          select: { progress: true },
-        });
-        const completionRate =
-          enrollments.length > 0
-            ? Math.round(
-                enrollments.reduce((sum, e) => sum + (e.progress || 0), 0) /
-                  enrollments.length
-              )
-            : 0;
-
-        return {
-          id: course.id,
-          title: course.title,
-          slug: course.slug,
-          thumbnail: course.thumbnail,
-          status: course.status,
-          category: course.category,
-          enrolledCount: course._count.enrollments,
-          completionRate,
-          updatedAt: course.updatedAt.toISOString(),
-          instructor: course.instructor,
-        };
-      })
+    const courseIds = courses.map((course) => course.id);
+    const completionRows =
+      courseIds.length > 0
+        ? await prisma.enrollment.groupBy({
+            by: ["courseId"],
+            where: { courseId: { in: courseIds } },
+            _avg: { progress: true },
+          })
+        : [];
+    const completionMap = new Map(
+      completionRows.map((row) => [row.courseId, Math.round(row._avg.progress ?? 0)])
     );
+
+    const courseData = courses.map((course) => ({
+      id: course.id,
+      title: course.title,
+      slug: course.slug,
+      thumbnail: course.thumbnail,
+      status: course.status,
+      category: course.category,
+      enrolledCount: course._count.enrollments,
+      completionRate: completionMap.get(course.id) ?? 0,
+      updatedAt: course.updatedAt.toISOString(),
+      instructor: course.instructor,
+    }));
 
     return {
       courses: courseData,

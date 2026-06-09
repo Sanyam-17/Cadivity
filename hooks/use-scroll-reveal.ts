@@ -12,19 +12,39 @@ export function useScrollReveal(threshold = 0.15) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    // Robust fallback: Force visibility to true after 600ms to guarantee content is never blank
+    const timer = setTimeout(() => {
+      setVisible(true);
+    }, 600);
+
     const el = ref.current;
-    if (!el) return;
+    if (!el) {
+      return () => clearTimeout(timer);
+    }
+
+    // Server-side safety or non-supported environment fallback
+    if (typeof window === "undefined" || !("IntersectionObserver" in window)) {
+      setVisible(true);
+      clearTimeout(timer);
+      return;
+    }
+
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setVisible(true);
+          clearTimeout(timer);
           obs.disconnect();
         }
       },
       { threshold }
     );
     obs.observe(el);
-    return () => obs.disconnect();
+
+    return () => {
+      clearTimeout(timer);
+      obs.disconnect();
+    };
   }, [threshold]);
 
   return { ref, visible };

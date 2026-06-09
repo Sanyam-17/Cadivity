@@ -6,7 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useAdminStore } from "@/stores/admin-store"
-import { authClient } from "@/lib/client/auth-client"
+import { authClient } from "@/lib/auth-client"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import {

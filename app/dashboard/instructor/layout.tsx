@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { requireRole } from '@/lib/server/auth-guard'
+import { requireInstructorOrAdmin } from '@/lib/server/auth-guard'
 import "@/app/styles/instructor.css"
 
 export const metadata: Metadata = {
@@ -19,7 +19,7 @@ export default async function InstructorLayout({
   children: React.ReactNode
 }>) {
   // Server-side guard — redirects non-instructor users
-  await requireRole("instructor");
+  await requireInstructorOrAdmin();
 
   return <>{children}</>;
 }

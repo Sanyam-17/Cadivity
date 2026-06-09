@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/server/db"
-import { auth } from "@/lib/server/auth"
-import { headers } from "next/headers"
+import { guardApiRole, getRequestIp } from "@/lib/server/auth-guard"
+import { parseJsonBody, errorResponse } from "@/lib/server/api-utils"
+import { categoryCreateSchema, categoryDeleteSchema, categoryUpdateSchema } from "@/lib/server/validators/admin"
+import { withRateLimit } from "@/lib/server/arcjet"
+
+const aj = withRateLimit(30, 60);
 
 // GET /api/admin/categories
 export async function GET(request: NextRequest) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || (session.user as any).role !== "admin") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+  const guarded = await guardApiRole("admin")
+  if (guarded.error) return guarded.error
+  const session = guarded.session
 
   try {
     const categories = await prisma.category.findMany({
@@ -32,19 +35,21 @@ export async function GET(request: NextRequest) {
 
 // POST /api/admin/categories — create category
 export async function POST(request: NextRequest) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || (session.user as any).role !== "admin") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+  const guarded = await guardApiRole("admin")
+  if (guarded.error) return guarded.error
+  const session = guarded.session
 
   try {
-    const { name } = await request.json()
-    if (!name || !name.trim()) {
-      return NextResponse.json({ error: "Name is required" }, { status: 400 })
+    const decision = await aj.protect(request);
+    if (decision.isDenied()) {
+      return errorResponse("Too many requests", 429)
     }
 
+    const parsed = await parseJsonBody(request, categoryCreateSchema)
+    if (parsed.error) return parsed.error
+
     const category = await prisma.category.create({
-      data: { name: name.trim() },
+      data: { name: parsed.data.name },
     })
 
     return NextResponse.json(category, { status: 201 })
@@ -59,20 +64,22 @@ export async function POST(request: NextRequest) {
 
 // PATCH /api/admin/categories — update category
 export async function PATCH(request: NextRequest) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || (session.user as any).role !== "admin") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+  const guarded = await guardApiRole("admin")
+  if (guarded.error) return guarded.error
+  const session = guarded.session
 
   try {
-    const { id, name } = await request.json()
-    if (!id || !name?.trim()) {
-      return NextResponse.json({ error: "ID and name are required" }, { status: 400 })
+    const decision = await aj.protect(request);
+    if (decision.isDenied()) {
+      return errorResponse("Too many requests", 429)
     }
 
+    const parsed = await parseJsonBody(request, categoryUpdateSchema)
+    if (parsed.error) return parsed.error
+
     const updated = await prisma.category.update({
-      where: { id },
-      data: { name: name.trim() },
+      where: { id: parsed.data.id },
+      data: { name: parsed.data.name },
     })
 
     return NextResponse.json(updated)
@@ -84,18 +91,20 @@ export async function PATCH(request: NextRequest) {
 
 // DELETE /api/admin/categories
 export async function DELETE(request: NextRequest) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || (session.user as any).role !== "admin") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+  const guarded = await guardApiRole("admin")
+  if (guarded.error) return guarded.error
+  const session = guarded.session
 
   try {
-    const { id } = await request.json()
-    if (!id) {
-      return NextResponse.json({ error: "ID is required" }, { status: 400 })
+    const decision = await aj.protect(request);
+    if (decision.isDenied()) {
+      return errorResponse("Too many requests", 429)
     }
 
-    // Check if courses are using the category
+    const parsed = await parseJsonBody(request, categoryDeleteSchema)
+    if (parsed.error) return parsed.error
+    const { id } = parsed.data
+
     const courseCount = await prisma.course.count({ where: { categoryId: id } })
     if (courseCount > 0) {
       return NextResponse.json(

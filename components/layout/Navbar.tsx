@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { Menu, X, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuthModal } from "@/hooks/use-auth-modal";
-import { authClient } from "@/lib/client/auth-client";
+import { authClient } from "@/lib/auth-client";
 import { useSignOut } from "@/hooks/use-signout";
 
 export function Navbar() {

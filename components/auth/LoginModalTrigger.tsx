@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthModal } from "@/hooks/use-auth-modal";
-import { authClient } from "@/lib/client/auth-client";
+import { authClient } from "@/lib/auth-client";
 
 /**
  * Thin client component that:

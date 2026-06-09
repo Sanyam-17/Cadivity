@@ -1,23 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/server/db";
-import { auth } from "@/lib/server/auth";
-import { headers } from "next/headers";
+import { guardApiRole } from "@/lib/server/auth-guard";
 import { logAdminAction } from "@/lib/services/audit.service";
+import { parsePagination, errorResponse } from "@/lib/server/api-utils";
+import { adminUserRolePatchSchema } from "@/lib/server/validators/users";
+import { isValidRole } from "@/lib/roles";
 import { ROLES } from "@/lib/roles";
 
-// GET /api/admin/users — list all users (admin only)
 export async function GET(request: NextRequest) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || (session.user as any).role !== "admin") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const guarded = await guardApiRole("admin");
+  if (guarded.error) return guarded.error;
 
   const { searchParams } = new URL(request.url);
+  const { page, pageSize, skip } = parsePagination(searchParams, { page: 1, pageSize: 50 });
   const role = searchParams.get("role");
   const search = searchParams.get("search");
 
-  const where: any = {};
-  if (role) where.role = role;
+  const where: Record<string, unknown> = {};
+  if (role) {
+    if (!isValidRole(role)) {
+      return errorResponse("Invalid role filter", 400);
+    }
+    where.role = role;
+  }
   if (search) {
     where.OR = [
       { name: { contains: search, mode: "insensitive" } },
@@ -25,49 +30,49 @@ export async function GET(request: NextRequest) {
     ];
   }
 
-  const users = await prisma.user.findMany({
-    where,
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      image: true,
-      createdAt: true,
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        image: true,
+        active: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: pageSize,
+    }),
+    prisma.user.count({ where }),
+  ]);
 
-  return NextResponse.json(users);
+  return NextResponse.json({
+    success: true,
+    data: users,
+    pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) },
+  });
 }
 
-// PATCH /api/admin/users — update user role (admin only)
 export async function PATCH(request: NextRequest) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || (session.user as any).role !== "admin") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const guarded = await guardApiRole("admin");
+  if (guarded.error) return guarded.error;
+  const session = guarded.session;
+
+  const body = await request.json().catch(() => ({}));
+  const parsed = adminUserRolePatchSchema.safeParse(body);
+  if (!parsed.success) {
+    return errorResponse("Invalid payload", 400, parsed.error.flatten());
   }
 
-  const body = await request.json();
-  const { userId, role } = body;
+  const { userId, role } = parsed.data;
 
-  if (!userId || !role) {
-    return NextResponse.json({ error: "Missing fields" }, { status: 400 });
-  }
-
-  if (!Object.values(ROLES).includes(role)) {
-    return NextResponse.json({ error: "Invalid role" }, { status: 400 });
-  }
-
-  // ── Guard: admins cannot change their own role ─────────────────────────────
   if (userId === session.user.id) {
-    return NextResponse.json(
-      { error: "You cannot change your own role" },
-      { status: 403 }
-    );
+    return errorResponse("You cannot change your own role", 403);
   }
 
-  // ── Guard: prevent removing the last admin ─────────────────────────────────
   const targetUser = await prisma.user.findUnique({
     where: { id: userId },
     select: { role: true },
@@ -78,20 +83,22 @@ export async function PATCH(request: NextRequest) {
       where: { role: ROLES.ADMIN },
     });
     if (adminCount <= 1) {
-      return NextResponse.json(
-        { error: "Cannot remove the last admin" },
-        { status: 403 }
-      );
+      return errorResponse("Cannot remove the last admin", 403);
     }
   }
 
-  // ── Perform update ─────────────────────────────────────────────────────────
   const updatedUser = await prisma.user.update({
     where: { id: userId },
     data: { role },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      active: true,
+    },
   });
 
-  // ── Audit log ──────────────────────────────────────────────────────────────
   await logAdminAction({
     adminId: session.user.id,
     action: "ROLE_CHANGE",
@@ -99,6 +106,5 @@ export async function PATCH(request: NextRequest) {
     meta: JSON.stringify({ newRole: role }),
   });
 
-  return NextResponse.json(updatedUser);
+  return NextResponse.json({ success: true, data: updatedUser });
 }
-

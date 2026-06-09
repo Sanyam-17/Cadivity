@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/server/db"
-import { auth } from "@/lib/server/auth"
-import { headers } from "next/headers"
+import { guardApiRole } from "@/lib/server/auth-guard"
 
 // GET /api/admin/dashboard/enrollment-trend — enrollment chart data
 export async function GET(request: NextRequest) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || (session.user as any).role !== "admin") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+  const guarded = await guardApiRole("admin")
+  if (guarded.error) return guarded.error
 
   const { searchParams } = new URL(request.url)
   const days = parseInt(searchParams.get("days") || "7", 10)

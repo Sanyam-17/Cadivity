@@ -15,7 +15,7 @@ import { useAuthModal } from "@/hooks/use-auth-modal";
 import { useState, useTransition, useEffect } from "react";
 
 import { toast } from "sonner";
-import { authClient } from "@/lib/client/auth-client";
+import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 
 type AuthMode = "login" | "register" | "otp" | "forgot";

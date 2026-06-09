@@ -35,7 +35,13 @@ export function LessonEditor({
   React.useEffect(() => {
     if (lesson) {
       setTitle(lesson.title)
-      setContent(lesson.content || (lesson.type === "quiz" ? { questions: [] } : {}))
+      const base =
+        lesson.content || (lesson.type === "quiz" ? { questions: [] } : {})
+      if (lesson.type === "video" && !base.videoUrl && lesson.youtubeVideoId) {
+        setContent({ ...base, videoUrl: lesson.youtubeVideoId })
+      } else {
+        setContent(base)
+      }
     }
   }, [lesson])
 

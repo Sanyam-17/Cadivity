@@ -1,15 +1,13 @@
 import "server-only"
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/server/auth"
-import { headers } from "next/headers"
+import { guardApiRole } from "@/lib/server/auth-guard"
 import { prisma } from "@/lib/server/db"
 
 // GET /api/instructor/notifications?page=1&limit=20
 export async function GET(request: NextRequest) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || (session.user as any).role !== "instructor") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  }
+  const guarded = await guardApiRole("instructor")
+  if (guarded.error) return guarded.error
+  const session = guarded.session
 
   try {
     const { searchParams } = new URL(request.url)
@@ -56,10 +54,9 @@ export async function GET(request: NextRequest) {
 
 // PATCH /api/instructor/notifications — mark as read
 export async function PATCH(request: NextRequest) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || (session.user as any).role !== "instructor") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  }
+  const guarded = await guardApiRole("instructor")
+  if (guarded.error) return guarded.error
+  const session = guarded.session
 
   try {
     const body = await request.json()

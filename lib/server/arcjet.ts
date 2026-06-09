@@ -9,7 +9,6 @@ import arcjet, {
 } from "@arcjet/next";
 import { env } from "../env";
 
-
 export {
  detectBot,
  fixedWindow,
@@ -19,15 +18,26 @@ export {
  slidingWindow
 };
 
-export default  arcjet({
-  key : env.ARCJET_KEY,
-
+export default arcjet({
+  key: env.ARCJET_KEY,
   characteristics: ["fingerprint"],
-   
   rules: [
-   shield({
-     mode:"LIVE",
-     
-   }),
-  ]
-})
+    shield({
+      mode: "LIVE",
+    }),
+  ],
+});
+
+export const withRateLimit = (max: number, windowSec: number = 60) => {
+  return arcjet({
+    key: env.ARCJET_KEY,
+    characteristics: ["ip.src"], // Rate limit by IP
+    rules: [
+      slidingWindow({
+        mode: "LIVE",
+        interval: `${windowSec}s`,
+        max,
+      }),
+    ],
+  });
+};

@@ -61,7 +61,11 @@ export function useApi<T>({
         throw new Error(body.error || `Request failed (${res.status})`)
       }
       const json = await res.json()
-      setData(json)
+      const unwrapped =
+        json && typeof json === "object" && "success" in json && json.success === true && "data" in json
+          ? json.data
+          : json
+      setData(unwrapped as T)
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
     } finally {

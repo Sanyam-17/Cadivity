@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/server/db"
-import { auth } from "@/lib/server/auth"
-import { headers } from "next/headers"
+import { guardApiRole } from "@/lib/server/auth-guard"
 import { logAdminAction } from "@/lib/services/audit.service"
 
 // GET /api/admin/instructors/[id]
@@ -9,10 +8,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || (session.user as any).role !== "admin") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+  const guarded = await guardApiRole("admin")
+  if (guarded.error) return guarded.error
+  const session = guarded.session
 
   const { id } = await params
 
@@ -55,10 +53,9 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || (session.user as any).role !== "admin") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+  const guarded = await guardApiRole("admin")
+  if (guarded.error) return guarded.error
+  const session = guarded.session
 
   const { id } = await params
 
@@ -96,10 +93,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || (session.user as any).role !== "admin") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+  const guarded = await guardApiRole("admin")
+  if (guarded.error) return guarded.error
+  const session = guarded.session
 
   const { id } = await params
 

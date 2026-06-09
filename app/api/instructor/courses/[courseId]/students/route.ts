@@ -1,8 +1,6 @@
 import "server-only"
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/server/auth"
-import { headers } from "next/headers"
-import { prisma } from "@/lib/server/db"
+import { guardApiRole, canManageCourse } from "@/lib/server/auth-guard"
 import { InstructorService } from "@/lib/services/instructor.service"
 
 // GET /api/instructor/courses/[courseId]/students
@@ -10,21 +8,14 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ courseId: string }> }
 ) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || (session.user as any).role !== "instructor") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  }
+  const guarded = await guardApiRole("instructor")
+  if (guarded.error) return guarded.error
+  const session = guarded.session
 
   const { courseId } = await params
 
   try {
-    // Verify ownership
-    const course = await prisma.course.findUnique({
-      where: { id: courseId },
-      select: { instructorId: true },
-    })
-
-    if (!course || course.instructorId !== session.user.id) {
+    if (!(await canManageCourse(courseId, session))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
@@ -35,7 +26,7 @@ export async function GET(
     const result = await InstructorService.getStudents(session.user.id, {
       page,
       limit,
-      courseId, // Force filter by this specific course
+      courseId,
     })
 
     return NextResponse.json(result)

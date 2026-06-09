@@ -2,6 +2,7 @@
 
 import Autoplay from "embla-carousel-autoplay";
 import useEmblaCarousel from "embla-carousel-react";
+import Image from "next/image";
 import heroBg1 from "@/public/generated_images/Background_img1.png";
 import heroBg2 from "@/public/generated_images/Background_img2.png";
 import heroBg3 from "@/public/generated_images/Background_img3.png";
@@ -21,18 +22,21 @@ export function HeroSlider() {
       headline: "🚀 Automate Your Engineering — Work 5x Faster",
       subline:
       "Transform repetitive CAD tasks into intelligent, reusable automation workflows.",
+      alt: "CAD automation workflow showing engineering design optimization",
     },
     {
       image: heroBg2,
       headline: "⚙️ Manual Modeling Is History — Automation Is the Future",
       subline:
       "Design smarter, scale faster, and stay competitive with automation-driven CAD development.",
+      alt: "Automated CAD modeling and engineering design process",
     },
     {
       image: heroBg3,
       headline: "🎯 Engineering Efficiency Starts Here",
       subline:
       "Save time, reduce rework, and unlock the full potential of CAD customization.",
+      alt: "Engineering efficiency through CAD customization and automation",
     },
   ];
 
@@ -47,14 +51,15 @@ export function HeroSlider() {
             key={index}
             className="relative flex-[0_0_100%] min-w-0 h-144 md:h-176"
           >
-            {/* Background Image */}
-            <div
-              className="absolute inset-0 z-0 opacity-40 transition-transform duration-[2000ms] hover:scale-105"
-              style={{
-                backgroundImage: `url(${slide.image.src})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
+            {/* Background Image — now uses next/image for optimization */}
+            <Image
+              src={slide.image}
+              alt={slide.alt}
+              fill
+              priority={index === 0}
+              sizes="100vw"
+              className="object-cover opacity-40 transition-transform duration-[2000ms] hover:scale-105"
+              placeholder="blur"
             />
 
             {/* Animated gradient overlay */}

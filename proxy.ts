@@ -25,6 +25,7 @@ export async function proxy(request: NextRequest) {
     const baseUrl = process.env.BETTER_AUTH_URL || request.nextUrl.origin;
     const sessionRes = await fetch(`${baseUrl}/api/auth/get-session`, {
       headers: { cookie: request.headers.get("cookie") || "" },
+      signal: AbortSignal.timeout(3000),
     });
 
     if (!sessionRes.ok) {

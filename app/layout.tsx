@@ -18,62 +18,35 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://cadivity.com"),
   title: "CAD Automation Services & Training | Creo, SolidWorks API - Cadivity",
-  description: "Cadivity provides CAD automation services, Creo Toolkit development, SolidWorks API programming, and industry-level CAD automation training with real-world projects.",
-  keywords: ["CAD Automation Services",
-    "CAD Automation Course Online",
-    "CAD API Programming",
-    "CAD Software Automation",
-    "Engineering Design Automation",
-    "CAD Customization Services",
-
-    "Creo Toolkit Development",
-    "Creo API Programming",
-    "Creo CAD Automation",
-    "SolidWorks Automation Services",
-    "SolidWorks API Programming",
-    "SolidWorks Macro Development",
-    "AutoCAD Automation Services",
-    "AutoCAD Lisp Programming",
-    "Siemens NX Open API Programming",
-
-    "CAD Automation Training",
-    "Learn CAD Automation Online",
-    "CAD Programming Course",
-    "Creo Toolkit Training",
-    "SolidWorks API Course",
-    "AutoCAD Automation Course",
-    "Python for CAD Automation",
-    "VBA for CAD Automation",
-    "CAD Macro Programming Course",
-
-    "CAD Automation Service Provider",
-    "Custom CAD Tool Development",
-    "CAD Workflow Automation",
-    "CAD Plugin Development",
-    "CAD Macro Development Services",
-    "Engineering Automation Solutions",
-    "CAD Design Automation Services",
-
-    "Learn Creo Toolkit Programming from Scratch",
-    "Best CAD Automation Course Online",
-    "CAD Automation for Mechanical Engineers",
-    "Custom CAD Automation Tools for Manufacturing",
-    "Reduce Design Time using CAD Automation",
-    "SolidWorks API Training with Projects",
-    "CAD Automation Solutions for Businesses",
-
-    "CAD Automation Training and Services",
-    "Learn CAD Automation with Real Projects",
-    "Industry-Level CAD Automation Course",
-    "CAD Automation Consulting and Development",
-
-    "CAD Automation Services in India",
-    "Creo Toolkit Development India",
-    "SolidWorks API Training India",
-    "CAD Programming Course India",
-    "CAD Automation Company in Nagpur"
-  ],
+  description:
+    "Cadivity provides CAD automation services, Creo Toolkit development, SolidWorks API programming, and industry-level CAD automation training with real-world projects.",
+  openGraph: {
+    title: "CAD Automation Services & Training | Cadivity",
+    description:
+      "Cadivity provides CAD automation services, Creo Toolkit development, SolidWorks API programming, and industry-level CAD automation training with real-world projects.",
+    url: "https://cadivity.com",
+    siteName: "Cadivity",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Cadivity - CAD Automation Services & Training",
+      },
+    ],
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CAD Automation Services & Training | Cadivity",
+    images: ["/og-image.png"],
+  },
+  alternates: {
+    canonical: "/",
+  },
 };
 
 export default function RootLayout({

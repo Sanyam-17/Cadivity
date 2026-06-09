@@ -1,7 +1,7 @@
 "use client";
 
-import { Navbar } from "@/components/common/Navbar";
-import { Footer } from "@/components/common/Footer";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
@@ -65,7 +65,7 @@ export default function ServicesPage() {
       <section className="relative bg-slate-900 text-white py-24 overflow-hidden">
         <Image
           src={servicesHero}
-          alt="Services"
+          alt="CAD automation engineering services - drawing automation, plugin development, and batch processing"
           fill
           priority
           className="object-cover opacity-15 transition-transform duration-2000 hover:scale-105"

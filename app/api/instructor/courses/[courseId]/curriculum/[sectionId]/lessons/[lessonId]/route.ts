@@ -1,28 +1,36 @@
 import "server-only"
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/server/auth"
-import { headers } from "next/headers"
 import { prisma } from "@/lib/server/db"
+import {
+  guardApiRole,
+  canManageCourse,
+  requireLessonInSectionCourse,
+  getRequestIp,
+} from "@/lib/server/auth-guard"
+import { lessonPatchSchema } from "@/lib/server/validators/course"
+import { withRateLimit } from "@/lib/server/arcjet"
+import { errorResponse } from "@/lib/server/api-utils"
+
+const aj = withRateLimit(60, 60);
+import { extractYouTubeVideoId } from "@/lib/youtube"
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ courseId: string; sectionId: string; lessonId: string }> }
 ) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || (session.user as any).role !== "instructor") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  }
+  const guarded = await guardApiRole("instructor")
+  if (guarded.error) return guarded.error
+  const session = guarded.session
 
-  const { courseId, lessonId } = await params
+  const { courseId, sectionId, lessonId } = await params
 
   try {
-    const course = await prisma.course.findUnique({
-      where: { id: courseId },
-      select: { instructorId: true },
-    })
+    if (!(await canManageCourse(courseId, session))) {
+      return errorResponse("Forbidden", 403)
+    }
 
-    if (!course || course.instructorId !== session.user.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    if (!(await requireLessonInSectionCourse(lessonId, sectionId, courseId))) {
+      return errorResponse("Lesson does not belong to this section/course", 400)
     }
 
     const lesson = await prisma.lesson.findUnique({
@@ -30,16 +38,13 @@ export async function GET(
     })
 
     if (!lesson) {
-      return NextResponse.json({ error: "Lesson not found" }, { status: 404 })
+      return errorResponse("Lesson not found", 404)
     }
 
     return NextResponse.json(lesson)
   } catch (error) {
     console.error("Fetch lesson error:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch lesson" },
-      { status: 500 }
-    )
+    return errorResponse("Failed to fetch lesson", 500)
   }
 }
 
@@ -47,44 +52,59 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ courseId: string; sectionId: string; lessonId: string }> }
 ) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || (session.user as any).role !== "instructor") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  }
+  const guarded = await guardApiRole("instructor")
+  if (guarded.error) return guarded.error
+  const session = guarded.session
 
-  const { courseId, lessonId } = await params
+  const { courseId, sectionId, lessonId } = await params
 
   try {
-    const course = await prisma.course.findUnique({
-      where: { id: courseId },
-      select: { instructorId: true },
-    })
-
-    if (!course || course.instructorId !== session.user.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    const decision = await aj.protect(request);
+    if (decision.isDenied()) {
+      return errorResponse("Too many requests", 429)
     }
 
-    const body = await request.json()
-    const { title, type, content, duration } = body
+    if (!(await canManageCourse(courseId, session))) {
+      return errorResponse("Forbidden", 403)
+    }
 
-    const updateData: any = {}
-    if (title !== undefined) updateData.title = title
-    if (type !== undefined) updateData.type = type
-    if (content !== undefined) updateData.content = content
-    if (duration !== undefined) updateData.duration = duration
+    if (!(await requireLessonInSectionCourse(lessonId, sectionId, courseId))) {
+      return errorResponse("Lesson does not belong to this section/course", 400)
+    }
+
+    const body = await request.json().catch(() => ({}))
+    const parsed = lessonPatchSchema.safeParse(body)
+    if (!parsed.success) {
+      return errorResponse("Invalid payload", 400, parsed.error.flatten())
+    }
+
+    const { content, ...rest } = parsed.data
+
+    let youtubeVideoIdSync: string | null | undefined
+    if (content !== undefined && content !== null && typeof content === "object") {
+      const videoUrl = (content as { videoUrl?: string }).videoUrl
+      if (videoUrl?.trim()) {
+        youtubeVideoIdSync = extractYouTubeVideoId(videoUrl)
+      } else if ("videoUrl" in content) {
+        youtubeVideoIdSync = null
+      }
+    }
 
     const lesson = await prisma.lesson.update({
       where: { id: lessonId },
-      data: updateData,
+      data: {
+        ...rest,
+        ...(content !== undefined ? { content: content as object } : {}),
+        ...(youtubeVideoIdSync !== undefined
+          ? { youtubeVideoId: youtubeVideoIdSync }
+          : {}),
+      },
     })
 
     return NextResponse.json(lesson)
   } catch (error) {
     console.error("Update lesson error:", error)
-    return NextResponse.json(
-      { error: "Failed to update lesson" },
-      { status: 500 }
-    )
+    return errorResponse("Failed to update lesson", 500)
   }
 }
 
@@ -92,21 +112,19 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ courseId: string; sectionId: string; lessonId: string }> }
 ) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || (session.user as any).role !== "instructor") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  }
+  const guarded = await guardApiRole("instructor")
+  if (guarded.error) return guarded.error
+  const session = guarded.session
 
-  const { courseId, lessonId } = await params
+  const { courseId, sectionId, lessonId } = await params
 
   try {
-    const course = await prisma.course.findUnique({
-      where: { id: courseId },
-      select: { instructorId: true },
-    })
+    if (!(await canManageCourse(courseId, session))) {
+      return errorResponse("Forbidden", 403)
+    }
 
-    if (!course || course.instructorId !== session.user.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    if (!(await requireLessonInSectionCourse(lessonId, sectionId, courseId))) {
+      return errorResponse("Lesson does not belong to this section/course", 400)
     }
 
     await prisma.lesson.delete({
@@ -116,9 +134,6 @@ export async function DELETE(
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Delete lesson error:", error)
-    return NextResponse.json(
-      { error: "Failed to delete lesson" },
-      { status: 500 }
-    )
+    return errorResponse("Failed to delete lesson", 500)
   }
 }

@@ -34,7 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
-import { authClient } from "@/lib/client/auth-client"
+import { authClient } from "@/lib/auth-client"
 
 type TabId = "general" | "users" | "notifications" | "payments" | "categories" | "profile"
 

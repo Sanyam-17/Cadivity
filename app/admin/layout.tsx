@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { requireRole } from '@/lib/serverauth-guard'
+import { requireAdmin } from '@/lib/server/auth-guard'
 import "@/app/styles/admin.css"
 
 export const metadata: Metadata = {
@@ -19,7 +19,7 @@ export default async function AdminLayout({
   children: React.ReactNode
 }>) {
   // Server-side guard — redirects non-admin users
-  await requireRole("admin");
+  await requireAdmin();
 
   return <>{children}</>;
 }

@@ -6,7 +6,7 @@ import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useInstructorStore } from "@/stores/instructor-store"
-import { authClient } from "@/lib/client/auth-client"
+import { authClient } from "@/lib/auth-client"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import {
@@ -29,8 +29,8 @@ import {
 
 const mainNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/instructor" },
-  { icon: BookOpen, label: "My Courses", href: "/dashboard/instructor/courses" },
-  { icon: Users, label: "My Students", href: "/dashboard/instructor/students" },
+  { icon: BookOpen, label: "Courses", href: "/dashboard/instructor/courses" },
+  { icon: Users, label: "Students", href: "/dashboard/instructor/students" },
 ]
 
 const bottomNavItems = [

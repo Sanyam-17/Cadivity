@@ -4,17 +4,12 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./db";
 import { emailOTP } from "better-auth/plugins";
 import { resend } from "./resend";
+import { getTrustedOrigins } from "../env";
 
 export const auth = betterAuth({
-  baseURL: process.env.BETTER_AUTH_URL || "https://cadivity-idrz.vercel.app",
+  baseURL: process.env.BETTER_AUTH_URL!,
 
-  trustedOrigins: [
-    "https://cadivity-idrz.vercel.app", 
-    "https://cadivity-idrz-1qjual0xg-sanyam-17s-projects.vercel.app",
-    "https://www.cadivity.com",
-    "https://cadivity.com",
-    "http://localhost:3000",
-  ],
+  trustedOrigins: getTrustedOrigins(),
 
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   emailAndPassword: {

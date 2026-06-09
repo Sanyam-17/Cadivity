@@ -1,34 +1,49 @@
 import "server-only"
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/server/auth"
-import { headers } from "next/headers"
 import { prisma } from "@/lib/server/db"
+import {
+  guardApiRole,
+  canManageCourse,
+  requireSectionInCourse,
+  getRequestIp,
+} from "@/lib/server/auth-guard"
+import { instructorLessonCreateSchema } from "@/lib/server/validators/users"
+import { withRateLimit } from "@/lib/server/arcjet"
+import { errorResponse } from "@/lib/server/api-utils"
+
+const aj = withRateLimit(40, 60);
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ courseId: string; sectionId: string }> }
 ) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || (session.user as any).role !== "instructor") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  }
+  const guarded = await guardApiRole("instructor")
+  if (guarded.error) return guarded.error
+  const session = guarded.session
 
   const { courseId, sectionId } = await params
 
   try {
-    const course = await prisma.course.findUnique({
-      where: { id: courseId },
-      select: { instructorId: true },
-    })
-
-    if (!course || course.instructorId !== session.user.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    const decision = await aj.protect(request);
+    if (decision.isDenied()) {
+      return errorResponse("Too many requests", 429)
     }
 
-    const { title, type } = await request.json()
-    if (!title || !type) {
-      return NextResponse.json({ error: "Title and type are required" }, { status: 400 })
+    if (!(await canManageCourse(courseId, session))) {
+      return errorResponse("Forbidden", 403)
     }
+
+    if (!(await requireSectionInCourse(sectionId, courseId))) {
+      return errorResponse("Section not found in course", 400)
+    }
+
+    const body = await request.json().catch(() => ({}))
+    const parsed = instructorLessonCreateSchema.safeParse(body)
+    if (!parsed.success) {
+      return errorResponse("Invalid payload", 400, parsed.error.flatten())
+    }
+
+    const { title, type } = parsed.data
 
     const lastLesson = await prisma.lesson.findFirst({
       where: { sectionId },
@@ -42,16 +57,12 @@ export async function POST(
         type,
         sectionId,
         order: newOrder,
-        content: null,
       },
     })
 
     return NextResponse.json(lesson)
   } catch (error) {
     console.error("Create lesson error:", error)
-    return NextResponse.json(
-      { error: "Failed to create lesson" },
-      { status: 500 }
-    )
+    return errorResponse("Failed to create lesson", 500)
   }
 }

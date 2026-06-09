@@ -1,28 +1,21 @@
 import "server-only"
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/server/auth"
-import { headers } from "next/headers"
 import { prisma } from "@/lib/server/db"
+import { guardApiRole, canManageCourse } from "@/lib/server/auth-guard"
 
 // GET /api/instructor/courses/[courseId]/curriculum
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ courseId: string }> }
 ) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || (session.user as any).role !== "instructor") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  }
+  const guarded = await guardApiRole("instructor")
+  if (guarded.error) return guarded.error
+  const session = guarded.session
 
   const { courseId } = await params
 
   try {
-    const course = await prisma.course.findUnique({
-      where: { id: courseId },
-      select: { instructorId: true },
-    })
-
-    if (!course || course.instructorId !== session.user.id) {
+    if (!(await canManageCourse(courseId, session))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
@@ -59,20 +52,14 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ courseId: string }> }
 ) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || (session.user as any).role !== "instructor") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  }
+  const guarded = await guardApiRole("instructor")
+  if (guarded.error) return guarded.error
+  const session = guarded.session
 
   const { courseId } = await params
 
   try {
-    const course = await prisma.course.findUnique({
-      where: { id: courseId },
-      select: { instructorId: true },
-    })
-
-    if (!course || course.instructorId !== session.user.id) {
+    if (!(await canManageCourse(courseId, session))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/server/db"
-import { auth } from "@/lib/server/auth"
-import { headers } from "next/headers"
+import { requireApiRole } from "@/lib/server/auth-guard"
+import { createCourseSchema, courseStatusSchema } from "@/lib/server/validators/course"
+import { withRateLimit } from "@/lib/server/arcjet"
+
+const aj = withRateLimit(20, 60);
 
 // GET /api/admin/courses — paginated course list
 export async function GET(request: NextRequest) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || (session.user as any).role !== "admin") {
+  const session = await requireApiRole("admin")
+  if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
@@ -26,7 +29,13 @@ export async function GET(request: NextRequest) {
     ]
   }
 
-  if (status) where.status = status
+  if (status) {
+    const parsed = courseStatusSchema.safeParse(status)
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 })
+    }
+    where.status = parsed.data
+  }
   if (categoryId) where.categoryId = categoryId
   if (instructorId) where.instructorId = instructorId
 
@@ -68,33 +77,50 @@ export async function GET(request: NextRequest) {
 
 // POST /api/admin/courses — create a course
 export async function POST(request: NextRequest) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || (session.user as any).role !== "admin") {
+  const session = await requireApiRole("admin")
+  if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   try {
-    const body = await request.json()
-    const { title, slug, description, instructorId, categoryId, status: courseStatus } = body
-
-    if (!title || !slug) {
-      return NextResponse.json({ error: "Title and slug are required" }, { status: 400 })
+    const decision = await aj.protect(request);
+    if (decision.isDenied()) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 })
     }
 
+    const body = await request.json().catch(() => ({}))
+    const parsed = createCourseSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid payload", details: parsed.error.flatten() }, { status: 400 })
+    }
+    const payload = parsed.data
+
     // Check slug uniqueness
-    const existing = await prisma.course.findUnique({ where: { slug } })
+    const existing = await prisma.course.findUnique({ where: { slug: payload.slug } })
     if (existing) {
       return NextResponse.json({ error: "A course with this slug already exists" }, { status: 409 })
     }
 
     const course = await prisma.course.create({
       data: {
-        title,
-        slug,
-        description,
-        instructorId: instructorId || null,
-        categoryId: categoryId || null,
-        status: courseStatus || "draft",
+        title: payload.title,
+        slug: payload.slug,
+        description: payload.description ?? null,
+        shortDescription: payload.shortDescription ?? null,
+        logo: payload.logo ?? null,
+        difficultyBadge: payload.difficultyBadge ?? null,
+        tags: payload.tags ?? null,
+        keyFeatures: payload.keyFeatures ?? [],
+        ctaType: payload.ctaType ?? "enroll_now",
+        brochureUrl: payload.brochureUrl ?? null,
+        price: payload.price ?? null,
+        originalPrice: payload.originalPrice ?? null,
+        instructorId: payload.instructorId ?? null,
+        categoryId: payload.categoryId ?? null,
+        status: payload.status ?? "draft",
+        whatYouWillLearn: payload.whatYouWillLearn ?? [],
+        requirements: payload.requirements ?? [],
+        whoIsThisFor: payload.whoIsThisFor ?? [],
       },
     })
 

@@ -1,8 +1,8 @@
 // AboutPage
 "use client";
 
-import { Navbar } from "@/components/common/Navbar";
-import { Footer } from "@/components/common/Footer";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import {
   Target,
   Wrench,

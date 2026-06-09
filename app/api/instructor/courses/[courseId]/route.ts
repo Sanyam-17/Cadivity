@@ -1,22 +1,24 @@
 import "server-only"
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/server/auth"
-import { headers } from "next/headers"
 import { prisma } from "@/lib/server/db"
+import { guardApiRole, canManageCourse } from "@/lib/server/auth-guard"
 
 // GET /api/instructor/courses/[courseId]
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ courseId: string }> }
 ) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || (session.user as any).role !== "instructor") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  }
+  const guarded = await guardApiRole("instructor")
+  if (guarded.error) return guarded.error
+  const session = guarded.session
 
   const { courseId } = await params
 
   try {
+    if (!(await canManageCourse(courseId, session))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
     const course = await prisma.course.findUnique({
       where: { id: courseId },
       include: {
@@ -30,11 +32,6 @@ export async function GET(
       return NextResponse.json({ error: "Course not found" }, { status: 404 })
     }
 
-    if (course.instructorId !== session.user.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    }
-
-    // Calculate completion rate
     const enrollments = await prisma.enrollment.findMany({
       where: { courseId },
       select: { progress: true },
@@ -77,28 +74,21 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ courseId: string }> }
 ) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || (session.user as any).role !== "instructor") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  }
+  const guarded = await guardApiRole("instructor")
+  if (guarded.error) return guarded.error
+  const session = guarded.session
 
   const { courseId } = await params
 
   try {
-    // Verify ownership
-    const course = await prisma.course.findUnique({
-      where: { id: courseId },
-      select: { instructorId: true },
-    })
-
-    if (!course || course.instructorId !== session.user.id) {
+    if (!(await canManageCourse(courseId, session))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
     const body = await request.json()
     const { status, completionCriteria, seoTitle, seoDescription } = body
 
-    const updateData: any = {}
+    const updateData: Record<string, unknown> = {}
     if (status !== undefined) updateData.status = status
     if (completionCriteria !== undefined) updateData.completionCriteria = completionCriteria
     if (seoTitle !== undefined) updateData.seoTitle = seoTitle

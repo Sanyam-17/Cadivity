@@ -3,6 +3,11 @@ import { z } from "zod";
 import { resend } from "@/lib/server/resend";
 import { getContactNotificationEmailHtml } from "@/lib/server/emails/contact-notification-email";
 import { getAutoReplyEmailHtml } from "@/lib/server/emails/auto-reply-email";
+import { withRateLimit } from "@/lib/server/arcjet";
+import { logger } from "@/lib/server/logger";
+import { getRequestIp } from "@/lib/server/auth-guard";
+
+const aj = withRateLimit(5, 60);
 
 const schema = z.object({
   name: z.string().min(2),
@@ -14,6 +19,14 @@ const schema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const decision = await aj.protect(req);
+    if (decision.isDenied()) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     const data = schema.parse(body);
 
@@ -33,7 +46,7 @@ export async function POST(req: Request) {
     });
 
     if (error) {
-      console.error("Resend error:", error);
+      logger.error("contact.email.failed", { error: error.message });
 
       return NextResponse.json(
         { error: error.message || "Failed to send message" },
@@ -53,9 +66,10 @@ export async function POST(req: Request) {
         }),
       })
       .catch((err) => {
-        // Log but don't fail the request if auto-reply fails
-        console.error("Auto-reply email error:", err);
+        logger.warn("contact.autoreply.failed", { error: String(err) });
       });
+
+    logger.info("contact.submitted", { email: data.email });
 
     return NextResponse.json({
       success: true,

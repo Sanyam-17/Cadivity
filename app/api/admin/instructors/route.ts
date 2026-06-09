@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/server/db"
 import { auth } from "@/lib/server/auth"
-import { headers } from "next/headers"
+import { guardApiRole } from "@/lib/server/auth-guard"
 
 // GET /api/admin/instructors — paginated instructor list
 export async function GET(request: NextRequest) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || (session.user as any).role !== "admin") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+  const guarded = await guardApiRole("admin")
+  if (guarded.error) return guarded.error
+  const session = guarded.session
 
   const { searchParams } = new URL(request.url)
   const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10))
@@ -69,10 +68,9 @@ export async function GET(request: NextRequest) {
 
 // POST /api/admin/instructors — create an instructor
 export async function POST(request: NextRequest) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session || (session.user as any).role !== "admin") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+  const guarded = await guardApiRole("admin")
+  if (guarded.error) return guarded.error
+  const session = guarded.session
 
   try {
     const body = await request.json()

@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { authClient } from "@/lib/client/auth-client"
+import { authClient } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,7 +14,16 @@ export default function LoginPage() {
   const [password, setPassword] = React.useState("")
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [redirectTo, setRedirectTo] = React.useState<string | null>(null)
   const router = useRouter()
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const redirect = params.get("redirect")
+    if (redirect?.startsWith("/")) {
+      setRedirectTo(redirect)
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,7 +41,11 @@ export default function LoginPage() {
         return
       }
 
-      // Role-based redirect
+      if (redirectTo && redirectTo.startsWith("/")) {
+        router.push(redirectTo)
+        return
+      }
+
       const role = (data?.user as any)?.role || "student"
       if (role === "admin") router.push("/dashboard/admin")
       else if (role === "instructor") router.push("/dashboard/instructor")
