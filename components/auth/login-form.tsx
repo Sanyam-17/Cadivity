@@ -170,21 +170,21 @@ export function LoginForm() {
           <CardHeader className="space-y-3 pb-4">
             {/* Blueprint grid background */}
             <div className="absolute inset-0 blueprint-grid opacity-40 pointer-events-none rounded-lg"></div>
-            
+
             <div className="relative z-10">
               <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
-                {mode === "register" 
-                  ? "Create Your Account" 
+                {mode === "register"
+                  ? "Create Your Account"
                   : mode === "forgot"
-                  ? "Reset Password"
-                  : "Welcome Back"}
+                    ? "Reset Password"
+                    : "Welcome Back"}
               </CardTitle>
               <CardDescription className="text-sm mt-1">
-                {mode === "register" 
-                  ? "Join Cadivity and start your learning journey today" 
+                {mode === "register"
+                  ? "Join Cadivity and start your learning journey today"
                   : mode === "forgot"
-                  ? "Enter your email to receive a password reset link"
-                  : mode === "login" ? "Sign in to access your courses and dashboard" : ""}
+                    ? "Enter your email to receive a password reset link"
+                    : mode === "login" ? "Sign in to access your courses and dashboard" : ""}
               </CardDescription>
             </div>
           </CardHeader>
@@ -336,7 +336,7 @@ export function LoginForm() {
             {mode !== "forgot" && (
               <div className="pt-2 space-y-3 border-t border-white/10 dark:border-neutral-800/50">
                 <p className="text-xs text-muted-foreground text-center">
-                  {mode === "register" ? "Already have an account?" : "Don&apos;t have an account yet?"}
+                  {mode === "register" ? "Already have an account?" : "Don't have an account yet?"}
                 </p>
                 <button
                   type="button"
