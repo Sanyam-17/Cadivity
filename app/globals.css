@@ -566,6 +566,79 @@
   font-feature-settings: 'tnum' 1;
 }
 
+/* ─── Mobile Drawer Navigation ─── */
+
+@keyframes drawer-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes drawer-slide-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes menu-item-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.drawer-menu {
+  animation: drawer-slide-in 300ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.drawer-menu.closed {
+  animation: drawer-slide-out 200ms cubic-bezier(0.4, 0, 1, 1);
+}
+
+.drawer-menu-item {
+  animation: menu-item-slide-in 300ms ease-out backwards;
+}
+
+.drawer-menu-item:nth-child(1) { animation-delay: 50ms; }
+.drawer-menu-item:nth-child(2) { animation-delay: 100ms; }
+.drawer-menu-item:nth-child(3) { animation-delay: 150ms; }
+.drawer-menu-item:nth-child(4) { animation-delay: 200ms; }
+.drawer-menu-item:nth-child(5) { animation-delay: 250ms; }
+.drawer-menu-item:nth-child(6) { animation-delay: 300ms; }
+
+/* Smooth menu item transitions */
+.menu-item-transition {
+  transition: all 200ms ease-out;
+}
+
+/* Hamburger menu icon animation */
+@keyframes hamburger-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(90deg);
+  }
+}
+
+.hamburger-animate {
+  animation: hamburger-rotate 300ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
 /* ─── Login Form Enhanced Styling ─── */
 
 @keyframes input-focus-glow {
