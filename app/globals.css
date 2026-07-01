@@ -438,3 +438,143 @@
 .delay-500 { animation-delay: 500ms; }
 .delay-700 { animation-delay: 700ms; }
 .delay-1000 { animation-delay: 1000ms; }
+
+/* ─── Blueprint Grid Background ─── */
+
+@keyframes blueprint-grid-float {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(1px, -1px); }
+}
+
+.blueprint-grid {
+  position: relative;
+  background-image:
+    linear-gradient(0deg, transparent 24%, rgba(9, 52, 117, 0.05) 25%, rgba(9, 52, 117, 0.05) 26%, transparent 27%, transparent 74%, rgba(9, 52, 117, 0.05) 75%, rgba(9, 52, 117, 0.05) 76%, transparent 77%, transparent),
+    linear-gradient(90deg, transparent 24%, rgba(9, 52, 117, 0.05) 25%, rgba(9, 52, 117, 0.05) 26%, transparent 27%, transparent 74%, rgba(9, 52, 117, 0.05) 75%, rgba(9, 52, 117, 0.05) 76%, transparent 77%, transparent);
+  background-size: 20px 20px;
+}
+
+.blueprint-grid.dark {
+  background-image:
+    linear-gradient(0deg, transparent 24%, rgba(148, 163, 184, 0.04) 25%, rgba(148, 163, 184, 0.04) 26%, transparent 27%, transparent 74%, rgba(148, 163, 184, 0.04) 75%, rgba(148, 163, 184, 0.04) 76%, transparent 77%, transparent),
+    linear-gradient(90deg, transparent 24%, rgba(148, 163, 184, 0.04) 25%, rgba(148, 163, 184, 0.04) 26%, transparent 27%, transparent 74%, rgba(148, 163, 184, 0.04) 75%, rgba(148, 163, 184, 0.04) 76%, transparent 77%, transparent);
+  background-size: 20px 20px;
+}
+
+/* ─── KPI Staggered Card Entrance ─── */
+
+@keyframes kpi-stagger-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.kpi-stagger-0 { animation: kpi-stagger-enter 300ms ease-out 0ms both; }
+.kpi-stagger-1 { animation: kpi-stagger-enter 300ms ease-out 80ms both; }
+.kpi-stagger-2 { animation: kpi-stagger-enter 300ms ease-out 160ms both; }
+.kpi-stagger-3 { animation: kpi-stagger-enter 300ms ease-out 240ms both; }
+.kpi-stagger-4 { animation: kpi-stagger-enter 300ms ease-out 320ms both; }
+.kpi-stagger-5 { animation: kpi-stagger-enter 300ms ease-out 400ms both; }
+
+/* ─── Technical Label Styling ─── */
+
+.technical-label {
+  font-family: 'Courier New', monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+
+/* ─── Corner Bracket Utilities ─── */
+
+.corner-bracket {
+  position: relative;
+}
+
+.corner-bracket::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 12px;
+  height: 12px;
+  border-top: 2px solid;
+  border-left: 2px solid;
+  border-color: hsl(var(--primary) / 0.3);
+  border-radius: 2px 0 0 0;
+}
+
+.corner-bracket::after {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 12px;
+  height: 12px;
+  border-bottom: 2px solid;
+  border-right: 2px solid;
+  border-color: hsl(var(--primary) / 0.3);
+  border-radius: 0 0 2px 0;
+}
+
+/* ─── Role-Based Accent Colors ─── */
+
+.accent-student {
+  --accent-rgb: 59, 130, 246; /* blue-500 */
+  --accent-light: rgb(191, 219, 254); /* blue-200 */
+  --accent-dark: rgb(30, 58, 138); /* blue-950 */
+}
+
+.dark .accent-student {
+  --accent-light: rgb(30, 58, 138);
+  --accent-dark: rgb(191, 219, 254);
+}
+
+.accent-instructor {
+  --accent-rgb: 217, 119, 6; /* amber-600 */
+  --accent-light: rgb(254, 243, 199); /* amber-100 */
+  --accent-dark: rgb(120, 53, 15); /* amber-950 */
+}
+
+.dark .accent-instructor {
+  --accent-light: rgb(120, 53, 15);
+  --accent-dark: rgb(254, 243, 199);
+}
+
+.accent-admin {
+  --accent-rgb: 239, 68, 68; /* red-500 */
+  --accent-light: rgb(254, 226, 226); /* red-100 */
+  --accent-dark: rgb(127, 29, 29); /* red-950 */
+}
+
+.dark .accent-admin {
+  --accent-light: rgb(127, 29, 29);
+  --accent-dark: rgb(254, 226, 226);
+}
+
+/* ─── Smooth Count-up Numbers (Tabular Numerals) ─── */
+
+.count-up {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* Accessibility: Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .blueprint-grid {
+    animation: none;
+  }
+}

@@ -1,7 +1,9 @@
 import { requireAuth } from "@/lib/server/auth-guard";
 import { StudentService } from "@/lib/services/student.service";
 import { StudentCourseCard } from "@/components/student/course-card";
-import { BookOpen, GraduationCap, Search, TrendingUp, Trophy } from "lucide-react";
+import { KPITile } from "@/components/shared/kpi-tile";
+import { ModeBadge } from "@/components/shared/mode-badge";
+import { BookOpen, GraduationCap, Search, TrendingUp, Trophy, Clock } from "lucide-react";
 import Link from "next/link";
 
 export default async function StudentDashboard() {
@@ -31,6 +33,61 @@ export default async function StudentDashboard() {
 
       {/* ─── Main Content ─── */}
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Quick Stats Section */}
+        <div className="mb-8 space-y-2">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-bold text-foreground">Your Progress</h2>
+            <ModeBadge mode="student" size="sm" />
+          </div>
+          <p className="text-sm text-muted-foreground">Track your learning metrics at a glance</p>
+        </div>
+
+        {/* KPI Tiles Grid */}
+        <div className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="student-kpi-card">
+            <KPITile
+              title="Courses Enrolled"
+              value={enrolledCourses.length}
+              icon={BookOpen}
+              accentColor="blue"
+              cornerBracket
+              animated
+            />
+          </div>
+          <div className="student-kpi-card">
+            <KPITile
+              title="Hours Learned"
+              value={stats?.totalHoursLearned || 0}
+              suffix=" hrs"
+              icon={Clock}
+              accentColor="blue"
+              cornerBracket
+              animated
+            />
+          </div>
+          <div className="student-kpi-card">
+            <KPITile
+              title="Avg Completion"
+              value={stats?.averageCompletion || 0}
+              suffix="%"
+              icon={TrendingUp}
+              accentColor="blue"
+              cornerBracket
+              animated
+            />
+          </div>
+          <div className="student-kpi-card">
+            <KPITile
+              title="Certificates"
+              value={stats?.certificatesEarned || 0}
+              icon={Trophy}
+              accentColor="blue"
+              cornerBracket
+              animated
+            />
+          </div>
+        </div>
+
         {/* Section Heading */}
         <div className="mb-6">
           <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
