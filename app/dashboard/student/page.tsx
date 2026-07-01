@@ -47,7 +47,7 @@ export default async function StudentDashboard() {
           <div className="student-kpi-card">
             <KPITile
               title="Courses Enrolled"
-              value={enrolledCourses.length}
+              value={stats?.totalCourses || 0}
               icon={BookOpen}
               accentColor="blue"
               cornerBracket
@@ -56,9 +56,8 @@ export default async function StudentDashboard() {
           </div>
           <div className="student-kpi-card">
             <KPITile
-              title="Hours Learned"
-              value={stats?.totalHoursLearned || 0}
-              suffix=" hrs"
+              title="In Progress"
+              value={stats?.inProgressCourses || 0}
               icon={Clock}
               accentColor="blue"
               cornerBracket
@@ -67,8 +66,8 @@ export default async function StudentDashboard() {
           </div>
           <div className="student-kpi-card">
             <KPITile
-              title="Avg Completion"
-              value={stats?.averageCompletion || 0}
+              title="Avg Progress"
+              value={stats?.avgProgress || 0}
               suffix="%"
               icon={TrendingUp}
               accentColor="blue"
@@ -78,8 +77,8 @@ export default async function StudentDashboard() {
           </div>
           <div className="student-kpi-card">
             <KPITile
-              title="Certificates"
-              value={stats?.certificatesEarned || 0}
+              title="Completed"
+              value={stats?.completedCourses || 0}
               icon={Trophy}
               accentColor="blue"
               cornerBracket
