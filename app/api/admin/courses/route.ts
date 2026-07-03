@@ -1,17 +1,47 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/server/db"
-import { requireApiRole } from "@/lib/server/auth-guard"
-import { createCourseSchema, courseStatusSchema } from "@/lib/server/validators/course"
-import { withRateLimit } from "@/lib/server/arcjet"
+/**
+ * ┌──────────────────────────────────────────────────────────────────┐
+ * │  ADMIN ROUTE HANDLER — PATTERN REFERENCE                       │
+ * │                                                                  │
+ * │  All admin API routes MUST follow these conventions:             │
+ * │                                                                  │
+ * │  1. AUTH:   Use `guardApiRole("admin")`.                        │
+ * │             if (guarded.error) return guarded.error;             │
+ * │             DO NOT use `requireApiRole()` (legacy).              │
+ * │                                                                  │
+ * │  2. RATE-LIMIT: Call `aj.protect(request)` BEFORE auth          │
+ * │             on write endpoints (POST/PUT/PATCH/DELETE).          │
+ * │                                                                  │
+ * │  3. RESPONSES:                                                   │
+ * │     - Success: `successResponse(data)` or                       │
+ * │                `successResponse(data, 201)`.                    │
+ * │     - Client errors: `errorResponse(msg, 4xx)`.                 │
+ * │     - Validation: `validationError(zodError)`.                  │
+ * │                                                                  │
+ * │  4. TYPES:  `Prisma.CourseWhereInput`, never `any`.             │
+ * │                                                                  │
+ * │  5. LOGGING: `logger.info()` on success,                        │
+ * │              `logger.error()` in catch blocks.                   │
+ * └──────────────────────────────────────────────────────────────────┘
+ */
 
+import { NextRequest } from "next/server"
+import { prisma } from "@/lib/server/db"
+import { guardApiRole } from "@/lib/server/auth-guard"
+import { createCourseSchema, courseStatusSchema } from "@/lib/server/validators/course"
+import { successResponse, errorResponse, validationError } from "@/lib/server/api-utils"
+import { withRateLimit } from "@/lib/server/arcjet"
+import { logger } from "@/lib/server/logger"
+import type { Prisma } from "@prisma/client"
+
+// ── Rate limiter ─────────────────────────────────────────────────────────────
 const aj = withRateLimit(20, 60);
 
-// GET /api/admin/courses — paginated course list
+// ─── GET /api/admin/courses — paginated course list ──────────────────────────
+
 export async function GET(request: NextRequest) {
-  const session = await requireApiRole("admin")
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+  // [CHANGE] guardApiRole replaces requireApiRole (standardised error shape)
+  const guarded = await guardApiRole("admin")
+  if (guarded.error) return guarded.error
 
   const { searchParams } = new URL(request.url)
   const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10))
@@ -21,7 +51,8 @@ export async function GET(request: NextRequest) {
   const categoryId = searchParams.get("categoryId")
   const instructorId = searchParams.get("instructorId")
 
-  const where: any = {}
+  // [CHANGE] Prisma.CourseWhereInput replaces `any`
+  const where: Prisma.CourseWhereInput = {}
 
   if (search) {
     where.OR = [
@@ -32,7 +63,8 @@ export async function GET(request: NextRequest) {
   if (status) {
     const parsed = courseStatusSchema.safeParse(status)
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid status" }, { status: 400 })
+      // [CHANGE] errorResponse replaces raw NextResponse.json
+      return errorResponse("Invalid status filter", 400)
     }
     where.status = parsed.data
   }
@@ -46,7 +78,7 @@ export async function GET(request: NextRequest) {
         include: {
           instructor: { select: { id: true, name: true, image: true } },
           category: { select: { id: true, name: true } },
-          _count: { select: { enrollments: true, sections: true } } as any,
+          _count: { select: { enrollments: true, sections: true } },
         },
         orderBy: { updatedAt: "desc" },
         skip: (page - 1) * pageSize,
@@ -55,11 +87,19 @@ export async function GET(request: NextRequest) {
       prisma.course.count({ where }),
     ])
 
-    return NextResponse.json({
-      data: courses.map((c: any) => ({
+    // [CHANGE] logger.info replaces silent success
+    logger.info("Admin courses listed", {
+      adminId: guarded.session.user.id,
+      page,
+      total,
+    })
+
+    // [CHANGE] successResponse replaces raw NextResponse.json
+    return successResponse({
+      courses: courses.map((c) => ({
         ...c,
-        enrolledStudents: c._count?.enrollments ?? 0,
-        sectionCount: c._count?.sections ?? 0,
+        enrolledStudents: c._count.enrollments,
+        sectionCount: c._count.sections,
         _count: undefined,
       })),
       pagination: {
@@ -70,35 +110,41 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Courses list error:", error)
-    return NextResponse.json({ error: "Failed to fetch courses" }, { status: 500 })
+    // [CHANGE] logger.error replaces console.error
+    logger.error("Admin courses list failed", {
+      error: error instanceof Error ? error.message : String(error),
+      adminId: guarded.session.user.id,
+    })
+    return errorResponse("Failed to fetch courses", 500)
   }
 }
 
-// POST /api/admin/courses — create a course
+// ─── POST /api/admin/courses — create a course ──────────────────────────────
+
 export async function POST(request: NextRequest) {
-  const session = await requireApiRole("admin")
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  // [CHANGE] Rate-limit check moved BEFORE auth — reject bots before hitting DB
+  const decision = await aj.protect(request);
+  if (decision.isDenied()) {
+    return errorResponse("Too many requests", 429)
   }
 
-  try {
-    const decision = await aj.protect(request);
-    if (decision.isDenied()) {
-      return NextResponse.json({ error: "Too many requests" }, { status: 429 })
-    }
+  // [CHANGE] guardApiRole replaces requireApiRole
+  const guarded = await guardApiRole("admin")
+  if (guarded.error) return guarded.error
 
+  try {
     const body = await request.json().catch(() => ({}))
     const parsed = createCourseSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid payload", details: parsed.error.flatten() }, { status: 400 })
+      // [CHANGE] validationError replaces raw NextResponse.json
+      return validationError(parsed.error)
     }
     const payload = parsed.data
 
     // Check slug uniqueness
     const existing = await prisma.course.findUnique({ where: { slug: payload.slug } })
     if (existing) {
-      return NextResponse.json({ error: "A course with this slug already exists" }, { status: 409 })
+      return errorResponse("A course with this slug already exists", 409)
     }
 
     const course = await prisma.course.create({
@@ -124,10 +170,21 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json(course, { status: 201 })
+    // [CHANGE] Structured log on successful creation
+    logger.info("Course created", {
+      courseId: course.id,
+      slug: course.slug,
+      adminId: guarded.session.user.id,
+    })
+
+    // [CHANGE] successResponse with 201 replaces raw NextResponse.json
+    return successResponse(course, 201)
   } catch (error) {
-    console.error("Create course error:", error)
-    return NextResponse.json({ error: "Failed to create course" }, { status: 500 })
+    // [CHANGE] logger.error replaces console.error
+    logger.error("Course creation failed", {
+      error: error instanceof Error ? error.message : String(error),
+      adminId: guarded.session.user.id,
+    })
+    return errorResponse("Failed to create course", 500)
   }
 }
-

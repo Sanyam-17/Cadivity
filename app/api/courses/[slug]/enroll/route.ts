@@ -30,6 +30,14 @@ export async function POST(
       return errorResponse("Course is not open for enrollment", 403)
     }
 
+    // Block free enrollment on paid courses — students must go through checkout
+    if (course.price && course.price > 0) {
+      return errorResponse(
+        "This course requires payment. Please use the checkout flow.",
+        402
+      )
+    }
+
     const decision = await aj.protect(request);
     if (decision.isDenied()) {
       return errorResponse("Too many enrollment requests", 429)

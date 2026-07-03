@@ -49,7 +49,7 @@ export function Navbar() {
         {/* Logo */}
         <Link
           href={session ? dashboardUrl : "/"}
-          className="flex items-center gap-2 hover:opacity-90 transition-opacity"
+          className="flex items-center gap-2 hover:opacity-90 transition-opacity shrink-0"
         >
           <Image
             src="/Cadivity.png"
@@ -68,7 +68,7 @@ export function Navbar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "text-sm font-medium transition-colors hover:text-primary relative py-1",
+                "text-sm font-medium transition-colors hover:text-primary relative py-1 whitespace-nowrap",
                 pathname === item.href
                   ? "text-primary font-bold after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-primary"
                   : "text-muted-foreground"
@@ -79,10 +79,10 @@ export function Navbar() {
           ))}
 
           {isPending ? null : session ? (
-            <div className="flex items-center gap-6 lg:gap-8">
+            <>
               <Link href={dashboardUrl}>
                 <span className={cn(
-                  "text-sm font-medium transition-colors hover:text-primary relative py-1 cursor-pointer",
+                  "text-sm font-medium transition-colors hover:text-primary relative py-1 cursor-pointer whitespace-nowrap",
                   pathname.startsWith(dashboardUrl)
                     ? "text-primary font-bold after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-primary"
                     : "text-muted-foreground"
@@ -92,18 +92,14 @@ export function Navbar() {
               </Link>
               <button
                 onClick={handleSignOut}
-                className="text-sm font-medium transition-colors hover:text-primary text-muted-foreground py-1 cursor-pointer"
+                className="text-sm font-medium transition-colors hover:text-primary text-muted-foreground py-1 cursor-pointer whitespace-nowrap"
               >
                 Sign out
               </button>
-            </div>
+            </>
           ) : (
-            <Button
-              onClick={open}
-              size="sm"
-              className="text-white shadow-md rounded-full px-6 hover:scale-105 transition-transform"
-            >
-              Login
+            <Button className="text-sm font-medium" onClick={() => open()}>
+              Log in
             </Button>
           )}
         </div>

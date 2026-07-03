@@ -3,29 +3,34 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
 }
-
 // ─── AUTH MODELS (better-auth) ───────────────────────────────────────────────
 
 model User {
-  id            String    @id
+  id            String   @id
   name          String
   email         String
-  emailVerified Boolean   @default(false)
+  emailVerified Boolean  @default(false)
   image         String?
-  role          String    @default("student") // "student" | "instructor" | "admin"
-  active        Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  phone         String?                    // ← NEW
+  role          String   @default("student")
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  sessions      Session[]
-  accounts      Account[]
+  sessions Session[]
+  accounts Account[]
 
-  // LMS relations
-  instructorCourses Course[]          @relation("InstructorCourses")
-  enrollments       Enrollment[]      @relation("StudentEnrollments")
-  lessonCompletions LessonCompletion[]
+  instructorCourses  Course[]            @relation("InstructorCourses")
+  enrollments        Enrollment[]        @relation("StudentEnrollments")
+  lessonCompletions  LessonCompletion[]
+  payments           Payment[]           @relation("StudentPayments")
+  certificates       Certificate[]       @relation("StudentCertificates")
+  lessonComments     LessonComment[]     @relation("AuthorComments")
+  reviews            Review[]            @relation("StudentReviews")
+  instructorProfile  InstructorProfile?
+  quizResults        QuizResult[]
 
   @@unique([email])
   @@map("user")
@@ -82,41 +87,49 @@ model Verification {
 // ─── LMS MODELS ──────────────────────────────────────────────────────────────
 
 model Course {
-  id                 String       @id @default(cuid())
+  id                 String        @id @default(cuid())
   title              String
-  slug               String       @unique
-  description        String?      @db.Text
-  shortDescription   String?      // max 120 chars, shown on course card
+  slug               String        @unique
+  description        String?       @db.Text
+  shortDescription   String? // max 120 chars, shown on course card
   thumbnail          String?
-  logo               String?      @db.Text  // software logo/icon (base64 data URI)
-  difficultyBadge    String?      // "Beginner/Inter" | "Intermediate" | "Advanced" | "Expert" | "Custom"
-  tags               String?      // comma-separated tech stack: "C++", "C# / VB.NET"
-  keyFeatures        String[]     // up to 6 bullet points for card checklist
-  ctaType            String       @default("enroll_now") // "enroll_now" | "coming_soon" | "contact_us"
-  brochureUrl        String?      @db.Text  // brochure PDF (base64 data URI or URL)
-  price              Int?         // price in INR
-  originalPrice      Int?         // original price for strikethrough display
-  status             String       @default("draft")       // "draft" | "published" | "archived"
-  visibility         String       @default("public")      // "public" | "private" | "unlisted"
-  whatYouWillLearn   String[]     // list of bullet points for course detail page
-  requirements       String[]     // list of requirements for course detail page
-  whoIsThisFor       String[]     // list of targeted audience bullet points
-  completionCriteria String       @default("all_videos")  // "all_videos" | "all_quizzes" | "manual"
+  logo               String?       @db.Text // software logo/icon (base64 data URI)
+  difficultyBadge    String? // "Beginner/Inter" | "Intermediate" | "Advanced" | "Expert" | "Custom"
+  tags               String? // comma-separated tech stack: "C++", "C# / VB.NET"
+  keyFeatures        String[] // up to 6 bullet points for card checklist
+  ctaType            String        @default("enroll_now") // "enroll_now" | "coming_soon" | "contact_us"
+  brochureUrl        String?       @db.Text // brochure PDF (base64 data URI or URL)
+  price              Int? // price in INR
+  originalPrice      Int? // original price for strikethrough display
+  status             String        @default("draft") // "draft" | "published" | "archived"
+  publishedAt        DateTime? // set when status first transitions to "published"
+  deletedAt          DateTime? // soft-delete — filter out in all public queries
+  visibility         String        @default("public") // "public" | "private" | "unlisted"
+  whatYouWillLearn   String[] // list of bullet points for course detail page
+  requirements       String[] // list of requirements for course detail page
+  whoIsThisFor       String[] // list of targeted audience bullet points
+  faq                Json?         // [{question: string, answer: string}[]]
+  completionCriteria String        @default("all_videos") // "all_videos" | "all_quizzes" | "manual"
   seoTitle           String?
-  seoDescription     String?      @db.Text
+  seoDescription     String?       @db.Text
   instructorId       String?
   categoryId         String?
-  instructor         User?        @relation("InstructorCourses", fields: [instructorId], references: [id], onDelete: SetNull)
-  category           Category?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  instructor         User?         @relation("InstructorCourses", fields: [instructorId], references: [id], onDelete: SetNull)
+  category           Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   sections           Section[]
   enrollments        Enrollment[]
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
+  payments           Payment[]
+  certificates       Certificate[]
+  reviews            Review[]
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 
   @@index([instructorId])
   @@index([categoryId])
   @@index([status])
+  @@index([status, deletedAt])
   @@index([slug])
+  @@index([publishedAt])
   @@map("course")
 }
 
@@ -135,19 +148,22 @@ model Section {
 }
 
 model Lesson {
-  id             String             @id @default(cuid())
-  title          String
-  type           String             @default("video") // "video" | "text" | "quiz"
-  content        Json?
-  duration       Int?               // duration in seconds (for video type)
-  order          Int                @default(0)
-  youtubeVideoId String?
-  sectionId      String
-  section        Section            @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  completions    LessonCompletion[]
-  currentEnrollments Enrollment[]   @relation("CurrentLessonEnrollments")
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
+  id                 String             @id @default(cuid())
+  title              String
+  type               String             @default("video") // "video" | "text" | "quiz"
+  content            Json?
+  duration           Int? // duration in seconds (for video type)
+  order              Int                @default(0)
+  youtubeVideoId     String?
+  isPreviewable      Boolean            @default(false) // free preview without enrollment
+  sectionId          String
+  section            Section            @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  completions        LessonCompletion[]
+  currentEnrollments Enrollment[]       @relation("CurrentLessonEnrollments")
+  comments           LessonComment[]
+  quizResults        QuizResult[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 
   @@index([sectionId])
   @@map("lesson")
@@ -159,8 +175,8 @@ model LessonCompletion {
   lessonId  String
   createdAt DateTime @default(now())
 
-  student   User   @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  lesson    Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  student User   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  lesson  Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, lessonId])
   @@index([studentId])
@@ -169,22 +185,52 @@ model LessonCompletion {
 }
 
 model Enrollment {
-  id              String    @id @default(cuid())
+  id              String       @id @default(cuid())
   studentId       String
   courseId        String
-  progress        Float     @default(0) // 0-100 percentage
+  progress        Float        @default(0) // 0-100 percentage
   currentLessonId String?
-  currentLesson   Lesson?   @relation("CurrentLessonEnrollments", fields: [currentLessonId], references: [id], onDelete: SetNull)
-  student         User      @relation("StudentEnrollments", fields: [studentId], references: [id], onDelete: Cascade)
-  course          Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  enrolledAt      DateTime  @default(now())
+  currentLesson   Lesson?      @relation("CurrentLessonEnrollments", fields: [currentLessonId], references: [id], onDelete: SetNull)
+  student         User         @relation("StudentEnrollments", fields: [studentId], references: [id], onDelete: Cascade)
+  course          Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  enrolledAt      DateTime     @default(now())
   lastActivity    DateTime?
   completedAt     DateTime?
+  payment         Payment?
+  certificate     Certificate?
 
   @@unique([studentId, courseId])
   @@index([studentId])
   @@index([courseId])
   @@map("enrollment")
+}
+
+model Payment {
+  id                   String      @id @default(cuid())
+  phonepeOrderId       String      @unique
+  phonepeTransactionId String?
+  merchantOrderId      String      @unique
+  amount               Int
+  currency             String      @default("INR")
+  status               String      @default("created")
+  courseId             String
+  studentId            String?                                    // ← was required, now nullable
+  guestEmail           String?                                    // ← NEW
+  guestPhone           String?                                    // ← NEW
+  guestName            String?                                    // ← NEW
+  enrollmentId         String?     @unique
+  course               Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student              User?       @relation("StudentPayments", fields: [studentId], references: [id], onDelete: SetNull) // ← User? + SetNull
+  enrollment           Enrollment? @relation(fields: [enrollmentId], references: [id], onDelete: SetNull)
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  @@index([merchantOrderId])
+  @@index([phonepeOrderId])
+  @@index([studentId])
+  @@index([courseId])
+  @@index([guestEmail])                                           // ← NEW
+  @@map("payment")
 }
 
 model Category {
@@ -200,7 +246,7 @@ model Category {
 model Notification {
   id          String   @id @default(cuid())
   userId      String
-  type        String   // "enrollment" | "course_published" | "registration" | "instructor_assigned" | "system"
+  type        String // "enrollment" | "course_published" | "registration" | "instructor_assigned" | "system"
   title       String
   description String
   read        Boolean  @default(false)
@@ -209,6 +255,7 @@ model Notification {
 
   @@index([userId])
   @@index([userId, read])
+  @@index([userId, read, createdAt(sort: Desc)])
   @@map("notification")
 }
 
@@ -224,14 +271,115 @@ model PlatformSettings {
 
 model AuditLog {
   id        String   @id @default(cuid())
-  adminId   String                        // ID of the admin who performed the action
-  action    String                        // e.g. "ROLE_CHANGE", "USER_DELETE"
-  targetId  String                        // ID of the affected resource (user, course, …)
-  meta      String?                       // Optional JSON string with extra context
+  adminId   String // ID of the admin who performed the action
+  action    String // e.g. "ROLE_CHANGE", "USER_DELETE"
+  targetId  String // ID of the affected resource (user, course, …)
+  meta      String? // Optional JSON string with extra context
   createdAt DateTime @default(now())
 
   @@index([adminId])
   @@index([targetId])
   @@index([action])
   @@map("audit_log")
+}
+
+model Certificate {
+  id                String   @id @default(cuid())
+  studentId         String
+  courseId          String
+  enrollmentId      String   @unique
+  certificateNumber String   @unique // e.g., CAD-2024-XXXXX
+  issuedAt          DateTime @default(now())
+  verificationUrl   String?  @db.Text
+
+  student    User       @relation("StudentCertificates", fields: [studentId], references: [id], onDelete: Cascade)
+  course     Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([courseId])
+  @@map("certificate")
+}
+
+model LessonComment {
+  id                 String   @id @default(cuid())
+  lessonId           String
+  authorId           String
+  content            String   @db.Text
+  parentId           String?
+  isInstructorAnswer Boolean  @default(false)
+  isPinned           Boolean  @default(false)
+  isDeleted          Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  lesson  Lesson          @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  author  User            @relation("AuthorComments", fields: [authorId], references: [id], onDelete: Cascade)
+  parent  LessonComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: SetNull)
+  replies LessonComment[] @relation("CommentReplies")
+
+  @@index([lessonId])
+  @@index([authorId])
+  @@index([parentId])
+  @@map("lesson_comment")
+}
+
+// ─── REVIEW MODEL ─────────────────────────────────────────────────────────────
+
+model Review {
+  id           String   @id @default(cuid())
+  courseId     String
+  studentId    String
+  rating       Int      // 1–5 integer
+  title        String?
+  body         String?  @db.Text
+  isPublished  Boolean  @default(true)  // set false to moderate
+  helpfulCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student User   @relation("StudentReviews", fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, courseId])
+  @@index([courseId, isPublished])
+  @@index([studentId])
+  @@map("review")
+}
+
+// ─── INSTRUCTOR PROFILE ───────────────────────────────────────────────────────
+
+model InstructorProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  bio          String?  @db.Text
+  headline     String?  // e.g. "Senior CAD Engineer at Siemens"
+  website      String?
+  linkedinUrl  String?
+  expertise    String[] // ["Creo Toolkit", "SolidWorks API"]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("instructor_profile")
+}
+
+// ─── QUIZ RESULT ──────────────────────────────────────────────────────────────
+
+model QuizResult {
+  id          String   @id @default(cuid())
+  lessonId    String
+  studentId   String
+  score       Int      // number of correct answers
+  totalQ      Int      // total questions
+  answers     Json     // [{questionId, selectedIndex, isCorrect}]
+  completedAt DateTime @default(now())
+
+  lesson  Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  student User   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId])
+  @@index([studentId])
+  @@map("quiz_result")
 }

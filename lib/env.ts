@@ -10,6 +10,12 @@ export const env = createEnv({
     AUTH_GOOGLE_CLIENT_SECRET: z.string().min(1),
     RESEND_API_KEY: z.string().min(1),
     ARCJET_KEY: z.string().min(1),
+    // ── PhonePe Payment Gateway ─────────────────────────────────────────
+    PHONEPE_CLIENT_ID: z.string().min(1),
+    PHONEPE_CLIENT_SECRET: z.string().min(1),
+    PHONEPE_CLIENT_VERSION: z.string().min(1),
+    PHONEPE_WEBHOOK_SECRET: z.string().min(1),
+    PHONEPE_ENV: z.enum(["sandbox", "production"]),
     /** Comma-separated list of allowed browser origins for better-auth */
     TRUSTED_ORIGINS: z.string().optional(),
   },

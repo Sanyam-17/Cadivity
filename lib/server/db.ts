@@ -9,9 +9,20 @@ const pool = new pg.Pool({
 
 const adapter = new PrismaPg(pool);
 
+// Bump PRISMA_SCHEMA_VERSION whenever you run `prisma generate` in dev
+// to force the globalThis singleton cache to reset.
+const PRISMA_SCHEMA_VERSION = "v2"; // phase-2 models added
+
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
+  prismaSchemaVersion: string | undefined;
 };
+
+// If schema version changed, discard the cached instance
+if (globalForPrisma.prismaSchemaVersion !== PRISMA_SCHEMA_VERSION) {
+  globalForPrisma.prisma = undefined;
+  globalForPrisma.prismaSchemaVersion = PRISMA_SCHEMA_VERSION;
+}
 
 export const prisma =
   globalForPrisma.prisma ??
@@ -22,4 +33,3 @@ export const prisma =
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
-

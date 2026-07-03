@@ -1,79 +1,72 @@
 import { requireAuth } from "@/lib/server/auth-guard";
 import { StudentService } from "@/lib/services/student.service";
-import { StudentCourseCard } from "@/components/student/course-card";
-import { BookOpen, GraduationCap, Search, TrendingUp, Trophy } from "lucide-react";
-import Link from "next/link";
+import { StudentCourseList } from "@/components/student/student-course-list";
 
 export default async function StudentDashboard() {
   const session = await requireAuth();
   const userId = session.user.id;
-
-  const [enrolledCourses, stats] = await Promise.all([
-    StudentService.getEnrolledCourses(userId),
-    StudentService.getDashboardStats(userId),
-  ]);
-
   const firstName = session.user.name;
 
+  const { stats, courses, continueLearning } =
+    await StudentService.getDashboardData(userId);
+
+  // Serialize dates to ISO strings for client components
+  const serializedCourses = courses.map((c) => ({
+    id: c.id,
+    courseId: c.courseId,
+    title: c.title,
+    slug: c.slug,
+    description: c.description,
+    thumbnail: c.thumbnail,
+    progress: c.progress,
+    enrolledAt: c.enrolledAt.toISOString(),
+    lastActivity: c.lastActivity?.toISOString() ?? null,
+    completedAt: c.completedAt?.toISOString() ?? null,
+    categoryName: c.categoryName,
+    instructorName: c.instructorName,
+    totalLessons: c.totalLessons,
+    completedLessons: c.completedLessons,
+    currentLessonTitle: c.currentLessonTitle,
+  }));
+
+  // Greeting based on time of day
+  const hour = new Date().getHours();
+  const greeting =
+    hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+
+
+
   return (
-    <div className="theme-student min-h-screen bg-background">
+    <div className="theme-student min-h-screen bg-[#f8fafe]">
       {/* ─── Welcome Banner ─── */}
-      <section className="student-banner px-4 py-10 sm:py-14">
-        <div className="relative z-10 mx-auto max-w-5xl text-center">
-          <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl lg:text-4xl">
-            Welcome back, {firstName} 👋
-          </h1>
-          <p className="mt-2 text-sm text-white/75 sm:text-base">
-            Continue your learning journey — pick up where you left off.
-          </p>
+      <section className="bg-gradient-to-r from-[#002B5B] to-[#118B63] py-16 sm:py-20">
+        <div className="relative z-10 container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl lg:text-4xl font-display">
+              {greeting}, {firstName} 👋
+            </h1>
+            <p className="mt-2 text-sm text-white/90 sm:text-base max-w-xl leading-relaxed">
+              Continue from where you left. You&apos;ve completed {continueLearning ? continueLearning.progress : stats.avgProgress}% of your current module. Almost there!
+            </p>
+          </div>
         </div>
       </section>
 
       {/* ─── Main Content ─── */}
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Section Heading */}
-        <div className="mb-6">
-          <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-            My Courses
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {enrolledCourses.length > 0
-              ? `You are enrolled in ${enrolledCourses.length} course${enrolledCourses.length === 1 ? "" : "s"}.`
-              : "You haven't enrolled in any courses yet."}
-          </p>
-        </div>
-
-        {enrolledCourses.length > 0 ? (
-          /* ─── Card Grid ─── */
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {enrolledCourses.map((course) => (
-              <StudentCourseCard key={course.id} course={course} />
-            ))}
-          </div>
-        ) : (
-          /* ─── Empty State ─── */
-          <div className="student-empty-state flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 px-6 py-20 text-center">
-            <div className="flex size-16 items-center justify-center rounded-full bg-primary/10">
-              <BookOpen className="size-7 text-primary" strokeWidth={1.5} />
+      <main className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+        {/* Course List with Search & Filters */}
+        <section>
+          <div className="border-b border-border/50 pb-3 mb-6">
+            <div className="relative pb-3 -mb-[13px] w-fit">
+              <h2 className="text-lg font-medium tracking-tight text-slate-800">
+                My Courses
+              </h2>
+              <div className="absolute bottom-0 left-0 h-[3px] w-full bg-emerald-600 rounded-t-sm" />
             </div>
-            <h3 className="mt-5 text-lg font-semibold text-foreground">
-              You&apos;re not enrolled in any courses
-            </h3>
-            <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-              Browse our course catalog to find the right program for you and
-              start your learning journey today.
-            </p>
-            <Link
-              href="/courses"
-              className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-md transition-all hover:bg-primary/90 hover:scale-105 hover:shadow-lg"
-            >
-              <Search className="size-4" />
-              Browse Courses
-            </Link>
           </div>
-        )}
+          <StudentCourseList courses={serializedCourses} />
+        </section>
       </main>
-    </div>
+    </div >
   );
 }
-

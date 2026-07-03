@@ -6,7 +6,7 @@
 /* ─── Admin Dashboard Design Tokens ─── */
 /* Enterprise blue/gray palette for professional admin UI */
 
-:root, .theme-admin {
+.theme-admin {
   /* Surface & Background */
   --background: 220 20% 97%;
   --foreground: 220 30% 10%;

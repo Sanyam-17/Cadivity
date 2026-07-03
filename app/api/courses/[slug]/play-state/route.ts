@@ -3,6 +3,7 @@ import { prisma } from "@/lib/server/db"
 import { guardApiExactRole } from "@/lib/server/auth-guard"
 import { errorResponse } from "@/lib/server/api-utils"
 import { resolveLessonYoutubeVideoId } from "@/lib/youtube"
+import { logger } from "@/lib/server/logger"
 
 export async function GET(
   request: NextRequest,
@@ -11,7 +12,12 @@ export async function GET(
   const { slug } = await params
 
   try {
-    // 1. Get Course and Curriculum
+    // 1. Authenticate student FIRST — avoid DB work for unauthenticated requests
+    const guarded = await guardApiExactRole("student")
+    if (guarded.error) return guarded.error
+    const session = guarded.session
+
+    // 2. Get Course and Curriculum (content excluded — fetched per-lesson when active)
     const course = await prisma.course.findUnique({
       where: { slug },
       include: {
@@ -20,20 +26,26 @@ export async function GET(
         sections: {
           orderBy: { order: "asc" },
           include: {
-            lessons: { orderBy: { order: "asc" } },
+            lessons: {
+              orderBy: { order: "asc" },
+              select: {
+                id: true,
+                title: true,
+                type: true,
+                duration: true,
+                order: true,
+                youtubeVideoId: true,
+                // content intentionally excluded — may contain quiz answers
+              },
+            },
           },
         },
       },
     })
 
     if (!course) {
-      return NextResponse.json({ error: "Course not found" }, { status: 404 })
+      return errorResponse("Course not found", 404)
     }
-
-    // 2. Authenticate student
-    const guarded = await guardApiExactRole("student")
-    if (guarded.error) return guarded.error
-    const session = guarded.session
 
     // 3. Verify Enrollment
     const enrollment = await prisma.enrollment.findUnique({
@@ -46,7 +58,7 @@ export async function GET(
     })
 
     if (!enrollment) {
-      return NextResponse.json({ error: "You are not enrolled in this course" }, { status: 403 })
+      return errorResponse("You are not enrolled in this course", 403)
     }
 
     // 4. Fetch completions
@@ -67,7 +79,7 @@ export async function GET(
     const completedLessonIds = completions.map((c) => c.lessonId)
 
     // 5. Flatten lessons to calculate sequential lock status
-    const allLessons: any[] = []
+    const allLessons: Array<{ id: string; order: number }> = []
     course.sections.forEach((section) => {
       // Sort lessons inside sections
       const sortedLessons = [...section.lessons].sort((a, b) => a.order - b.order)
@@ -105,9 +117,8 @@ export async function GET(
           id: lesson.id,
           title: lesson.title,
           type: lesson.type,
-          content: lesson.content,
           duration: lesson.duration,
-          youtubeVideoId: resolveLessonYoutubeVideoId(lesson),
+          youtubeVideoId: lesson.youtubeVideoId,
           order: lesson.order,
           isCompleted: completedSet.has(lesson.id),
           isLocked: !unlockedLessonIds.has(lesson.id),
@@ -133,10 +144,8 @@ export async function GET(
       },
     })
   } catch (error) {
-    console.error("Play-state fetch error:", error)
-    return NextResponse.json(
-      { error: "Failed to load course play-state" },
-      { status: 500 }
-    )
+    logger.error("play-state.fetch.failed", { slug, error: String(error) })
+    return errorResponse("Failed to load course play-state", 500)
   }
 }
+

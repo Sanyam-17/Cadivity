@@ -6,7 +6,7 @@
 /* ─── Instructor Dashboard Design Tokens ─── */
 /* Same enterprise blue/gray palette as admin for visual consistency */
 
-:root, .theme-instructor {
+.theme-instructor {
   /* Surface & Background */
   --background: 220 20% 97%;
   --foreground: 220 30% 10%;

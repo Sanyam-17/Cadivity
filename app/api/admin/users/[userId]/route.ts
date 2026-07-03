@@ -25,7 +25,7 @@ export async function PATCH(
     );
   }
 
-  const data: any = {};
+  const data: { role?: string; active?: boolean } = {};
   
   // Handle Role Change
   if (role !== undefined) {

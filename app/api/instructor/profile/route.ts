@@ -1,65 +1,44 @@
-import "server-only"
-import { NextRequest, NextResponse } from "next/server"
-import { guardApiRole } from "@/lib/server/auth-guard"
-import { prisma } from "@/lib/server/db"
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/server/db";
+import { guardApiRole } from "@/lib/server/auth-guard";
+import { z } from "zod";
 
-// GET /api/instructor/profile
-export async function GET(request: NextRequest) {
-  const guarded = await guardApiRole("instructor")
-  if (guarded.error) return guarded.error
-  const session = guarded.session
+const profileSchema = z.object({
+  bio: z.string().max(1000).optional(),
+  headline: z.string().max(120).optional(),
+  website: z.string().url().optional().or(z.literal("")),
+  linkedinUrl: z.string().url().optional().or(z.literal("")),
+  expertise: z.array(z.string().max(60)).max(10).optional(),
+});
 
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        image: true,
-        role: true,
-      },
-    })
+/* ── GET /api/instructor/profile ── */
+export async function GET(_req: NextRequest) {
+  const guarded = await guardApiRole("instructor");
+  if (guarded.error) return guarded.error;
 
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 })
-    }
+  const profile = await prisma.instructorProfile.findUnique({
+    where: { userId: guarded.session.user.id },
+  });
 
-    return NextResponse.json(user)
-  } catch (error) {
-    console.error("Profile fetch error:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch profile" },
-      { status: 500 }
-    )
-  }
+  return NextResponse.json({ profile });
 }
 
-// PATCH /api/instructor/profile
+/* ── PATCH /api/instructor/profile ── */
 export async function PATCH(request: NextRequest) {
-  const guarded = await guardApiRole("instructor")
-  if (guarded.error) return guarded.error
-  const session = guarded.session
+  const guarded = await guardApiRole("instructor");
+  if (guarded.error) return guarded.error;
 
-  try {
-    const body = await request.json()
-    const { name, image } = body
-
-    const updateData: any = {}
-    if (name !== undefined) updateData.name = name
-    if (image !== undefined) updateData.image = image
-
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: updateData,
-    })
-
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error("Profile update error:", error)
-    return NextResponse.json(
-      { error: "Failed to update profile" },
-      { status: 500 }
-    )
+  const body = await request.json().catch(() => ({}));
+  const parsed = profileSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid payload", details: parsed.error.flatten() }, { status: 400 });
   }
+
+  const profile = await prisma.instructorProfile.upsert({
+    where: { userId: guarded.session.user.id },
+    create: { userId: guarded.session.user.id, ...parsed.data },
+    update: parsed.data,
+  });
+
+  return NextResponse.json({ profile });
 }

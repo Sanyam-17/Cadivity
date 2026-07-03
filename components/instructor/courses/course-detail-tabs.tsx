@@ -8,6 +8,7 @@ import { OverviewTab } from "./overview-tab"
 import { SettingsTab } from "./settings-tab"
 import { CurriculumTab } from "./curriculum-tab"
 import { StudentsTab } from "./students-tab"
+import { DiscussionTab } from "./discussion-tab"
 import { EmptyState } from "@/components/shared/empty-state"
 import { PageHeader } from "@/components/shared/page-header"
 import { Button } from "@/components/ui/button"
@@ -72,6 +73,12 @@ export function CourseDetailTabs({ courseId, courseTitle }: CourseDetailTabsProp
             >
               Settings
             </TabsTrigger>
+            <TabsTrigger
+              value="discussion"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 pb-3 pt-2 text-sm font-medium"
+            >
+              Discussion
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
@@ -88,6 +95,10 @@ export function CourseDetailTabs({ courseId, courseTitle }: CourseDetailTabsProp
 
           <TabsContent value="settings" className="mt-6">
             <SettingsTab courseId={courseId} />
+          </TabsContent>
+
+          <TabsContent value="discussion" className="mt-6">
+            <DiscussionTab courseId={courseId} />
           </TabsContent>
         </Tabs>
       </div>

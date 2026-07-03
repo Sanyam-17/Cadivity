@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { requireExactRole } from '@/lib/server/auth-guard'
+import { requireAuth } from '@/lib/server/auth-guard'
 import "@/app/styles/student.css"
 
 export const metadata: Metadata = {
@@ -18,8 +18,8 @@ export default async function PlayerLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  // Server-side guard — redirects non-student users
-  await requireExactRole("student");
+  // Server-side guard — any authenticated user can access the player
+  await requireAuth();
 
   return (
     <div className="theme-student h-screen w-screen overflow-hidden bg-slate-950">

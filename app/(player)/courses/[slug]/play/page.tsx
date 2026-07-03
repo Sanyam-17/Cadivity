@@ -32,8 +32,9 @@ import { toast } from "sonner"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { extractYouTubeVideoId, YOUTUBE_PLAYER_ERROR_MESSAGES } from "@/lib/youtube"
+import { LessonDiscussion } from "@/components/player/LessonDiscussion"
 
-// ─── CHANGE 1: Moved global YT type declaration to a dedicated types section ──
+// ─── Global YT type declaration ────────────────────────────────────────────
 declare global {
   interface Window {
     YT: any
@@ -90,12 +91,8 @@ interface CoursePlayState {
   curriculum: Section[]
 }
 
-// ─── CHANGE 2: Extracted playback speed options to module-level constant ──────
-// Previously defined inline inside the component, causing recreation on every render.
 const SPEED_OPTIONS = ["0.5", "0.75", "1", "1.25", "1.5", "1.75", "2"] as const
 
-// ─── CHANGE 3: Extracted formatTime to module-level utility ──────────────────
-// Previously a method inside the component; no reason for it to close over state.
 function formatTime(timeInSeconds: number): string {
   const hours = Math.floor(timeInSeconds / 3600)
   const minutes = Math.floor((timeInSeconds % 3600) / 60)
@@ -105,8 +102,34 @@ function formatTime(timeInSeconds: number): string {
     : `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
 }
 
-// ─── CHANGE 4: Extracted PlayerSettingsMenu to its own component ──────────────
-// Previously ~60 lines of JSX embedded inside the footer, making it hard to read.
+// ─── Promise-based YouTube IFrame API loader, module-level singleton ──
+// Loads the script exactly once for the whole app and resolves a shared
+// promise via the official onYouTubeIframeAPIReady callback, chaining any
+// pre-existing handler instead of clobbering it.
+let ytApiPromise: Promise<void> | null = null
+
+function loadYouTubeIframeAPI(): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve()
+  if (window.YT?.Player) return Promise.resolve()
+  if (ytApiPromise) return ytApiPromise
+
+  ytApiPromise = new Promise((resolve) => {
+    const previousCallback = window.onYouTubeIframeAPIReady
+    window.onYouTubeIframeAPIReady = () => {
+      previousCallback?.()
+      resolve()
+    }
+    if (!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
+      const tag = document.createElement("script")
+      tag.src = "https://www.youtube.com/iframe_api"
+      document.head.appendChild(tag)
+    }
+  })
+
+  return ytApiPromise
+}
+
+// ─── Player settings menu ──────────────────────────────────────────────────
 interface PlayerSettingsMenuProps {
   playbackSpeed: string
   availableQualities: string[]
@@ -210,6 +233,18 @@ export default function CoursePlayerPage() {
 
   // YouTube player state
   const playerRef = React.useRef<any>(null)
+  // FIX: Tracks whether the *current* playerRef.current instance is alive.
+  // Event handlers (onReady/onStateChange/onError) read this ref instead of
+  // a per-effect-run "destroyed" closure variable. Previously, when the video
+  // effect re-ran and *reused* the existing YT.Player (the loadVideoById fast
+  // path below, used when navigating between video lessons so the iframe
+  // doesn't reload), the reused player's callbacks were still the ones bound
+  // to the *previous* effect run's closure — and that previous run's cleanup
+  // had already flipped its own local "destroyed" flag to true. Every
+  // subsequent onStateChange/onReady call then silently no-op'd, so isPlaying
+  // and currentTime stopped updating forever. That's the actual cause of
+  // "play/pause and timestamps stop working after the first lesson."
+  const playerAliveRef = React.useRef(false)
   const playerContainerRef = React.useRef<HTMLDivElement>(null)
   const [isPlaying, setIsPlaying] = React.useState(false)
   const [currentTime, setCurrentTime] = React.useState(0)
@@ -218,10 +253,23 @@ export default function CoursePlayerPage() {
   const [isMuted, setIsMuted] = React.useState(false)
   const [iframeFallback, setIframeFallback] = React.useState(false)
 
+  // `videoEnded` drives a custom "up next" overlay so YouTube's own suggested-
+  // videos grid never gets a chance to show. `videoError` holds a persistent,
+  // visible reason when a video genuinely cannot play.
+  const [videoEnded, setVideoEnded] = React.useState(false)
+  const [videoError, setVideoError] = React.useState<string | null>(null)
+  const [retryKey, setRetryKey] = React.useState(0)
+
   // Stable refs so YT callbacks never read stale closure values
   const volumeRef = React.useRef(50)
   const isMutedRef = React.useRef(false)
   const playbackSpeedRef = React.useRef("1")
+
+  // Consume-once "was this lesson change a real click?" flag. Browsers block
+  // unmuted autoplay unless play() happens inside genuine user activation, so
+  // page load / resumed lessons must NOT force autoplay. Sidebar clicks and
+  // next/prev buttons set this ref right before switching lessons.
+  const autoplayIntentRef = React.useRef(false)
 
   // Settings state
   const [settingsOpen, setSettingsOpen] = React.useState(false)
@@ -238,12 +286,10 @@ export default function CoursePlayerPage() {
   const loadedVideoIdRef = React.useRef<string | null>(null)
   const activeSidebarItemRef = React.useRef<HTMLDivElement>(null)
 
-  // Keep activeLessonRef in sync
   React.useEffect(() => {
     activeLessonRef.current = activeLesson
   }, [activeLesson])
 
-  // Keep playback-setting refs in sync
   React.useEffect(() => { volumeRef.current = volume }, [volume])
   React.useEffect(() => { isMutedRef.current = isMuted }, [isMuted])
   React.useEffect(() => { playbackSpeedRef.current = playbackSpeed }, [playbackSpeed])
@@ -256,9 +302,6 @@ export default function CoursePlayerPage() {
     [activeLesson?.id, activeLesson?.youtubeVideoId]
   )
 
-  // ─── CHANGE 5: Memoized flatLessons ────────────────────────────────────────
-  // Previously getFlatLessons() was called as a plain function inside render
-  // and in handlers, recomputing the full sorted array on every render.
   const flatLessons = React.useMemo(() => {
     if (!state) return []
     return state.curriculum.flatMap((section) =>
@@ -266,10 +309,6 @@ export default function CoursePlayerPage() {
     )
   }, [state])
 
-  // ─── CHANGE 6: loadPlayState wrapped in useCallback with abort signal ───────
-  // Previously: plain async function recreated every render, no cleanup on unmount.
-  // Now: stable reference, uses AbortController so in-flight fetches are cancelled
-  // when the component unmounts or slug changes.
   const loadPlayState = React.useCallback(
     async (initial = false, signal?: AbortSignal) => {
       try {
@@ -308,9 +347,10 @@ export default function CoursePlayerPage() {
               }
             }
           }
+          // Note: autoplayIntentRef is intentionally left false here — this is
+          // page load, not a click, so the video will be cued, not force-played.
           if (resumeLesson) setActiveLesson(resumeLesson)
         } else {
-          // Sync active lesson's isCompleted / isLocked flags after a reload
           const currentId = activeLessonRef.current?.id
           if (currentId) {
             for (const section of data.curriculum) {
@@ -323,7 +363,7 @@ export default function CoursePlayerPage() {
           }
         }
       } catch (err: any) {
-        if (err.name === "AbortError") return // Silently ignore cancelled requests
+        if (err.name === "AbortError") return
         console.error(err)
         toast.error("Failed to load curriculum details.")
       } finally {
@@ -333,7 +373,6 @@ export default function CoursePlayerPage() {
     [slug]
   )
 
-  // Initial load + abort cleanup
   React.useEffect(() => {
     const controller = new AbortController()
     loadPlayState(true, controller.signal)
@@ -372,12 +411,42 @@ export default function CoursePlayerPage() {
       playerRef.current = null
       loadedVideoIdRef.current = null
     }
+    playerAliveRef.current = false
   }, [])
 
-  // Reset iframe fallback when lesson changes
+  // Reset per-lesson video UI state whenever the lesson changes
   React.useEffect(() => {
     setIframeFallback(false)
+    setVideoEnded(false)
+    setVideoError(null)
   }, [activeLesson?.id])
+
+  // ─── FIX: Pause playback when the active lesson isn't a video ─────────────
+  // The YouTube player is intentionally kept mounted in the background when
+  // switching to a quiz/text lesson (see the "always in DOM" comment further
+  // down), so that resuming a video lesson doesn't re-fetch/re-buffer it. But
+  // nothing was ever telling the *player itself* to stop — only its container
+  // was CSS-hidden — so audio/video kept running underneath the quiz/reading
+  // UI. This effect explicitly pauses it any time you're not on a video lesson.
+  React.useEffect(() => {
+    if (activeLesson?.type === "video") return
+    const player = playerRef.current
+    if (player && typeof player.pauseVideo === "function") {
+      try { player.pauseVideo() } catch (e) { console.error("Pause on lesson-switch failed:", e) }
+    }
+    setIsPlaying(false)
+  }, [activeLesson?.type])
+
+  // ─── Retry handler — lets the person recover from a failed load ───────────
+  // without a full page refresh.
+  const retryVideoLoad = React.useCallback(() => {
+    setVideoError(null)
+    setIframeFallback(false)
+    loadedVideoIdRef.current = null
+    destroyPlayer()
+    autoplayIntentRef.current = true
+    setRetryKey((k) => k + 1)
+  }, [destroyPlayer])
 
   // ─── YouTube player init / video-swap effect ──────────────────────────────
   React.useEffect(() => {
@@ -387,17 +456,14 @@ export default function CoursePlayerPage() {
 
     const videoId = activeYoutubeVideoId
     const lessonId = activeLesson.id
-    let destroyed = false
-    let checkAPITimer: ReturnType<typeof setInterval> | undefined
-
-    if (!window.YT) {
-      const tag = document.createElement("script")
-      tag.src = "https://www.youtube.com/iframe_api"
-      document.getElementsByTagName("script")[0].parentNode?.insertBefore(
-        tag,
-        document.getElementsByTagName("script")[0]
-      )
-    }
+    const shouldAutoplay = autoplayIntentRef.current
+    autoplayIntentRef.current = false // consume once — next effect run defaults to "don't force play"
+    // Guards only the async loadYouTubeIframeAPI().then() callback below, so
+    // we don't create/load a video after this specific effect run was
+    // cleaned up. Deliberately NOT read inside the player's event handlers —
+    // see playerAliveRef above for why that used to silently break play/pause
+    // and the time display across lesson switches.
+    let cancelled = false
 
     const ensurePlayerDiv = () => {
       if (!document.getElementById("youtube-player")) {
@@ -412,39 +478,51 @@ export default function CoursePlayerPage() {
       if (loadedVideoIdRef.current === videoId) return
       setCurrentTime(0)
       setDuration(0)
-      setIsPlaying(false)
+      setVideoEnded(false)
       loadedVideoIdRef.current = videoId
+
       const savedTime = localStorage.getItem(`playback_time_${lessonId}`)
       const startSeconds = savedTime && parseFloat(savedTime) > 5 ? parseFloat(savedTime) : 0
-      player.loadVideoById({ videoId, startSeconds })
+
       player.setVolume(volumeRef.current)
       if (isMutedRef.current) player.mute()
       else player.unMute()
       player.setPlaybackRate(parseFloat(playbackSpeedRef.current))
-      setIsPlaying(true)
+
+      if (shouldAutoplay) {
+        // loadVideoById starts playback immediately — safe here because this
+        // path only runs from a real click (sidebar item, next/prev, retry).
+        player.loadVideoById({ videoId, startSeconds })
+      } else {
+        // cueVideoById loads the first frame without playing. The visible
+        // "play" overlay below is what actually starts it, guaranteeing a
+        // real user gesture backs the playVideo() call.
+        player.cueVideoById({ videoId, startSeconds })
+        setIsPlaying(false)
+      }
     }
 
-    const initPlayer = () => {
-      if (destroyed) return
-
-      if (
-        playerRef.current &&
-        typeof playerRef.current.loadVideoById === "function" &&
-        isPlayerAlive()
-      ) {
-        loadLessonVideo(playerRef.current)
-        return
-      }
-
+    const createPlayer = () => {
+      if (cancelled) return
       destroyPlayer()
       ensurePlayerDiv()
 
       playerRef.current = new window.YT.Player("youtube-player", {
         videoId,
-        playerVars: { enablejsapi: 1, html5: 1, rel: 0, modestbranding: 1, controls: 0, autoplay: 1, playsinline: 1 },
+        host: "https://www.youtube-nocookie.com",
+        playerVars: {
+          enablejsapi: 1,
+          origin: window.location.origin,
+          rel: 0,
+          modestbranding: 1,
+          controls: 0,
+          autoplay: shouldAutoplay ? 1 : 0,
+          playsinline: 1,
+          fs: 0,
+        },
         events: {
           onReady: (event: any) => {
-            if (destroyed) return
+            if (!playerAliveRef.current) return
             loadedVideoIdRef.current = videoId
             const player = event.target
             setDuration(player.getDuration())
@@ -454,62 +532,95 @@ export default function CoursePlayerPage() {
             setAvailableQualities(levels?.length > 0 ? levels : ["Auto"])
             player.setPlaybackRate(parseFloat(playbackSpeedRef.current))
             applySavedPlaybackPosition(player, lessonId)
-            player.playVideo()
-            setIsPlaying(true)
+            if (!shouldAutoplay) setIsPlaying(false)
+            // If shouldAutoplay is true we deliberately don't setIsPlaying(true)
+            // here — onStateChange (below) is now the single source of truth,
+            // so if the browser silently blocks the autoplay, the UI correctly
+            // still shows the "paused" play button instead of lying about it.
           },
           onStateChange: (event: any) => {
-            if (destroyed) return
-            if (event.data === 1) {
+            if (!playerAliveRef.current) return
+            const State = window.YT.PlayerState
+            if (event.data === State.PLAYING) {
               setIsPlaying(true)
+              setVideoEnded(false)
               const total = event.target?.getDuration?.()
               if (total > 0) setDuration(total)
-            } else if (event.data === 2) {
+            } else if (event.data === State.PAUSED) {
               setIsPlaying(false)
+            } else if (event.data === State.ENDED) {
+              setIsPlaying(false)
+              setVideoEnded(true)
             }
           },
           onError: (event: any) => {
+            if (!playerAliveRef.current) return
             const code = event?.data as number
             console.error("YouTube Player Error:", code, "for videoId:", videoId)
-            if (code === 5) {
+            setIsPlaying(false)
+
+            if (code === 101 || code === 150) {
+              // Embedding disallowed by the owner — this is exactly what you get
+              // for a video set to Private. Unlisted fixes it; nothing in this
+              // component can work around it.
+              setVideoError(
+                "This video can't be embedded. If it's set to Private on YouTube, switch it to Unlisted — Private videos can never play in an embedded player, for anyone."
+              )
+            } else if (code === 100) {
+              setVideoError("This video doesn't exist, or was deleted/made private.")
+            } else if (code === 5) {
               destroyPlayer()
               setIframeFallback(true)
-              return
+            } else {
+              const message =
+                YOUTUBE_PLAYER_ERROR_MESSAGES[code] ??
+                "Video playback failed. Try refreshing or another lesson."
+              setVideoError(message)
+              toast.error(message)
             }
-            toast.error(
-              YOUTUBE_PLAYER_ERROR_MESSAGES[code] ??
-              "Video playback failed. Try refreshing or another lesson."
-            )
-            setIsPlaying(false)
           },
         },
       })
+      playerAliveRef.current = true
     }
 
-    checkAPITimer = setInterval(() => {
-      if (window.YT?.Player) {
-        clearInterval(checkAPITimer)
-        initPlayer()
+    loadYouTubeIframeAPI().then(() => {
+      if (cancelled) return
+      if (
+        playerRef.current &&
+        typeof playerRef.current.loadVideoById === "function" &&
+        isPlayerAlive()
+      ) {
+        loadLessonVideo(playerRef.current)
+      } else {
+        createPlayer()
       }
-    }, 100)
+    })
 
     return () => {
-      destroyed = true
-      clearInterval(checkAPITimer)
+      cancelled = true
     }
-  }, [activeLesson?.id, activeLesson?.type, activeYoutubeVideoId, iframeFallback, applySavedPlaybackPosition, isPlayerAlive, destroyPlayer])
+  }, [
+    activeLesson?.id,
+    activeLesson?.type,
+    activeYoutubeVideoId,
+    iframeFallback,
+    retryKey,
+    applySavedPlaybackPosition,
+    isPlayerAlive,
+    destroyPlayer,
+  ])
 
   // Destroy player on page leave
   React.useEffect(() => {
     return () => {
-      try { playerRef.current?.destroy() } catch {}
+      try { playerRef.current?.destroy() } catch { }
       playerRef.current = null
       loadedVideoIdRef.current = null
+      playerAliveRef.current = false
     }
   }, [])
 
-  // ─── CHANGE 7: triggerCompletion wrapped in useCallback ───────────────────
-  // Previously a plain async function; being unstable caused it to be missing
-  // from the progress-timer dep array, risking stale closure bugs.
   const triggerCompletion = React.useCallback(async () => {
     const curLesson = activeLessonRef.current
     if (!curLesson || completing || curLesson.isCompleted) return
@@ -530,11 +641,6 @@ export default function CoursePlayerPage() {
     }
   }, [completing, loadPlayState])
 
-  // ─── CHANGE 8: Progress timer — triggerCompletion now in dep array ─────────
-  // Previously missing, which meant the timer closed over a stale copy of
-  // triggerCompletion and could silently fail to fire after the first render.
-  // Also: localStorage writes are now throttled to every ~5 seconds instead of
-  // every 500 ms — localStorage.setItem is synchronous; 500 ms was excessive.
   React.useEffect(() => {
     if (!isPlaying || !playerRef.current) return
 
@@ -545,12 +651,14 @@ export default function CoursePlayerPage() {
       setCurrentTime(current)
       if (total > 0) setDuration(total)
 
-      // ─── CHANGE 9: Throttled localStorage writes (every ~5 s) ─────────────
       if (activeLesson && Math.floor(current) % 5 === 0) {
         localStorage.setItem(`playback_time_${activeLesson.id}`, String(current))
       }
 
-      if (total > 0 && current / total >= 0.5 && activeLesson && !activeLesson.isCompleted && !completing) {
+      // Bumped from 50% to 60% watched to match the "watched" threshold the
+      // sidebar tick now represents — both should agree on what counts as
+      // "watched" so the tick and the real completion state never disagree.
+      if (total > 0 && current / total >= 0.6 && activeLesson && !activeLesson.isCompleted && !completing) {
         triggerCompletion()
       }
     }, 500)
@@ -558,9 +666,6 @@ export default function CoursePlayerPage() {
     return () => clearInterval(timer)
   }, [isPlaying, activeLesson?.id, completing, triggerCompletion])
 
-  // ─── CHANGE 10: Player control handlers wrapped in useCallback ─────────────
-  // Previously plain functions recreated every render; now stable references
-  // that can safely be added to dependency arrays and used in the keyboard handler.
   const togglePlay = React.useCallback(() => {
     const player = playerRef.current
     if (!player || typeof player.playVideo !== 'function') return
@@ -569,7 +674,7 @@ export default function CoursePlayerPage() {
       setIsPlaying(false)
     } else {
       player.playVideo()
-      setIsPlaying(true)
+      // Real state confirmed by onStateChange — no optimistic set here.
     }
   }, [isPlaying])
 
@@ -592,8 +697,6 @@ export default function CoursePlayerPage() {
     setCurrentTime((prev) => Math.max(0, Math.min(total, prev + seconds)))
   }, [])
 
-  // ─── CHANGE 11: Extracted handleVolumeChange ────────────────────────────────
-  // Previously an inline arrow function in JSX — created a new reference every render.
   const handleVolumeChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const vol = parseInt(e.target.value)
     setVolume(vol)
@@ -658,48 +761,44 @@ export default function CoursePlayerPage() {
     }
   }, [])
 
-  // ─── CHANGE 12: Keyboard handler — uses stable useCallback refs ────────────
-  // Previously recreated on every render; control functions are now stable
-  // useCallback refs so deps are accurate without ref forwarding tricks.
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName
       if (tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement).isContentEditable) return
 
       switch (e.code) {
-        case "Space":      e.preventDefault(); togglePlay(); break
-        case "KeyF":       e.preventDefault(); toggleFullscreen(); break
-        case "KeyT":       e.preventDefault(); toggleTheatre(); break
-        case "KeyM":       e.preventDefault(); toggleMute(); break
+        case "Space": e.preventDefault(); togglePlay(); break
+        case "KeyF": e.preventDefault(); toggleFullscreen(); break
+        case "KeyT": e.preventDefault(); toggleTheatre(); break
+        case "KeyM": e.preventDefault(); toggleMute(); break
         case "ArrowRight": e.preventDefault(); seekDelta(5); break
-        case "ArrowLeft":  e.preventDefault(); seekDelta(-5); break
+        case "ArrowLeft": e.preventDefault(); seekDelta(-5); break
         case "Period": if (e.shiftKey) { e.preventDefault(); changeSpeedStep(1) } break
-        case "Comma":  if (e.shiftKey) { e.preventDefault(); changeSpeedStep(-1) } break
+        case "Comma": if (e.shiftKey) { e.preventDefault(); changeSpeedStep(-1) } break
       }
     }
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [togglePlay, toggleFullscreen, toggleTheatre, toggleMute, seekDelta, changeSpeedStep])
 
-  // Fullscreen change listener
   React.useEffect(() => {
     const handler = () => setIsFullscreen(!!document.fullscreenElement)
     document.addEventListener("fullscreenchange", handler)
     return () => document.removeEventListener("fullscreenchange", handler)
   }, [])
 
-  // Scroll active lesson into view in sidebar
   React.useEffect(() => {
     activeSidebarItemRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" })
   }, [activeLesson?.id])
 
-  // ─── CHANGE 13: handleLessonClick wrapped in useCallback ──────────────────
   const handleLessonClick = React.useCallback(
     async (lesson: Lesson) => {
       if (lesson.isLocked) {
         toast.error("Complete the previous lessons to unlock this content!")
         return
       }
+      // Real click → safe to autoplay the next lesson's video.
+      autoplayIntentRef.current = true
       setActiveLesson(lesson)
       setShowCompletionBanner(false)
       setSettingsOpen(false)
@@ -744,22 +843,9 @@ export default function CoursePlayerPage() {
   const progressPercentage = state?.enrollment.progress ?? 0
   const isCourseFullyCompleted = progressPercentage === 100
 
-  // ─── CHANGE 14: Removed dead Loader2 inline component definition ──────────
-  // Previously Loader2 was re-declared at the bottom of the file as a manual SVG
-  // component, but lucide-react already exports Loader2. Importing it directly
-  // at the top removes ~20 lines of redundant code.
-
-  // ─── Early returns ────────────────────────────────────────────────────────
-  // Show blank screen while loading OR while state/activeLesson haven't resolved yet.
-  // Previously these were two separate checks — the gap between them caused the
-  // error screen to flash briefly on every page load before data arrived.
   if (loading || !state || !activeLesson) {
     return <div className="h-screen w-screen bg-slate-950" />
   }
-
-  // Separate explicit error state: only shown when loading is done but data is missing.
-  // This is now unreachable via normal load — only triggers on a genuine API failure
-  // where loading finished but state is still null (toast already shown by loadPlayState).
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
@@ -768,49 +854,51 @@ export default function CoursePlayerPage() {
       {/* ─── LEFT SIDEBAR ─── */}
       <aside
         className={cn(
-          "h-full bg-[#1e2433] flex flex-col shrink-0 transition-all duration-300 border-r border-slate-800/80 z-20 overflow-hidden",
-          sidebarCollapsed ? "w-0 opacity-0" : "w-[320px] opacity-100"
+          "h-full bg-slate-50 flex flex-col shrink-0 transition-all duration-300 border-r border-slate-200 z-20 overflow-hidden",
+          sidebarCollapsed ? "w-0 opacity-0" : "w-[420px] opacity-100"
         )}
       >
-        <div className="p-5 space-y-5 border-b border-slate-800 shrink-0">
+        <div className="bg-[#363845] p-6 pt-8 space-y-6 shrink-0 border-b border-slate-800">
           <div className="flex items-center justify-between">
             <Link
-              href={`/courses/${state.course.slug}`}
-              className="text-xs font-semibold text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
+              href={`/dashboard/student`}
+              className="text-[13px] italic text-slate-300 hover:text-white flex items-center gap-1.5 transition-colors"
             >
-              <ArrowLeft className="h-3.5 w-3.5" />
+              <ArrowLeft className="h-4 w-4" />
               Back to course page
             </Link>
             <button
               type="button"
               onClick={() => setSidebarCollapsed(true)}
-              className="h-6 w-6 text-slate-400 hover:text-white flex items-center justify-center rounded hover:bg-slate-800 transition-colors"
+              className="h-7 w-7 text-slate-400 hover:text-white flex items-center justify-center rounded hover:bg-slate-700 transition-colors"
             >
-              <ChevronLeft className="h-4.5 w-4.5" />
+              <ChevronLeft className="h-5 w-5" />
             </button>
           </div>
 
-          <div className="space-y-3">
-            <h2 className="text-md font-bold text-white font-display line-clamp-1 leading-snug">
+          <div className="space-y-4">
+            <h2 className="text-xl font-medium text-white font-display line-clamp-2 leading-snug">
               {state.course.title}
             </h2>
-            <div className="flex items-center justify-between gap-3 text-xs">
-              <div className="h-1.5 flex-1 bg-slate-800 rounded-full overflow-hidden">
+            <div className="flex items-center justify-between gap-4 text-xs pt-1">
+              <div className="h-[3px] flex-1 bg-slate-700/50 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500 rounded-full"
+                  className="h-full bg-indigo-500 transition-all duration-500 rounded-full"
                   style={{ width: `${progressPercentage}%` }}
                 />
               </div>
-              <span className="font-mono font-bold text-primary shrink-0">{progressPercentage}%</span>
+              <span className="font-semibold text-slate-200 shrink-0">{progressPercentage} %</span>
             </div>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto divide-y divide-slate-800/60 custom-scrollbar p-2 space-y-2">
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
           {state.curriculum.map((section, sIndex) => {
             const isExpanded = expandedSections.has(section.id)
+            const isSectionActive = section.lessons.some(l => l.id === activeLesson.id)
+
             return (
-              <div key={section.id} className="pt-2 border-0">
+              <div key={section.id} className={cn("border-b border-slate-200", isSectionActive ? "border-b-0" : "")}>
                 <button
                   type="button"
                   onClick={() =>
@@ -821,38 +909,39 @@ export default function CoursePlayerPage() {
                       return next
                     })
                   }
-                  className="w-full flex items-center justify-between p-3.5 hover:bg-slate-800/40 rounded-xl text-left transition-colors"
+                  className={cn(
+                    "w-full flex items-center justify-between p-5 text-left transition-colors",
+                    isSectionActive ? "bg-indigo-500 text-white hover:bg-indigo-600" : "bg-white text-slate-600 hover:bg-slate-50"
+                  )}
                 >
-                  <div className="flex items-center gap-2.5 flex-1 min-w-0 pr-2">
-                    <span className="font-mono text-xs text-slate-500 font-semibold">{sIndex + 1}.</span>
-                    <span className="text-xs font-semibold text-slate-200 truncate pr-1">{section.title}</span>
+                  <div className="flex items-center gap-3 flex-1 min-w-0 pr-2">
+                    <span className={cn("text-[15px]", isSectionActive ? "text-white" : "text-slate-500")}>
+                      {sIndex + 1}.
+                    </span>
+                    <span className={cn("text-[15px] truncate pr-1", isSectionActive ? "font-medium" : "")}>{section.title}</span>
                   </div>
                   {isExpanded ? (
-                    <ChevronUp className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                    <ChevronUp className={cn("h-4 w-4 shrink-0", isSectionActive ? "text-white" : "text-slate-400")} />
                   ) : (
-                    <ChevronDown className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                    <ChevronDown className={cn("h-4 w-4 shrink-0", isSectionActive ? "text-white" : "text-slate-400")} />
                   )}
                 </button>
 
                 {isExpanded && (
-                  <div className="mt-1 space-y-1 pl-3">
+                  <div className="bg-slate-50">
                     {section.lessons.map((lesson) => {
                       const isActive = activeLesson.id === lesson.id
+                      // Type-based icon: video → play icon, everything else
+                      // (quiz / text / self-assessment / pdf) → book icon.
+                      // Unlike before, completion no longer *replaces* this
+                      // icon — instead it adds a small check badge on top of
+                      // it, so the lesson type stays visible even once watched.
                       const LessonIcon = lesson.isLocked
                         ? Lock
-                        : lesson.isCompleted
-                        ? CheckCircle2
-                        : lesson.type === "quiz"
-                        ? HelpCircle
-                        : lesson.type === "text"
-                        ? FileText
-                        : Play
-
-                      const iconClass = lesson.isLocked
-                        ? "text-slate-500"
-                        : lesson.isCompleted
-                        ? "text-emerald-500"
-                        : "text-primary"
+                        : lesson.type === "video"
+                          ? PlayCircle
+                          : BookOpen
+                      const showWatchedTick = !lesson.isLocked && lesson.isCompleted
 
                       return (
                         <div
@@ -860,26 +949,51 @@ export default function CoursePlayerPage() {
                           ref={isActive ? activeSidebarItemRef : null}
                           onClick={() => handleLessonClick(lesson)}
                           className={cn(
-                            "flex items-center justify-between px-3.5 py-3 rounded-xl cursor-pointer transition-all border-l-2 select-none",
+                            "flex items-start gap-4 px-6 py-4 cursor-pointer transition-all select-none border-l-4 border-b border-white/5 last:border-b-0",
                             isActive
-                              ? "bg-slate-800 border-primary text-white font-medium"
-                              : "border-transparent text-slate-400 hover:bg-slate-800/20 hover:text-slate-200",
-                            lesson.isLocked ? "cursor-not-allowed opacity-55" : ""
+                              ? "bg-[#272935] border-l-indigo-500 text-white"
+                              : "bg-[#272935] border-l-transparent text-slate-300 hover:bg-[#323440] hover:text-white",
+                            lesson.isLocked ? "cursor-not-allowed opacity-60" : ""
                           )}
                         >
-                          <div className="flex items-center gap-3 flex-1 min-w-0 pr-3">
-                            <LessonIcon className={cn("h-3.5 w-3.5 shrink-0", iconClass)} />
-                            <span className="text-xs truncate leading-snug">{lesson.title}</span>
+                          <div className="relative mt-0.5 shrink-0">
+                            <LessonIcon className={cn("h-4 w-4", isActive ? "text-white" : "text-slate-400")} />
+                            {/* Watched tick — badged on the icon itself rather than
+                                replacing it, so the video/book icon stays visible.
+                                Ring color matches the row background so it reads
+                                as a clean cutout on both active (indigo highlight
+                                is only on the section header, not this row) and
+                                inactive rows. */}
+                            {showWatchedTick && (
+                              <span className="absolute -bottom-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-[#272935]">
+                                <Check className="h-2 w-2 text-white" strokeWidth={3.5} />
+                              </span>
+                            )}
                           </div>
-                          {lesson.type === "quiz" ? (
-                            <span className="font-mono text-[10px] text-slate-500 shrink-0 font-light">Quiz</span>
-                          ) : lesson.type === "text" ? (
-                            <span className="font-mono text-[10px] text-slate-500 shrink-0 font-light">Read</span>
-                          ) : lesson.duration ? (
-                            <span className="font-mono text-[10px] text-slate-500 shrink-0 font-light">
-                              {formatTime(lesson.duration)}
+
+                          <div className="flex flex-col flex-1 min-w-0">
+                            <span className="text-[14px] font-medium leading-snug break-words">
+                              {lesson.title}
                             </span>
-                          ) : null}
+
+                            <div className="flex items-center justify-between mt-1 gap-2">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span className="text-[11px] capitalize text-slate-400 font-medium truncate">
+                                  {lesson.type === "quiz"
+                                    ? "Self-Assessment"
+                                    : lesson.type === "text"
+                                      ? "Reading"
+                                      : "video"}
+                                </span>
+                              </div>
+
+                              {lesson.duration ? (
+                                <span className="text-[11px] text-slate-400 font-medium shrink-0 tabular-nums">
+                                  {formatTime(lesson.duration)}
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
                         </div>
                       )
                     })}
@@ -891,7 +1005,6 @@ export default function CoursePlayerPage() {
         </div>
       </aside>
 
-      {/* Sidebar restore button */}
       {sidebarCollapsed && (
         <button
           type="button"
@@ -905,27 +1018,33 @@ export default function CoursePlayerPage() {
       {/* ─── MAIN CONTENT PANEL ─── */}
       <main ref={playerContainerRef} className="flex-1 flex flex-col h-full overflow-hidden bg-black relative">
 
-        {/* Top nav bar */}
-        <header className="h-14 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-6 shrink-0 z-10 select-none">
-          <Button
-            variant="ghost" size="sm"
-            onClick={handlePrevLesson}
-            disabled={!hasPrev}
-            className="text-xs gap-1 cursor-pointer font-medium hover:bg-slate-800 text-slate-300 disabled:opacity-30"
-          >
-            ‹ Previous
-          </Button>
-          <span className="text-xs font-bold font-display text-white max-w-sm sm:max-w-md md:max-w-lg truncate px-4">
-            {activeLesson.title}
-          </span>
-          <Button
-            variant="ghost" size="sm"
-            onClick={handleNextLesson}
-            disabled={!hasNext}
-            className="text-xs gap-1 cursor-pointer font-medium hover:bg-slate-800 text-slate-300 disabled:opacity-30"
-          >
-            Next ›
-          </Button>
+        <header className="h-14 bg-[#1e2028] border-b border-black flex items-center justify-center px-8 shrink-0 z-10 select-none relative">
+          <div className="w-full max-w-4xl flex items-center justify-between">
+            <Button
+              variant="ghost" size="sm"
+              onClick={handlePrevLesson}
+              disabled={!hasPrev}
+              className="text-[11px] lowercase tracking-wider gap-1 cursor-pointer font-normal hover:bg-slate-800/50 text-slate-300 disabled:opacity-30"
+            >
+              ‹ previous
+            </Button>
+
+            <div className="flex items-center gap-4">
+              {activeLesson.type === "video" && (
+                <button onClick={toggleMute} className="text-slate-400 hover:text-white transition-colors cursor-pointer hidden md:flex">
+                  {isMuted || volume === 0 ? <VolumeX className="h-4.5 w-4.5" /> : <Volume2 className="h-4.5 w-4.5" />}
+                </button>
+              )}
+              <Button
+                variant="ghost" size="sm"
+                onClick={handleNextLesson}
+                disabled={!hasNext}
+                className="text-[11px] lowercase tracking-wider gap-1 cursor-pointer font-normal hover:bg-slate-800/50 text-slate-300 disabled:opacity-30"
+              >
+                next ›
+              </Button>
+            </div>
+          </div>
         </header>
 
         {/* Player area */}
@@ -958,11 +1077,17 @@ export default function CoursePlayerPage() {
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <button
                   type="button"
-                  onClick={() => toast.info("Certificate generation is coming soon. Your completion is recorded.")}
+                  onClick={() => {
+                    if (state?.enrollment?.id) {
+                      window.open(`/api/certificates/${state.enrollment.id}`, "_blank")
+                    } else {
+                      toast.error("Enrollment not found")
+                    }
+                  }}
                   className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all cursor-pointer"
                 >
                   <Download className="h-5 w-5" />
-                  Certificate (Coming Soon)
+                  Download Certificate
                 </button>
                 <button
                   type="button"
@@ -996,12 +1121,33 @@ export default function CoursePlayerPage() {
                   </div>
                 )}
 
-                {iframeFallback && activeYoutubeVideoId && (
+                {/* Persistent, visible error card instead of a toast that vanishes */}
+                {videoError && (
+                  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center p-8 bg-slate-950">
+                    <Lock className="h-14 w-14 text-amber-500 mb-4" strokeWidth={1} />
+                    <h3 className="text-lg font-bold text-white font-display">Video unavailable</h3>
+                    <p className="text-sm text-slate-400 mt-2 max-w-md font-light">{videoError}</p>
+                    <button
+                      type="button"
+                      onClick={retryVideoLoad}
+                      className="mt-5 inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold py-2.5 px-5 rounded-xl transition-colors cursor-pointer"
+                    >
+                      Try again
+                    </button>
+                  </div>
+                )}
+
+                {/* FIX: also require type==="video" so switching to a quiz/text
+                    lesson unmounts (and thus silences) the raw fallback iframe —
+                    it has no JS API to pause via postMessage without
+                    enablejsapi, so unmounting is the reliable fix here. */}
+                {iframeFallback && activeLesson.type === "video" && activeYoutubeVideoId && !videoError && (
                   <iframe
+                    key={activeLesson.id}
                     className="absolute inset-0 w-full h-full z-0"
-                    src={`https://www.youtube.com/embed/${activeYoutubeVideoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`}
+                    src={`https://www.youtube-nocookie.com/embed/${activeYoutubeVideoId}?rel=0&modestbranding=1&playsinline=1`}
                     title={activeLesson.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowFullScreen
                     frameBorder="0"
                   />
@@ -1013,16 +1159,52 @@ export default function CoursePlayerPage() {
                   </div>
                 )}
 
-                {activeLesson.type === "video" && activeYoutubeVideoId && !iframeFallback && (
-                  <div onClick={togglePlay} className="absolute inset-0 z-10 cursor-pointer" />
+                {/* Visible play button — click is what actually starts playback
+                    when the video was only cued (page-load / resume case) */}
+                {!iframeFallback && activeLesson.type === "video" && activeYoutubeVideoId && !videoError && (
+                  <div
+                    onClick={togglePlay}
+                    className="absolute inset-0 z-10 cursor-pointer flex items-center justify-center"
+                  >
+                    {!isPlaying && !videoEnded && (
+                      <div className="h-20 w-20 rounded-full bg-black/60 border border-white/20 flex items-center justify-center backdrop-blur-sm transition-transform hover:scale-105">
+                        <Play className="h-9 w-9 text-white ml-1" fill="currentColor" />
+                      </div>
+                    )}
+                  </div>
                 )}
 
-                {/* Read-only completion status badge — video completes automatically at 50% watch time */}
-                {activeLesson.type === "video" && activeLesson.isCompleted && (
-                  <div className="absolute bottom-6 left-6 z-20 opacity-0 group-hover/screen:opacity-100 transition-opacity duration-300 pointer-events-none">
-                    <div className="inline-flex items-center gap-1.5 bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 text-xs font-semibold px-3 py-1.5 rounded-xl">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      Completed
+                {/* Custom end screen — covers the video so YouTube's own
+                    suggested-videos grid never becomes visible */}
+                {!iframeFallback && videoEnded && !videoError && (
+                  <div className="absolute inset-0 z-20 bg-slate-950/95 flex flex-col items-center justify-center text-center p-8 space-y-5">
+                    <CheckCircle2 className="h-12 w-12 text-emerald-500" strokeWidth={1.5} />
+                    <div className="space-y-1.5">
+                      <h3 className="text-lg font-bold text-white font-display">Lesson finished</h3>
+                      <p className="text-sm text-slate-400 font-light max-w-xs">{activeLesson.title}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setVideoEnded(false)
+                          loadedVideoIdRef.current = null
+                          autoplayIntentRef.current = true
+                          setRetryKey((k) => k + 1)
+                        }}
+                        className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold py-2.5 px-5 rounded-xl transition-colors cursor-pointer"
+                      >
+                        Watch again
+                      </button>
+                      {hasNext && (
+                        <button
+                          type="button"
+                          onClick={handleNextLesson}
+                          className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white text-sm font-semibold py-2.5 px-5 rounded-xl transition-colors cursor-pointer"
+                        >
+                          Next lesson <ChevronRight className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -1053,92 +1235,120 @@ export default function CoursePlayerPage() {
 
         {/* Bottom controls */}
         {activeLesson.type === "video" ? (
-          <footer className="h-16 bg-slate-900 border-t border-slate-800/80 flex items-center justify-between px-6 shrink-0 relative z-20 select-none">
-            <div className="flex items-center gap-4">
+          iframeFallback ? (
+            // Fallback mode has no JS control over the player, so give it its
+            // own minimal footer instead of leaving dead play/scrubber/volume
+            // buttons that silently do nothing.
+            <footer className="h-14 bg-slate-900 border-t border-slate-800/80 flex items-center justify-between px-6 shrink-0 relative z-20 select-none">
+              <div className="flex items-center gap-3">
+                <PlayCircle className="h-4 w-4 text-indigo-400" />
+                <span className="text-xs font-medium text-slate-300">Playing with YouTube&apos;s built-in controls</span>
+              </div>
               <button
                 type="button"
-                onClick={togglePlay}
-                className="h-8 w-8 text-white hover:text-primary transition-colors flex items-center justify-center cursor-pointer"
+                onClick={triggerCompletion}
+                disabled={activeLesson.isCompleted || completing}
+                className={cn(
+                  "inline-flex items-center gap-2 px-5 py-2 rounded-xl font-bold text-xs transition-all",
+                  activeLesson.isCompleted
+                    ? "bg-emerald-600/20 text-emerald-400 border border-emerald-500/20 cursor-default"
+                    : completing
+                      ? "bg-slate-800 text-slate-400 cursor-wait"
+                      : "bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
+                )}
               >
-                {isPlaying ? <span className="text-lg">⏸</span> : <span className="text-lg">▶</span>}
+                {completing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : activeLesson.isCompleted ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
+                {activeLesson.isCompleted ? "Completed" : completing ? "Marking..." : "Mark as complete"}
               </button>
-              <span className="font-mono text-xs text-slate-400 select-none font-light">
-                {formatTime(currentTime)} / {formatTime(duration)}
-              </span>
-            </div>
-
-            <div className="flex-1 max-w-xl mx-8 relative flex items-center h-full">
-              <input
-                type="range"
-                min={0}
-                max={duration || 100}
-                step={1}
-                value={currentTime || 0}
-                onChange={handleScrubberChange}
-                className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-primary focus:outline-none transition-all hover:h-1.5"
-              />
-            </div>
-
-            <div className="flex items-center gap-4 relative">
-              <div className="flex items-center gap-2 mr-2 group/volume">
-                <button type="button" onClick={toggleMute} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
-                  {isMuted || volume === 0 ? <VolumeX className="h-4.5 w-4.5" /> : <Volume2 className="h-4.5 w-4.5" />}
-                </button>
-                <input
-                  type="range" min={0} max={100}
-                  value={isMuted ? 0 : (volume || 0)}
-                  onChange={handleVolumeChange}
-                  className="w-0 overflow-hidden group-hover/volume:w-16 h-1 bg-slate-800 rounded appearance-none cursor-pointer accent-primary transition-all duration-300"
-                />
-              </div>
-
-              <div className="relative">
+            </footer>
+          ) : (
+            <footer className="h-16 bg-black flex items-center px-6 shrink-0 relative z-20 select-none border-t border-slate-900">
+              <div className="flex items-center gap-4 w-full">
                 <button
                   type="button"
-                  onClick={() => setSettingsOpen((prev) => !prev)}
-                  className={cn(
-                    "h-9 w-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer",
-                    settingsOpen && "bg-slate-800 text-white"
-                  )}
+                  onClick={togglePlay}
+                  className="h-8 w-8 text-indigo-400 hover:text-indigo-300 transition-colors flex items-center justify-center cursor-pointer shrink-0"
                 >
-                  <Settings className="h-4.5 w-4.5" />
+                  {isPlaying ? <span className="text-xl">⏸</span> : <span className="text-xl">▶</span>}
                 </button>
 
-                {/* ─── CHANGE 4 (render): Extracted to <PlayerSettingsMenu /> ─── */}
-                {settingsOpen && (
-                  <PlayerSettingsMenu
-                    playbackSpeed={playbackSpeed}
-                    availableQualities={availableQualities}
-                    activeQuality={activeQuality}
-                    ccActive={ccActive}
-                    onSpeedSelect={handleSpeedSelect}
-                    onQualitySelect={handleQualitySelect}
-                    onToggleCc={toggleCc}
-                    onClose={() => setSettingsOpen(false)}
+                <div className="flex-1 relative flex items-center h-full">
+                  <input
+                    type="range"
+                    min={0}
+                    max={duration || 100}
+                    step={1}
+                    value={currentTime || 0}
+                    onChange={handleScrubberChange}
+                    className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 focus:outline-none transition-all hover:h-1.5"
                   />
-                )}
+                </div>
+
+                <div className="flex items-center gap-5 shrink-0 pl-4">
+                  <span className="font-mono text-[10px] text-slate-300 select-none font-semibold">
+                    {formatTime(currentTime)} / {formatTime(duration)}
+                  </span>
+
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setSettingsOpen((prev) => !prev)}
+                      className={cn(
+                        "flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer",
+                        settingsOpen && "text-white"
+                      )}
+                    >
+                      <Settings className="h-4.5 w-4.5" />
+                    </button>
+
+                    {settingsOpen && (
+                      <PlayerSettingsMenu
+                        playbackSpeed={playbackSpeed}
+                        availableQualities={availableQualities}
+                        activeQuality={activeQuality}
+                        ccActive={ccActive}
+                        onSpeedSelect={handleSpeedSelect}
+                        onQualitySelect={handleQualitySelect}
+                        onToggleCc={toggleCc}
+                        onClose={() => setSettingsOpen(false)}
+                      />
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 group/volume relative hidden sm:flex">
+                    <button type="button" onClick={toggleMute} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
+                      {isMuted || volume === 0 ? <VolumeX className="h-4.5 w-4.5" /> : <Volume2 className="h-4.5 w-4.5" />}
+                    </button>
+                    <input
+                      type="range" min={0} max={100}
+                      value={isMuted ? 0 : (volume || 0)}
+                      onChange={handleVolumeChange}
+                      className="w-0 overflow-hidden group-hover/volume:w-16 h-1 bg-slate-800 rounded appearance-none cursor-pointer accent-indigo-500 transition-all duration-300"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={toggleTheatre}
+                    className={cn(
+                      "flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer hidden md:block",
+                      theatreMode && "text-white"
+                    )}
+                  >
+                    <Tv className="h-4 w-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={toggleFullscreen}
+                    className="flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  >
+                    {isFullscreen ? <Minimize2 className="h-4.5 w-4.5" /> : <Maximize2 className="h-4.5 w-4.5" />}
+                  </button>
+                </div>
               </div>
-
-              <button
-                type="button"
-                onClick={toggleTheatre}
-                className={cn(
-                  "h-9 w-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer",
-                  theatreMode && "bg-slate-800 text-white"
-                )}
-              >
-                <Tv className="h-4.5 w-4.5" />
-              </button>
-
-              <button
-                type="button"
-                onClick={toggleFullscreen}
-                className="h-9 w-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
-              >
-                {isFullscreen ? <Minimize2 className="h-4.5 w-4.5" /> : <Maximize2 className="h-4.5 w-4.5" />}
-              </button>
-            </div>
-          </footer>
+            </footer>
+          )
         ) : (
           <footer className="h-14 bg-slate-900 border-t border-slate-800/80 flex items-center justify-between px-6 shrink-0 relative z-20 select-none">
             <div className="flex items-center gap-3">
@@ -1151,11 +1361,6 @@ export default function CoursePlayerPage() {
                 {activeLesson.type === "quiz" ? "Interactive Quiz" : "Reading Material"}
               </span>
             </div>
-            {activeLesson.isCompleted && (
-              <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1">
-                <CheckCircle2 className="h-3.5 w-3.5" /> Completed
-              </span>
-            )}
           </footer>
         )}
       </main>
@@ -1177,7 +1382,6 @@ function QuizPlayer({ lesson, isCompleted, completing, onComplete }: QuizPlayerP
   const [submitted, setSubmitted] = React.useState(false)
   const [score, setScore] = React.useState(0)
 
-  // ─── CHANGE 15: Explicit reset when lesson changes (keyed externally too) ──
   React.useEffect(() => {
     setSelectedAnswers({})
     setSubmitted(false)
@@ -1259,8 +1463,8 @@ function QuizPlayer({ lesson, isCompleted, completing, onComplete }: QuizPlayerP
                   submitted && isCorrectAnswer
                     ? "border-emerald-500/30 bg-emerald-500/5"
                     : submitted && isAnswered && !isCorrectAnswer
-                    ? "border-rose-500/30 bg-rose-500/5"
-                    : "border-slate-800 bg-slate-900/50"
+                      ? "border-rose-500/30 bg-rose-500/5"
+                      : "border-slate-800 bg-slate-900/50"
                 )}
               >
                 <div className="flex items-start gap-3">
@@ -1388,8 +1592,8 @@ function TextLessonViewer({ lesson, isCompleted, completing, onComplete }: TextL
               isCompleted
                 ? "bg-emerald-600/20 text-emerald-400 border border-emerald-500/20 cursor-default"
                 : completing
-                ? "bg-slate-800 text-slate-400 cursor-wait"
-                : "bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
+                  ? "bg-slate-800 text-slate-400 cursor-wait"
+                  : "bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
             )}
           >
             {completing ? <Loader2 className="h-4 w-4 animate-spin" /> : isCompleted ? <CheckCircle2 className="h-4 w-4" /> : <Check className="h-4 w-4" />}

@@ -4,6 +4,7 @@ import { requireApiRole } from "@/lib/server/auth-guard"
 import { logAdminAction } from "@/lib/services/audit.service"
 import { updateCourseSchema } from "@/lib/server/validators/course"
 import { withRateLimit } from "@/lib/server/arcjet"
+import { revalidatePath } from "next/cache"
 
 const aj = withRateLimit(40, 60);
 
@@ -76,10 +77,25 @@ export async function PATCH(
     }
     const data = parsed.data
 
+    /* ── Set publishedAt when transitioning to published for the first time ── */
+    if (data.status === "published") {
+      const existing = await prisma.course.findUnique({
+        where: { id: courseId },
+        select: { publishedAt: true, slug: true },
+      });
+      if (existing && !existing.publishedAt) {
+        (data as any).publishedAt = new Date();
+      }
+    }
+
     const updated = await prisma.course.update({
       where: { id: courseId },
       data,
     })
+
+    /* ── Revalidate ISR pages so changes are live instantly ── */
+    revalidatePath("/courses")
+    revalidatePath(`/courses/${updated.slug}`)
 
     await logAdminAction({
       adminId: session.user.id,
@@ -109,6 +125,9 @@ export async function DELETE(
 
   try {
     await prisma.course.delete({ where: { id: courseId } })
+
+    /* ── Revalidate ISR pages ── */
+    revalidatePath("/courses")
 
     await logAdminAction({
       adminId: session.user.id,

@@ -24,7 +24,7 @@ export default async function StudentLayout({
   await requireExactRole("student");
 
   return (
-    <div>
+    <div className="theme-student min-h-screen flex flex-col">
       <Navbar />
       {children}
       <Footer />

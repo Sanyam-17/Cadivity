@@ -21,6 +21,6 @@ export default async function AdminLayout({
   // Server-side guard — redirects non-admin users
   await requireAdmin();
 
-  return <>{children}</>;
+  return <div className="theme-admin min-h-screen">{children}</div>;
 }
 

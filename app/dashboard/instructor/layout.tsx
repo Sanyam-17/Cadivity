@@ -21,6 +21,6 @@ export default async function InstructorLayout({
   // Server-side guard — redirects non-instructor users
   await requireInstructorOrAdmin();
 
-  return <>{children}</>;
+  return <div className="theme-instructor min-h-screen">{children}</div>;
 }
 

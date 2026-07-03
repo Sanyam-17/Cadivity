@@ -3,9 +3,9 @@
 import Autoplay from "embla-carousel-autoplay";
 import useEmblaCarousel from "embla-carousel-react";
 import Image from "next/image";
-import heroBg1 from "@/public/generated_images/Background_img1.png";
-import heroBg2 from "@/public/generated_images/Background_img2.png";
-import heroBg3 from "@/public/generated_images/Background_img3.png";
+import heroBg1 from "@/public/generated_images/Background_img1.webp";
+import heroBg2 from "@/public/generated_images/Background_img2.webp";
+import heroBg3 from "@/public/generated_images/Background_img3.webp";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
@@ -49,15 +49,16 @@ export function HeroSlider() {
         {slides.map((slide, index) => (
           <div
             key={index}
-            className="relative flex-[0_0_100%] min-w-0 h-144 md:h-176"
+            className="relative flex-[0_0_100%] min-w-0"
+            style={{ aspectRatio: "16 / 9", minHeight: "28rem" }}
           >
-            {/* Background Image — now uses next/image for optimization */}
+            {/* Background Image — uses next/image for AVIF/WebP optimization */}
             <Image
               src={slide.image}
               alt={slide.alt}
               fill
               priority={index === 0}
-              sizes="100vw"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
               className="object-cover opacity-40 transition-transform duration-[2000ms] hover:scale-105"
               placeholder="blur"
             />

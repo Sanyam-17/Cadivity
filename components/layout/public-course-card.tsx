@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Check, Download } from "lucide-react";
+import { Award, Check, Download, Users } from "lucide-react";
 import Link from "next/link";
 
 export interface PublicCourse {
@@ -20,6 +20,10 @@ export interface PublicCourse {
   price?: number | null;
   originalPrice?: number | null;
   thumbnail?: string | null;
+  /* extended social-proof fields (optional for backwards-compat) */
+  enrollmentCount?: number;
+  instructorName?: string | null;
+  categoryName?: string | null;
 }
 
 function getDifficultyColor(badge: string | null | undefined): string {
@@ -61,13 +65,21 @@ export function PublicCourseCard({
   const hasBrochure = !!course.brochureUrl;
   const isComingSoon = course.ctaType === "coming_soon";
   const isContactUs = course.ctaType === "contact_us";
+  const isFree = course.price === 0 || course.price == null;
+  const hasDiscount =
+    course.price != null &&
+    course.originalPrice != null &&
+    course.originalPrice > course.price;
+  const discountPct = hasDiscount
+    ? Math.round(((course.originalPrice! - course.price!) / course.originalPrice!) * 100)
+    : 0;
 
   return (
     <Card
-      className="flex flex-col overflow-hidden border-slate-200 shadow-sm hover:shadow-xl transition-all duration-500 group hover:-translate-y-1 animate-fade-in-up"
+      className="flex flex-col overflow-hidden border-slate-200 shadow-sm hover:shadow-xl transition-all duration-500 group hover:-translate-y-1 animate-fade-in-up h-full"
       style={{ animationDelay: `${index * 100 + 100}ms` }}
     >
-      {/* ─── Header: Logo + Badge ─── */}
+      {/* ─── Header: Logo + Badges ─── */}
       <CardHeader className="bg-slate-50 border-b border-slate-100">
         <div className="flex justify-between items-start mb-4">
           {/* Software Logo */}
@@ -88,16 +100,40 @@ export function PublicCourseCard({
             )}
           </span>
 
-          {/* Difficulty Badge */}
-          {course.difficultyBadge && (
-            <Badge
-              variant="secondary"
-              className={`${getDifficultyColor(course.difficultyBadge)} hover:opacity-90 shrink-0`}
-            >
-              {course.difficultyBadge}
-            </Badge>
-          )}
+          {/* Right badges stack */}
+          <div className="flex flex-col items-end gap-1.5 shrink-0">
+            {/* Free / Paid badge */}
+            {!isComingSoon && (
+              isFree ? (
+                <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 border text-[10px] font-bold px-2 py-0.5">
+                  FREE
+                </Badge>
+              ) : (
+                hasDiscount && (
+                  <Badge className="bg-red-100 text-red-600 border-red-200 border text-[10px] font-bold px-2 py-0.5">
+                    {discountPct}% OFF
+                  </Badge>
+                )
+              )
+            )}
+            {/* Difficulty badge */}
+            {course.difficultyBadge && (
+              <Badge
+                variant="secondary"
+                className={`${getDifficultyColor(course.difficultyBadge)} hover:opacity-90 text-[10px]`}
+              >
+                {course.difficultyBadge}
+              </Badge>
+            )}
+          </div>
         </div>
+
+        {/* Category */}
+        {course.categoryName && (
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">
+            {course.categoryName}
+          </p>
+        )}
 
         {/* Title */}
         <h3 className="font-display text-xl font-bold text-slate-900 group-hover:text-primary transition-colors duration-300">
@@ -106,8 +142,23 @@ export function PublicCourseCard({
 
         {/* Tags */}
         {course.tags && (
-          <p className="text-sm font-medium text-accent">{course.tags}</p>
+          <p className="text-sm font-medium text-accent mt-1">{course.tags}</p>
         )}
+
+        {/* Instructor + Enrollment meta */}
+        <div className="flex items-center gap-4 mt-3 pt-2 border-t border-slate-100">
+          {course.instructorName && (
+            <p className="text-xs text-slate-500 truncate">
+              By <span className="font-medium text-slate-700">{course.instructorName}</span>
+            </p>
+          )}
+          {typeof course.enrollmentCount === "number" && course.enrollmentCount > 0 && (
+            <p className="text-xs text-slate-500 flex items-center gap-1 shrink-0">
+              <Users className="h-3 w-3" />
+              {course.enrollmentCount.toLocaleString("en-IN")} enrolled
+            </p>
+          )}
+        </div>
       </CardHeader>
 
       {/* ─── Content: Description + Features ─── */}
@@ -136,18 +187,29 @@ export function PublicCourseCard({
           </div>
         )}
 
+        {/* Certificate badge */}
+        <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-auto">
+          <Award className="h-3.5 w-3.5 text-amber-500" />
+          Certificate of Completion
+        </div>
+
         {/* Price */}
-        {(course.price != null || course.originalPrice != null) && (
-          <div className="flex items-baseline gap-2 mt-auto">
+        {!isFree && (course.price != null || course.originalPrice != null) && (
+          <div className="flex items-baseline gap-2 mt-3">
             {course.price != null && (
               <span className="text-lg font-bold text-slate-900">
                 {formatPrice(course.price)}
               </span>
             )}
             {course.originalPrice != null && (
-              <span className="text-sm text-slate-400 line-through">
-                {formatPrice(course.originalPrice)}
-              </span>
+              <>
+                <span className="text-sm text-slate-400 line-through" aria-hidden="true">
+                  {formatPrice(course.originalPrice)}
+                </span>
+                <span className="sr-only">
+                  Original price: {formatPrice(course.originalPrice)}
+                </span>
+              </>
             )}
           </div>
         )}
@@ -174,7 +236,7 @@ export function PublicCourseCard({
               className="flex-1 bg-slate-300 text-slate-500 cursor-not-allowed"
               disabled
             >
-              Coming Soon...
+              Coming Soon…
             </Button>
           ) : isPreview ? (
             <Button className="flex-1 bg-primary hover:bg-primary/90 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20">
@@ -183,7 +245,7 @@ export function PublicCourseCard({
           ) : (
             <Link href={`/courses/${course.slug}`} className="flex-1">
               <Button className="w-full bg-primary hover:bg-primary/90 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20">
-                Enroll Now
+                View Course
               </Button>
             </Link>
           )}
@@ -211,6 +273,7 @@ export function PublicCourseCard({
                     variant="outline"
                     size="icon"
                     title="Download Brochure"
+                    aria-label="Download course brochure"
                     className="hover:scale-110 transition-transform duration-300"
                   >
                     <Download className="h-4 w-4" />
@@ -222,6 +285,7 @@ export function PublicCourseCard({
                 variant="outline"
                 size="icon"
                 title={isComingSoon ? "Coming Soon" : "No brochure"}
+                aria-label={isComingSoon ? "Brochure coming soon" : "No brochure available"}
                 disabled
                 className="opacity-40 cursor-not-allowed"
               >

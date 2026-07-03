@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 
-import servicesHero from "@/public/generated_images/Background_img1.png";
+import servicesHero from "@/public/generated_images/Background_img1.webp";
 
 export default function ServicesPage() {
   const heroReveal = useScrollReveal();
@@ -68,7 +68,9 @@ export default function ServicesPage() {
           alt="CAD automation engineering services - drawing automation, plugin development, and batch processing"
           fill
           priority
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
           className="object-cover opacity-15 transition-transform duration-2000 hover:scale-105"
+          placeholder="blur"
         />
         {/* Floating shapes */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
