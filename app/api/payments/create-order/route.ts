@@ -188,11 +188,22 @@ export async function POST(request: NextRequest) {
       201
     );
   } catch (error) {
-    logger.error("payment.create.failed", {
-      error: error instanceof Error ? error.message : String(error),
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    console.log("[v0] Payment creation error:", {
+      message: errorMessage,
+      stack: errorStack,
       studentId,
       courseSlug,
     });
-    return errorResponse("Failed to initiate payment", 500);
+    
+    logger.error("payment.create.failed", {
+      error: errorMessage,
+      stack: errorStack,
+      studentId,
+      courseSlug,
+    });
+    return errorResponse(`Failed to initiate payment: ${errorMessage}`, 500);
   }
 }
