@@ -164,15 +164,35 @@ export async function createOrder(
     responseData: JSON.stringify(data),
   });
 
-  const orderId = data.orderId || data.data?.merchantTransactionId || data.data?.orderId || params.merchantOrderId;
-  const redirectUrl = data.redirectUrl || data.instrumentResponse?.redirectInfo?.url || data.data?.instrumentResponse?.redirectInfo?.url || data.data?.redirectUrl;
+  // PhonePe API v2 response structure:
+  // {
+  //   "success": true,
+  //   "code": "PAYMENT_INITIATED",
+  //   "message": "Payment initiated",
+  //   "data": {
+  //     "merchantOrderId": "...",
+  //     "merchantTransactionId": "...",
+  //     "instrumentResponse": {
+  //       "type": "LINK",
+  //       "redirectInfo": {
+  //         "url": "https://...",
+  //         "method": "REDIRECT"
+  //       }
+  //     }
+  //   }
+  // }
+
+  const orderId = data.data?.merchantTransactionId || data.data?.merchantOrderId || params.merchantOrderId;
+  const redirectUrl = data.data?.instrumentResponse?.redirectInfo?.url;
 
   if (!redirectUrl) {
     logger.error("phonepe.createOrder.missingRedirectUrl", {
       merchantOrderId: params.merchantOrderId,
+      success: data.success,
+      code: data.code,
       data: JSON.stringify(data),
     });
-    throw new Error("PhonePe response did not contain a redirectUrl");
+    throw new Error("PhonePe response did not contain a valid redirect URL. Please check your API credentials.");
   }
 
   return {
