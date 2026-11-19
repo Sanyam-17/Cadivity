@@ -62,7 +62,7 @@ export default function InstructorDetailPage() {
     if (confirmAction === "delete") {
       await mutate(`/api/admin/instructors/${instructorId}`, { method: "DELETE" })
       toast.success("Instructor removed")
-      router.push("/admin/instructors")
+      router.push("/dashboard/admin/instructors")
     } else {
       const active = confirmAction === "reactivate"
       await mutate(`/api/admin/instructors/${instructorId}`, {
@@ -172,7 +172,7 @@ export default function InstructorDetailPage() {
                       )}
                     </div>
                     <div className="min-w-0">
-                      <Link href={`/admin/courses/${course.id}`} className="text-sm font-medium hover:text-primary transition-colors truncate block">{course.title}</Link>
+                      <Link href={`/dashboard/admin/courses/${course.id}`} className="text-sm font-medium hover:text-primary transition-colors truncate block">{course.title}</Link>
                       <div className="flex items-center gap-3 mt-0.5">
                         <span className="text-xs text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" />{course._count.enrollments} students</span>
                       </div>

@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X, LogOut, ArrowUpRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuthModal } from "@/hooks/use-auth-modal";
 import { authClient } from "@/lib/auth-client";
@@ -17,12 +16,12 @@ export function Navbar() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { open } = useAuthModal();
+  const [scrolled, setScrolled] = useState(false);
 
   const navItems = [
-    { label: "Home", href: "/" },
     { label: "Services", href: "/services" },
-    { label: "Courses", href: "/courses" },
-    { label: "About Us", href: "/about" },
+    { label: "Programs", href: "/courses" },
+    { label: "About", href: "/about" },
     { label: "Contact", href: "/contact" },
   ];
 
@@ -35,6 +34,12 @@ export function Navbar() {
     return () => { document.body.style.overflow = ""; };
   }, [mobileMenuOpen]);
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   // Role-based dashboard link
   const userRole = session?.user ? (session.user as any).role : null;
   const dashboardUrl = userRole === "admin"
@@ -43,9 +48,22 @@ export function Navbar() {
       ? "/dashboard/instructor"
       : "/dashboard/student";
 
+  // Determine if we're on a page with a dark hero
+  const darkHeroPages = ["/", "/services", "/courses", "/contact", "/about"];
+  const isDarkHero = darkHeroPages.includes(pathname);
+  const isTransparent = isDarkHero && !scrolled;
+
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 shadow-sm">
-      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+    <nav
+      className={cn(
+        "fixed top-0 z-50 w-full transition-all duration-300",
+        isTransparent
+          ? "bg-gradient-to-b from-[#070B14] via-[#070B14]/85 to-transparent"
+          : "border-b bg-[var(--cad-cream)]",
+        scrolled && !isTransparent && "border-[var(--cad-hairline)]"
+      )}
+    >
+      <div className="cad-container flex h-20 items-center justify-between">
         {/* Logo */}
         <Link
           href={session ? dashboardUrl : "/"}
@@ -56,22 +74,30 @@ export function Navbar() {
             alt="Cadivity Logo"
             width={160}
             height={64}
-            className="h-10 sm:h-12 lg:h-14 w-auto object-contain"
+            className={cn(
+              "h-10 sm:h-12 lg:h-14 w-auto object-contain transition-all",
+              isTransparent && "brightness-0 invert"
+            )}
             priority
           />
         </Link>
 
         {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-6 lg:gap-8">
+        <div className="hidden lg:flex items-center gap-8">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "text-sm font-medium transition-colors hover:text-primary relative py-1 whitespace-nowrap",
-                pathname === item.href
-                  ? "text-primary font-bold after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-primary"
-                  : "text-muted-foreground"
+                "cad-text-mono transition-colors relative py-1",
+                isTransparent
+                  ? "text-white/70 hover:text-white"
+                  : "text-[var(--cad-muted)] hover:text-[var(--cad-ink)]",
+                pathname === item.href && (
+                  isTransparent
+                    ? "text-white after:absolute after:bottom-0 after:left-0 after:w-full after:h-px after:bg-white"
+                    : "text-[var(--cad-ink)] after:absolute after:bottom-0 after:left-0 after:w-full after:h-px after:bg-[var(--cad-ink)]"
+                )
               )}
             >
               {item.label}
@@ -82,90 +108,137 @@ export function Navbar() {
             <>
               <Link href={dashboardUrl}>
                 <span className={cn(
-                  "text-sm font-medium transition-colors hover:text-primary relative py-1 cursor-pointer whitespace-nowrap",
-                  pathname.startsWith(dashboardUrl)
-                    ? "text-primary font-bold after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-primary"
-                    : "text-muted-foreground"
+                  "cad-text-mono transition-colors relative py-1 cursor-pointer",
+                  isTransparent
+                    ? "text-white/70 hover:text-white"
+                    : "text-[var(--cad-muted)] hover:text-[var(--cad-ink)]",
+                  pathname.startsWith(dashboardUrl) && (
+                    isTransparent
+                      ? "text-white after:absolute after:bottom-0 after:left-0 after:w-full after:h-px after:bg-white"
+                      : "text-[var(--cad-ink)] after:absolute after:bottom-0 after:left-0 after:w-full after:h-px after:bg-[var(--cad-ink)]"
+                  )
                 )}>
                   {userRole === "admin" ? "Admin Panel" : "My Batch"}
                 </span>
               </Link>
               <button
                 onClick={handleSignOut}
-                className="text-sm font-medium transition-colors hover:text-primary text-muted-foreground py-1 cursor-pointer whitespace-nowrap"
+                className={cn(
+                  "cad-text-mono transition-colors py-1 cursor-pointer",
+                  isTransparent
+                    ? "text-white/70 hover:text-white"
+                    : "text-[var(--cad-muted)] hover:text-[var(--cad-ink)]"
+                )}
               >
                 Sign out
               </button>
             </>
           ) : (
-            <Button className="text-sm font-medium" onClick={() => open()}>
+            <button
+              onClick={() => open()}
+              className={cn(
+                "cad-btn",
+                isTransparent
+                  ? "cad-btn-outline text-white border-white"
+                  : "cad-btn-primary"
+              )}
+            >
               Log in
-            </Button>
+              <ArrowUpRight className="h-3.5 w-3.5 cad-arrow" />
+            </button>
           )}
         </div>
 
         {/* Mobile Toggle */}
         <button
           aria-label="Toggle menu"
-          className="md:hidden rounded-md p-2 text-muted-foreground hover:text-primary hover:bg-muted transition"
+          className={cn(
+            "lg:hidden p-2 transition-colors",
+            isTransparent
+              ? "text-white hover:text-white/80"
+              : "text-[var(--cad-ink)] hover:text-[var(--cad-muted)]"
+          )}
           onClick={() => setMobileMenuOpen((prev) => !prev)}
         >
           {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
 
-      {/* Mobile Overlay */}
+      {/* Mobile Full-Screen Menu */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-40 md:hidden bg-black/40 backdrop-blur-sm">
-          <div className="absolute top-0 left-0 right-0 bg-background shadow-lg animate-in slide-in-from-top-2">
-            <div className="flex flex-col gap-4 px-6 py-6">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "text-base font-medium transition-colors hover:text-primary py-2 border-b last:border-0",
-                    pathname === item.href ? "text-primary font-bold" : "text-muted-foreground"
-                  )}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              ))}
+        <div className="fixed inset-0 z-40 lg:hidden bg-[var(--cad-navy-950)] flex flex-col">
+          {/* Header */}
+          <div className="cad-container flex h-20 items-center justify-between">
+            <Image
+              src="/Cadivity.png"
+              alt="Cadivity Logo"
+              width={160}
+              height={64}
+              className="h-10 sm:h-12 w-auto object-contain brightness-0 invert"
+              priority
+            />
+            <button
+              aria-label="Close menu"
+              className="text-white p-2"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
 
-              {isPending ? null : session ? (
-                <div className="space-y-4 pt-2">
-                  <Link
-                    href={dashboardUrl}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block text-base font-medium text-muted-foreground hover:text-primary py-2"
-                  >
-                    {userRole === "admin" ? "Admin Panel" : "My Batch"}
-                  </Link>
-                  <button
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      handleSignOut();
-                    }}
-                    className="w-full text-left text-base font-medium text-muted-foreground hover:text-primary py-2 flex items-center gap-2"
-                  >
-                    Sign out
-                  </button>
-                </div>
-              ) : (
-                <Button
-                  onClick={() => { setMobileMenuOpen(false); open(); }}
-                  className="mt-2 w-full bg-primary text-white rounded-full"
+          {/* Links */}
+          <div className="flex-1 cad-container flex flex-col justify-center gap-0">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "block py-6 border-b border-[var(--cad-hairline-dark)] transition-colors",
+                  "font-[var(--font-manrope)] text-2xl font-light tracking-tight",
+                  pathname === item.href ? "text-white" : "text-white/60 hover:text-white"
+                )}
+                style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
+
+            {isPending ? null : session ? (
+              <div className="pt-6 space-y-4">
+                <Link
+                  href={dashboardUrl}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-2xl font-light text-white/60 hover:text-white py-4 border-b border-[var(--cad-hairline-dark)]"
+                  style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}
                 >
-                  Login
-                </Button>
-              )}
-            </div>
+                  {userRole === "admin" ? "Admin Panel" : "My Batch"}
+                </Link>
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleSignOut();
+                  }}
+                  className="block text-2xl font-light text-white/60 hover:text-white py-4 w-full text-left"
+                  style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}
+                >
+                  Sign out
+                </button>
+              </div>
+            ) : (
+              <div className="pt-8">
+                <button
+                  onClick={() => { setMobileMenuOpen(false); open(); }}
+                  className="cad-btn cad-btn-primary w-full"
+                >
+                  Log in
+                  <ArrowUpRight className="h-3.5 w-3.5 cad-arrow" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
     </nav>
   );
 }
-
-

@@ -4,13 +4,12 @@ import * as React from "react"
 import Link from "next/link"
 import { useSearchParams, useRouter } from "next/navigation"
 import { authClient } from "@/lib/auth-client"
-import { Button } from "@/components/ui/button"
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
-import { CheckCircle2, Loader2, KeyRound } from "lucide-react"
+import { CheckCircle2, Loader2, KeyRound, ArrowUpRight } from "lucide-react"
 import { toast } from "sonner"
 
 interface CourseSummary {
@@ -76,76 +75,102 @@ function CheckoutSuccessContent() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-955 text-slate-100 flex items-center justify-center px-4 py-12">
-      <div className="max-w-md w-full text-center space-y-6">
+    <div className="min-h-screen bg-[var(--cad-cream)] text-[var(--cad-ink)] flex items-center justify-center px-4 py-12">
+      <div className="max-w-md w-full bg-[var(--cad-cream)] border border-[var(--cad-hairline)] rounded-sm p-8 text-center space-y-6 relative">
+        {/* Blueprint corner marks */}
+        <div className="absolute top-2 left-2 w-2 h-2 border-t border-l border-[var(--cad-hairline)] pointer-events-none" />
+        <div className="absolute top-2 right-2 w-2 h-2 border-t border-r border-[var(--cad-hairline)] pointer-events-none" />
+        <div className="absolute bottom-2 left-2 w-2 h-2 border-b border-l border-[var(--cad-hairline)] pointer-events-none" />
+        <div className="absolute bottom-2 right-2 w-2 h-2 border-b border-r border-[var(--cad-hairline)] pointer-events-none" />
+
         <div className="flex justify-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/30">
-            <CheckCircle2 className="h-7 w-7 text-emerald-400" />
+          <div className="w-14 h-14 rounded-full border-2 border-[var(--cad-cobalt)] flex items-center justify-center">
+            <CheckCircle2 className="h-7 w-7 text-[var(--cad-cobalt)]" />
           </div>
         </div>
 
         <div className="space-y-2">
-          <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-white">
-            Payment Successful!
+          <p className="cad-eyebrow text-[var(--cad-cobalt)]">ENROLLMENT CONFIRMED</p>
+          <h1 className="cad-text-h3 text-[var(--cad-ink)]">
+            Enrollment confirmed
           </h1>
-          <p className="text-slate-400 text-sm">
+          <p className="text-sm text-[var(--cad-muted)]" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
             {course ? (
-              <>You&apos;re enrolled in <span className="text-white font-medium">{course.title}</span>.</>
+              <>You are enrolled in <span className="text-[var(--cad-ink)] font-semibold">{course.title}</span>.</>
             ) : (
-              "Your enrollment is confirmed."
+              "Your enrollment and course access have been confirmed."
             )}
           </p>
         </div>
 
         {isNewAccount && email ? (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/30 p-6 space-y-4 backdrop-blur text-left">
-            <div className="flex items-start gap-2.5 text-xs text-slate-400">
-              <KeyRound className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+          <div className="rounded-sm border border-[var(--cad-hairline)] bg-[var(--cad-ice)]/30 p-5 space-y-4 text-left">
+            <div className="flex items-start gap-2.5 text-xs text-[var(--cad-muted)]" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
+              <KeyRound className="h-4 w-4 text-[var(--cad-cobalt)] shrink-0 mt-0.5" />
               <p>
-                We&apos;ve created your Cadivity account using <span className="text-white">{email}</span>.
-                Enter the 6-digit sign-in code we just emailed you to access your course.
+                We&apos;ve set up your Cadivity account for <span className="font-semibold text-[var(--cad-ink)]">{email}</span>.
+                Enter the 6-digit access code sent to your email to begin.
               </p>
             </div>
 
-            <div className="flex justify-center">
+            <div className="flex justify-center py-1">
               <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} />
-                  <InputOTPSlot index={1} />
-                  <InputOTPSlot index={2} />
-                  <InputOTPSlot index={3} />
-                  <InputOTPSlot index={4} />
-                  <InputOTPSlot index={5} />
+                <InputOTPGroup className="gap-1.5">
+                  <InputOTPSlot index={0} className="border-[var(--cad-hairline)] rounded-sm bg-transparent" />
+                  <InputOTPSlot index={1} className="border-[var(--cad-hairline)] rounded-sm bg-transparent" />
+                  <InputOTPSlot index={2} className="border-[var(--cad-hairline)] rounded-sm bg-transparent" />
+                  <InputOTPSlot index={3} className="border-[var(--cad-hairline)] rounded-sm bg-transparent" />
+                  <InputOTPSlot index={4} className="border-[var(--cad-hairline)] rounded-sm bg-transparent" />
+                  <InputOTPSlot index={5} className="border-[var(--cad-hairline)] rounded-sm bg-transparent" />
                 </InputOTPGroup>
               </InputOTP>
             </div>
 
-            <Button
+            <button
               onClick={handleVerifyOtp}
               disabled={otp.length !== 6 || isVerifying}
-              className="w-full bg-primary text-white rounded-xl"
+              className="cad-btn cad-btn-cobalt w-full flex items-center justify-center gap-1.5"
             >
-              {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify & Start Learning"}
-            </Button>
+              {isVerifying ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Verifying Code...</span>
+                </>
+              ) : (
+                <>
+                  <span>Verify & Start Learning</span>
+                  <ArrowUpRight className="h-4 w-4" />
+                </>
+              )}
+            </button>
 
             <button
               type="button"
               onClick={handleResendOtp}
               disabled={isResending}
-              className="w-full text-center text-xs text-slate-500 hover:text-primary transition-colors"
+              className="cad-text-mono text-xs uppercase tracking-wider text-[var(--cad-muted)] hover:text-[var(--cad-cobalt)] transition-colors w-full text-center block pt-1"
             >
-              {isResending ? "Resending..." : "Didn't get a code? Resend"}
+              {isResending ? "Resending..." : "Didn't receive code? Resend"}
             </button>
           </div>
         ) : (
-          <Button asChild className="w-full bg-primary text-white rounded-xl py-6">
-            <Link href={playUrl}>Start Learning</Link>
-          </Button>
+          <Link
+            href={playUrl}
+            className="cad-btn cad-btn-cobalt w-full py-3.5 inline-flex items-center justify-center gap-2"
+          >
+            <span>Start Learning</span>
+            <ArrowUpRight className="h-4 w-4" />
+          </Link>
         )}
 
-        <Link href="/courses" className="block text-xs text-slate-500 hover:text-primary transition-colors">
-          Browse more courses
-        </Link>
+        <div className="pt-2">
+          <Link
+            href="/courses"
+            className="cad-text-mono text-xs uppercase tracking-wider text-[var(--cad-muted)] hover:text-[var(--cad-cobalt)] transition-colors inline-block"
+          >
+            Browse more courses
+          </Link>
+        </div>
       </div>
     </div>
   )
@@ -155,8 +180,8 @@ export default function CheckoutSuccessPage() {
   return (
     <React.Suspense
       fallback={
-        <div className="min-h-screen bg-slate-955 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 text-primary animate-spin" />
+        <div className="min-h-screen bg-[var(--cad-cream)] flex items-center justify-center">
+          <Loader2 className="h-8 w-8 text-[var(--cad-cobalt)] animate-spin" />
         </div>
       }
     >

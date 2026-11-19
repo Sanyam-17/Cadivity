@@ -142,7 +142,7 @@ export default function StudentsPage() {
           title="Students"
           description="Manage and monitor enrolled students"
           actions={
-            <Button>
+            <Button className="bg-[#F2A63B] text-[#070B14] hover:bg-[#e0952e] rounded-[2px] font-mono text-[11px] font-bold uppercase tracking-[0.12em] shadow-sm">
               <Plus className="mr-2 h-4 w-4" />
               Add Student
             </Button>
@@ -150,7 +150,7 @@ export default function StudentsPage() {
         />
 
         {/* Filters & Search */}
-        <div className="rounded-[var(--radius-card)] border border-border bg-card">
+        <div className="rounded-[2px] border border-[var(--cad-hairline,rgba(14,22,36,0.15))] bg-card shadow-sm">
           <div className="flex flex-col gap-4 border-b border-border p-4 sm:p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="relative flex-1 sm:max-w-xs">
@@ -316,7 +316,7 @@ export default function StudentsPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="animate-dropdown-enter">
                               <DropdownMenuItem asChild>
-                                <Link href={`/admin/students/${student.id}`}>
+                                <Link href={`/dashboard/admin/students/${student.id}`}>
                                   <Eye className="mr-2 h-4 w-4" />
                                   View Profile
                                 </Link>
@@ -397,7 +397,7 @@ export default function StudentsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem asChild>
-                            <Link href={`/admin/students/${student.id}`}>
+                            <Link href={`/dashboard/admin/students/${student.id}`}>
                               <Eye className="mr-2 h-4 w-4" />
                               View Profile
                             </Link>

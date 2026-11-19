@@ -7,52 +7,56 @@
 /* Warm indigo/teal palette — inviting, learner-focused UI */
 
 .theme-student {
-  /* Surface & Background */
-  --background: 230 25% 97%;
-  --foreground: 230 25% 10%;
+  /* Surface & Background — Cadivity Blueprint Palette */
+  --background: 40 20% 97%;
+  --foreground: 218 44% 10%;
   --card: 0 0% 100%;
-  --card-foreground: 230 25% 10%;
-  --surface: 230 20% 98%;
+  --card-foreground: 218 44% 10%;
+  --surface: 40 25% 95%;
 
-  /* Primary — Rich Indigo */
-  --primary: 245 58% 52%;
+  /* Primary — Cadivity Cobalt & Navy (no legacy indigo) */
+  --primary: 217 68% 30%;
   --primary-foreground: 0 0% 100%;
 
-  /* Secondary — Soft Teal */
-  --secondary: 172 50% 95%;
-  --secondary-foreground: 172 50% 20%;
+  /* Secondary — Cadivity Sand */
+  --secondary: 38 16% 90%;
+  --secondary-foreground: 218 44% 10%;
 
   /* Popover */
   --popover: 0 0% 100%;
-  --popover-foreground: 230 25% 10%;
+  --popover-foreground: 218 44% 10%;
 
   /* Muted */
-  --muted: 230 18% 95%;
-  --muted-foreground: 230 10% 46%;
+  --muted: 40 20% 94%;
+  --muted-foreground: 213 17% 43%;
 
-  /* Accent — Teal */
-  --accent: 172 55% 42%;
-  --accent-foreground: 0 0% 100%;
+  /* Accent — Cadivity Amber */
+  --accent: 35 88% 59%;
+  --accent-foreground: 221 63% 5%;
 
-  /* Destructive */
-  --destructive: 0 72% 51%;
+  /* Destructive — Cadivity Error Red */
+  --destructive: 0 63% 55%;
   --destructive-foreground: 0 0% 100%;
 
   /* Semantic Status */
-  --success: 155 72% 40%;
+  --success: 146 50% 36%;
   --success-foreground: 0 0% 100%;
-  --warning: 38 92% 50%;
-  --warning-foreground: 38 92% 20%;
-  --info: 210 85% 55%;
-  --info-foreground: 0 0% 100%;
+  --warning: 35 88% 59%;
+  --warning-foreground: 221 63% 5%;
+  --info: 198 81% 61%;
+  --info-foreground: 221 63% 5%;
 
-  /* Borders & Inputs */
-  --border: 230 16% 90%;
-  --input: 230 16% 90%;
-  --ring: 245 58% 52%;
+  /* Borders & Inputs — Cadivity Hairline */
+  --border: 218 44% 10% / 0.15;
+  --input: 218 44% 10% / 0.15;
+  --ring: 198 81% 61%;
 
-  /* Radius */
-  --radius: 0.625rem;
+  /* Micro-radius matching Cadivity Engineering-Editorial Blueprint */
+  --radius: 0.125rem;
+
+  /* Shadows — Technical blueprint subtle elevation */
+  --shadow-card: 0 1px 2px 0 rgb(7 11 20 / 0.05);
+  --shadow-card-hover: 0 4px 16px -2px rgb(7 11 20 / 0.1);
 }
 
 .theme-student.dark {

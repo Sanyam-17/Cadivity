@@ -1,4 +1,3 @@
-import "server-only";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./db";
@@ -10,6 +9,28 @@ export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL!,
   trustedOrigins: getTrustedOrigins(),
   database: prismaAdapter(prisma, { provider: "postgresql" }),
+
+   session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60,
+    },
+  },
+
+  rateLimit: {
+    enabled: true, 
+    window: 60,
+    max: 100,
+    storage: "database",   
+    modelName: "rateLimit",
+    customRules: {
+      "/sign-in/email": { window: 10, max: 3 },
+      "/sign-in/email-otp": { window: 60, max: 5 },
+      "/email-otp/send-verification-otp": { window: 60, max: 3 },
+    },
+  },
+
+
   emailAndPassword: {
     enabled: true,
     sendVerificationOnSignUp: true,
@@ -44,12 +65,7 @@ export const auth = betterAuth({
       },
     },
   },
-  session: {
-    cookieCache: {
-      enabled: true,
-      maxAge: 5 * 60,
-    },
-  },
+ 
   plugins: [
     emailOTP({
       async sendVerificationOTP({ email, otp, type }) {

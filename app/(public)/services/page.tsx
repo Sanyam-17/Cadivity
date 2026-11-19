@@ -1,23 +1,18 @@
 "use client";
 
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import { Card, CardContent } from "@/components/ui/card";
 import {
-  CheckCircle2,
-  Code,
-  Database,
-  FileSpreadsheet,
   Layout,
+  Code,
+  FileSpreadsheet,
+  CheckCircle2,
+  Database,
   MonitorPlay,
-  ArrowRight,
+  ArrowUpRight,
 } from "lucide-react";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 
-import servicesHero from "@/public/generated_images/Background_img1.webp";
 
 export default function ServicesPage() {
   const heroReveal = useScrollReveal();
@@ -27,66 +22,56 @@ export default function ServicesPage() {
 
   const capabilities = [
     {
-      icon: <Layout className="h-8 w-8 text-primary" />,
+      icon: Layout,
       title: "Drawing & Model Automation",
       desc: "Automatically generate 2D drawings and 3D models based on input parameters, saving hours of manual drafting time.",
+      bg: "cad-card-sand",
     },
     {
-      icon: <Code className="h-8 w-8 text-primary" />,
+      icon: Code,
       title: "Plugin / Add-on Development",
       desc: "Custom toolbars, ribbons, and commands integrated directly into your CAD environment for seamless workflow.",
+      bg: "cad-card-cobalt",
     },
     {
-      icon: <FileSpreadsheet className="h-8 w-8 text-primary" />,
+      icon: FileSpreadsheet,
       title: "ERP & Excel Integration",
       desc: "Connect your CAD data with BOMs, Excel spreadsheets, and ERP systems to ensure data consistency across the organization.",
+      bg: "cad-card-ice",
     },
     {
-      icon: <CheckCircle2 className="h-8 w-8 text-primary" />,
+      icon: CheckCircle2,
       title: "Model Checking & Validation",
       desc: "Automated quality assurance tools that verify geometry, standards compliance, and feature validity before release.",
+      bg: "cad-card-sand",
     },
     {
-      icon: <Database className="h-8 w-8 text-primary" />,
+      icon: Database,
       title: "Batch Processing",
       desc: "Process thousands of files overnight. Bulk export, format conversion, and mass property updates without manual intervention.",
+      bg: "cad-card-ice",
     },
     {
-      icon: <MonitorPlay className="h-8 w-8 text-primary" />,
+      icon: MonitorPlay,
       title: "UI Extensions",
       desc: "Create intuitive user interfaces (dialogs, forms, property pages) to make your automation tools user-friendly for your team.",
+      bg: "cad-card-sand",
     },
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col">
 
       {/* Hero */}
-      <section className="relative bg-slate-900 text-white py-24 overflow-hidden">
-        <Image
-          src={servicesHero}
-          alt="CAD automation engineering services - drawing automation, plugin development, and batch processing"
-          fill
-          priority
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
-          className="object-cover opacity-15 transition-transform duration-2000 hover:scale-105"
-          placeholder="blur"
-        />
-        {/* Floating shapes */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-          <div className="absolute top-16 right-[12%] w-14 h-14 rounded-2xl bg-white/5 border border-white/10 animate-float" style={{ animationDuration: "10s" }} />
-          <div className="absolute bottom-20 left-[15%] w-10 h-10 rounded-full bg-white/5 border border-white/10 animate-float delay-500" style={{ animationDuration: "12s" }} />
-        </div>
-
-        <div ref={heroReveal.ref} className={`container relative z-10 mx-auto px-4 transition-all duration-700 ${heroReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
+      <section className="relative cad-bg-navy cad-section pt-32 pb-16 md:pb-20 overflow-hidden">
+        <div ref={heroReveal.ref} className={`cad-container relative z-10 transition-all duration-700 ${heroReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
           <div className="max-w-3xl">
-            <h5 className="text-accent font-semibold tracking-wide uppercase mb-4">
-              Our Expertise
-            </h5>
-            <h1 className="font-display text-4xl md:text-5xl font-bold mb-6">
-              Engineering Solutions Provider
+            <p className="cad-eyebrow text-[var(--cad-sky)] mb-3">OUR EXPERTISE</p>
+            <h1 className="cad-text-display text-white mb-6">
+              Engineering{" "}
+              <span className="cad-accent-sky">Solutions Provider.</span>
             </h1>
-            <p className="text-xl text-slate-300 leading-relaxed max-w-2xl">
+            <p className="cad-text-body max-w-2xl text-white/70">
               We deliver automation and engineering development across multiple
               CAD platforms. From drawing automation to full enterprise
               integration.
@@ -95,54 +80,71 @@ export default function ServicesPage() {
         </div>
       </section>
 
-      {/* Capabilities */}
-      <section className="py-24 bg-white overflow-hidden">
-        <div ref={capabilitiesReveal.ref} className="container mx-auto px-4">
-          <h2 className={`font-display text-3xl font-bold text-center mb-16 text-slate-900 transition-all duration-700 ${capabilitiesReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
-            Our Capabilities
-          </h2>
+      {/* Capabilities — 3-col grid */}
+      <section className="cad-bg-cream cad-section overflow-hidden">
+        <div ref={capabilitiesReveal.ref} className="cad-container">
+          <div className="mb-16">
+            <p className="cad-eyebrow text-[var(--cad-cobalt)] mb-4">CAPABILITIES</p>
+            <h2 className="cad-text-h2 text-[var(--cad-ink)]">
+              What we <span className="cad-accent-teal font-bold">deliver.</span>
+            </h2>
+          </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {capabilities.map((feature, i) => (
-              <Card
-                key={i}
-                className={`border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 group hover:-translate-y-1 ${capabilitiesReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}
-                style={{ animationDelay: `${i * 100 + 100}ms` }}
-              >
-                <CardContent className="pt-8">
-                  <div className="mb-6 bg-slate-50 w-16 h-16 rounded-2xl flex items-center justify-center group-hover:bg-primary/10 group-hover:scale-110 transition-all duration-300">
-                    {feature.icon}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {capabilities.map((feature, i) => {
+              const Icon = feature.icon;
+              const isCobalt = feature.bg === "cad-card-cobalt";
+              return (
+                <div
+                  key={i}
+                  className={`cad-card ${feature.bg} p-8 space-y-5 transition-all duration-500 ${capabilitiesReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}
+                  style={{ animationDelay: `${i * 100 + 100}ms` }}
+                >
+                  <div className="flex items-start justify-between">
+                    <Icon
+                      className={`h-6 w-6 ${isCobalt ? "text-white/70" : "text-[var(--cad-cobalt)]"}`}
+                      strokeWidth={1.5}
+                    />
+                    <ArrowUpRight
+                      className={`h-4 w-4 ${isCobalt ? "text-white/30" : "text-[var(--cad-muted)]"}`}
+                      strokeWidth={1.5}
+                    />
                   </div>
-                  <h3 className="font-display text-xl font-bold mb-3 text-slate-900 group-hover:text-primary transition-colors duration-300">
+                  <h3 className={`cad-text-h3 ${isCobalt ? "text-white" : "text-[var(--cad-ink)]"}`}>
                     {feature.title}
                   </h3>
-                  <p className="text-slate-600 leading-relaxed">
+                  <p className={`text-sm leading-relaxed ${isCobalt ? "text-white/60" : "text-[var(--cad-muted)]"}`}
+                    style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}
+                  >
                     {feature.desc}
                   </p>
-                </CardContent>
-              </Card>
-            ))}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
       {/* Supported Platforms */}
-      <section className="py-24 bg-slate-50 overflow-hidden">
-        <div ref={platformsReveal.ref} className="container mx-auto px-4 text-center">
-          <h2 className={`font-display text-3xl font-bold mb-12 text-slate-900 transition-all duration-700 ${platformsReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
-            Supported Platforms
-          </h2>
+      <section className="cad-bg-sand cad-section-sm overflow-hidden">
+        <div ref={platformsReveal.ref} className="cad-container">
+          <div className="mb-12">
+            <p className="cad-eyebrow text-[var(--cad-cobalt)] mb-4">PLATFORMS</p>
+            <h2 className="cad-text-h2 text-[var(--cad-ink)]">
+              Supported <span className="cad-accent-cobalt font-bold">platforms.</span>
+            </h2>
+          </div>
 
-          <div className="flex flex-wrap justify-center gap-6">
+          <div className="flex flex-wrap gap-4">
             {["Creo", "SolidWorks", "Siemens NX", "CATIA CAA", "AutoCAD"].map(
               (platform, i) => (
-                <div
+                <span
                   key={platform}
-                  className={`bg-white px-8 py-4 rounded-xl shadow-sm border border-slate-100 font-display font-bold text-xl text-slate-700 hover:shadow-lg hover:-translate-y-1 hover:border-primary/20 transition-all duration-300 cursor-default ${platformsReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}
-                  style={{ animationDelay: `${i * 100 + 100}ms` }}
+                  className={`cad-tag text-[var(--cad-ink)] border-[var(--cad-hairline)] cursor-default ${platformsReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}
+                  style={{ animationDelay: `${i * 100 + 100}ms`, padding: '8px 20px', fontSize: '12px' }}
                 >
                   {platform}
-                </div>
+                </span>
               )
             )}
           </div>
@@ -150,27 +152,28 @@ export default function ServicesPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-24 bg-primary text-white overflow-hidden">
-        <div ref={ctaReveal.ref} className={`container mx-auto px-4 text-center max-w-2xl transition-all duration-700 ${ctaReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
-          <h2 className="font-display text-3xl font-bold mb-6">
-            Ready to optimize your workflow?
-          </h2>
-          <p className="text-slate-200 mb-8 text-lg">
-            Let's discuss how we can automate your engineering processes.
-          </p>
-
-          <Link href="/contact">
-            <Button
-              size="lg"
-              className="bg-accent hover:bg-accent/90 text-white font-semibold h-12 px-8 rounded-full group transition-all duration-300 hover:shadow-xl hover:shadow-accent/30 hover:scale-[1.02]"
-            >
-              Get Free Consultation
-              <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-            </Button>
-          </Link>
+      <section className="cad-bg-cobalt cad-section overflow-hidden">
+        <div ref={ctaReveal.ref} className={`cad-container transition-all duration-700 ${ctaReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
+          <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-start">
+            <div>
+              <p className="cad-eyebrow text-[var(--cad-sky)] mb-4">LET&apos;S BUILD BETTER</p>
+              <h2 className="cad-text-h2-bold text-white">
+                Ready to optimize your{" "}
+                <span className="cad-accent-amber">workflow?</span>
+              </h2>
+            </div>
+            <div className="md:pt-8 space-y-6">
+              <p className="cad-text-body" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                Let&apos;s discuss how we can automate your engineering processes.
+              </p>
+              <Link href="/contact" className="cad-btn cad-btn-primary">
+                Get Free Consultation
+                <ArrowUpRight className="h-3.5 w-3.5 cad-arrow" />
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
-
 
     </div>
   );

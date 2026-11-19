@@ -2,12 +2,9 @@
 
 import * as React from "react"
 import { authClient } from "@/lib/auth-client"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Loader2, ArrowLeft, CheckCircle2 } from "lucide-react"
+import { Loader2, ArrowLeft, CheckCircle2, ArrowUpRight } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { PasswordStrength } from "@/components/shared/password-strength"
 
 export default function ResetPasswordPage() {
@@ -49,74 +46,87 @@ export default function ResetPasswordPage() {
     return (
       <div className="space-y-6 text-center">
         <div className="flex justify-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success/10">
-            <CheckCircle2 className="h-6 w-6 text-success" />
+          <div className="w-12 h-12 rounded-full border-2 border-[var(--cad-cobalt)] flex items-center justify-center">
+            <CheckCircle2 className="h-6 w-6 text-[var(--cad-cobalt)]" />
           </div>
         </div>
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold tracking-tight">Password reset</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="cad-text-h3 text-[var(--cad-ink)]">Password reset</h1>
+          <p className="text-sm text-[var(--cad-muted)]" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
             Your password has been successfully reset.
           </p>
         </div>
-        <Button className="w-full" asChild>
-          <Link href="/login">Continue to login</Link>
-        </Button>
+        <Link href="/login" className="cad-btn cad-btn-cobalt w-full">
+          Continue to login
+          <ArrowUpRight className="h-4 w-4 ml-1.5" />
+        </Link>
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      <div className="text-center space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Set new password</h1>
-        <p className="text-sm text-muted-foreground">
+      <div className="text-center space-y-2">
+        <p className="cad-eyebrow text-[var(--cad-cobalt)]">ACCOUNT SECURITY</p>
+        <h1 className="cad-text-h3 text-[var(--cad-ink)]">Set new password</h1>
+        <p className="text-sm text-[var(--cad-muted)]" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
           Enter your new password below
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive border border-destructive/20 animate-validation-enter">
+          <div className="cad-card bg-[var(--cad-error)]/5 px-4 py-3 text-sm text-[var(--cad-error)] border-[var(--cad-error)]/20" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
             {error}
           </div>
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="password">New Password</Label>
+          <label htmlFor="password" className="cad-input-label">New Password</label>
           <Input
             id="password"
             type="password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="input-focus-ring"
+            className="bg-transparent border-[var(--cad-hairline)] text-[var(--cad-ink)] focus:border-[var(--cad-sky)] focus:ring-2 focus:ring-[var(--cad-sky)]/20 h-12 rounded-sm"
           />
           {password.length > 0 && <PasswordStrength password={password} />}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="confirm">Confirm Password</Label>
+          <label htmlFor="confirm" className="cad-input-label">Confirm Password</label>
           <Input
             id="confirm"
             type="password"
             required
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="input-focus-ring"
+            className="bg-transparent border-[var(--cad-hairline)] text-[var(--cad-ink)] focus:border-[var(--cad-sky)] focus:ring-2 focus:ring-[var(--cad-sky)]/20 h-12 rounded-sm"
           />
           {confirmPassword.length > 0 && !passwordsMatch && (
-            <p className="text-xs text-destructive animate-validation-enter mt-1">
+            <p className="text-xs text-[var(--cad-error)] mt-1" style={{ fontFamily: "var(--font-mono), monospace" }}>
               Passwords do not match
             </p>
           )}
         </div>
 
-        <Button type="submit" className="w-full" disabled={!canSubmit}>
+        <button type="submit" className="cad-btn cad-btn-cobalt w-full" disabled={!canSubmit}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
           {loading ? "Resetting..." : "Reset password"}
-        </Button>
+          {!loading && <ArrowUpRight className="h-4 w-4 ml-1.5" />}
+        </button>
       </form>
+
+      <div className="text-center">
+        <Link
+          href="/login"
+          className="cad-text-mono text-[var(--cad-muted)] hover:text-[var(--cad-cobalt)] transition-colors inline-flex items-center justify-center gap-1.5"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Back to login
+        </Link>
+      </div>
     </div>
   )
 }

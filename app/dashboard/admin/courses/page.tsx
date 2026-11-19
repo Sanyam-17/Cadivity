@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { DashboardLayout } from "@/components/admin/layout/dashboard-layout"
-import { PageHeader } from "@/components/shared/page-header"
+import { DashboardHero } from "@/components/shared/dashboard-hero"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { EmptyState } from "@/components/shared/empty-state"
 import { ErrorState } from "@/components/shared/error-state"
@@ -61,7 +61,7 @@ interface Course {
 }
 
 interface CoursesResponse {
-  data: Course[]
+  courses: Course[]
   pagination: {
     page: number
     pageSize: number
@@ -96,7 +96,7 @@ export default function CoursesPage() {
     onError: (err) => toast.error(err),
   })
 
-  const courses = data?.data || []
+  const courses = data?.courses || []
   const pagination = data?.pagination
 
   const handleDelete = async () => {
@@ -116,22 +116,23 @@ export default function CoursesPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <PageHeader
-          title="Courses"
-          description="Create and manage all courses"
+      <div className="space-y-6 pb-8">
+        <DashboardHero
+          eyebrow="Catalogue management"
+          title="Your course library, in one place."
+          description="Create, publish, and assign the learning experiences your team delivers."
+          className="py-6 sm:py-7"
           actions={
-            <Button asChild>
-              <Link href="/admin/courses/create">
-                <Plus className="mr-2 h-4 w-4" />
-                Create Course
-              </Link>
+            <Button asChild className="bg-[#F2A63B] text-[#070B14] hover:bg-[#e0952e] rounded-[2px] font-mono text-[11px] font-bold uppercase tracking-[0.12em] shadow-sm">
+              <Link href="/dashboard/admin/courses/create"><Plus className="mr-2 h-4 w-4" />Create course</Link>
             </Button>
           }
-        />
+        >
+          <p className="font-mono text-[11px] text-[#4AB8EA]">{loading ? "Loading catalogue..." : `${pagination?.total || 0} course${pagination?.total === 1 ? "" : "s"} in your workspace`}</p>
+        </DashboardHero>
 
         {/* Filters */}
-        <div className="rounded-[var(--radius-card)] border border-border bg-card">
+        <div className="overflow-hidden rounded-[2px] border border-[var(--cad-hairline,rgba(14,22,36,0.15))] bg-card shadow-sm">
           <div className="flex flex-col gap-3 border-b border-border p-4 sm:p-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative flex-1 sm:max-w-xs">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -194,7 +195,7 @@ export default function CoursesPage() {
                               )}
                             </div>
                             <div className="min-w-0">
-                              <Link href={`/admin/courses/${course.id}`} className="text-sm font-medium hover:text-primary transition-colors truncate block">
+                              <Link href={`/dashboard/admin/courses/${course.id}`} className="text-sm font-medium hover:text-primary transition-colors truncate block">
                                 {course.title}
                               </Link>
                               {course.category && (
@@ -239,7 +240,7 @@ export default function CoursesPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="animate-dropdown-enter">
                               <DropdownMenuItem asChild>
-                                <Link href={`/admin/courses/${course.id}`}>
+                                <Link href={`/dashboard/admin/courses/${course.id}`}>
                                   <Eye className="mr-2 h-4 w-4" />
                                   View
                                 </Link>
@@ -273,7 +274,7 @@ export default function CoursesPage() {
               {/* Mobile */}
               <div className="lg:hidden divide-y divide-border">
                 {courses.map((course) => (
-                  <Link key={course.id} href={`/admin/courses/${course.id}`} className="flex items-center justify-between p-4 row-hover hover:bg-muted/50">
+                  <Link key={course.id} href={`/dashboard/admin/courses/${course.id}`} className="flex items-center justify-between p-4 row-hover hover:bg-muted/50">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className="h-10 w-14 shrink-0 rounded-lg bg-muted overflow-hidden flex items-center justify-center">
                         {course.thumbnail ? (

@@ -1,28 +1,32 @@
 import { ReactNode } from "react"
 import Link from "next/link"
-import { BookOpen } from "lucide-react"
+import Image from "next/image"
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center cad-bg-cream p-4 sm:p-8">
       <div className="w-full max-w-md space-y-8">
         {/* Logo */}
         <div className="flex justify-center">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg group-hover:scale-105 transition-transform">
-              <BookOpen className="h-5 w-5" />
-            </div>
-            <span className="text-2xl font-bold tracking-tight">Cadivity</span>
+          <Link href="/" className="hover:opacity-90 transition-opacity">
+            <Image
+              src="/Cadivity.png"
+              alt="Cadivity"
+              width={160}
+              height={64}
+              className="h-10 sm:h-12 w-auto object-contain"
+              priority
+            />
           </Link>
         </div>
 
         {/* Content */}
-        <div className="rounded-[var(--radius-card)] border border-border bg-card p-6 sm:p-8 shadow-sm animate-in fade-in zoom-in-95 duration-300">
+        <div className="cad-card bg-white p-6 sm:p-8">
           {children}
         </div>
 
         {/* Footer */}
-        <p className="text-center text-xs text-muted-foreground">
+        <p className="cad-text-mono text-[var(--cad-muted)] text-center">
           &copy; {new Date().getFullYear()} Cadivity LMS. All rights reserved.
         </p>
       </div>

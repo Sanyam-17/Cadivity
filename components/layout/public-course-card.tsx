@@ -1,9 +1,6 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Award, Check, Download, Users } from "lucide-react";
+import { Award, Check, Download, Users, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 
 export interface PublicCourse {
@@ -24,23 +21,6 @@ export interface PublicCourse {
   enrollmentCount?: number;
   instructorName?: string | null;
   categoryName?: string | null;
-}
-
-function getDifficultyColor(badge: string | null | undefined): string {
-  switch (badge) {
-    case "Beginner/Inter":
-      return "bg-emerald-100 text-emerald-700 border-emerald-200";
-    case "Intermediate":
-      return "bg-sky-100 text-sky-700 border-sky-200";
-    case "Advanced":
-      return "bg-amber-100 text-amber-700 border-amber-200";
-    case "Expert":
-      return "bg-rose-100 text-rose-700 border-rose-200";
-    case "Custom":
-      return "bg-violet-100 text-violet-700 border-violet-200";
-    default:
-      return "bg-primary/10 text-primary border-primary/20";
-  }
 }
 
 function formatPrice(price: number): string {
@@ -75,12 +55,9 @@ export function PublicCourseCard({
     : 0;
 
   return (
-    <Card
-      className="flex flex-col overflow-hidden border-slate-200 shadow-sm hover:shadow-xl transition-all duration-500 group hover:-translate-y-1 animate-fade-in-up h-full"
-      style={{ animationDelay: `${index * 100 + 100}ms` }}
-    >
+    <div className="cad-card bg-white flex flex-col h-full group">
       {/* ─── Header: Logo + Badges ─── */}
-      <CardHeader className="bg-slate-50 border-b border-slate-100">
+      <div className="bg-[var(--cad-sand)] border-b border-[var(--cad-hairline)] p-5">
         <div className="flex justify-between items-start mb-4">
           {/* Software Logo */}
           <span className="block">
@@ -88,12 +65,12 @@ export function PublicCourseCard({
               <img
                 src={course.logo}
                 alt={`${course.title} logo`}
-                className="w-full h-20 object-contain"
-                style={{ maxWidth: 200 }}
+                className="w-full h-16 object-contain"
+                style={{ maxWidth: 180 }}
               />
             ) : (
-              <div className="w-[200px] h-20 rounded-lg bg-slate-100 flex items-center justify-center">
-                <span className="text-slate-400 text-sm font-medium">
+              <div className="w-[180px] h-16 bg-[var(--cad-cream)] flex items-center justify-center">
+                <span className="cad-text-mono text-[var(--cad-muted)]">
                   No logo
                 </span>
               </div>
@@ -105,81 +82,80 @@ export function PublicCourseCard({
             {/* Free / Paid badge */}
             {!isComingSoon && (
               isFree ? (
-                <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 border text-[10px] font-bold px-2 py-0.5">
+                <span className="cad-badge bg-[var(--cad-success)] text-white">
                   FREE
-                </Badge>
+                </span>
               ) : (
                 hasDiscount && (
-                  <Badge className="bg-red-100 text-red-600 border-red-200 border text-[10px] font-bold px-2 py-0.5">
+                  <span className="cad-badge cad-badge-discount">
                     {discountPct}% OFF
-                  </Badge>
+                  </span>
                 )
               )
             )}
             {/* Difficulty badge */}
             {course.difficultyBadge && (
-              <Badge
-                variant="secondary"
-                className={`${getDifficultyColor(course.difficultyBadge)} hover:opacity-90 text-[10px]`}
-              >
+              <span className="cad-badge cad-badge-level">
                 {course.difficultyBadge}
-              </Badge>
+              </span>
             )}
           </div>
         </div>
 
         {/* Category */}
         {course.categoryName && (
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">
+          <p className="cad-text-mono text-[var(--cad-muted)] mb-1" style={{ fontSize: '10px' }}>
             {course.categoryName}
           </p>
         )}
 
         {/* Title */}
-        <h3 className="font-display text-xl font-bold text-slate-900 group-hover:text-primary transition-colors duration-300">
+        <h3 className="cad-text-h3 text-[var(--cad-ink)] group-hover:text-[var(--cad-cobalt)] transition-colors duration-200">
           {course.title || "Untitled Course"}
         </h3>
 
         {/* Tags */}
         {course.tags && (
-          <p className="text-sm font-medium text-accent mt-1">{course.tags}</p>
+          <p className="cad-text-mono text-[var(--cad-teal)] mt-1.5" style={{ fontSize: '10px' }}>
+            {course.tags}
+          </p>
         )}
 
         {/* Instructor + Enrollment meta */}
-        <div className="flex items-center gap-4 mt-3 pt-2 border-t border-slate-100">
+        <div className="flex items-center gap-4 mt-3 pt-2 border-t border-[var(--cad-hairline)]">
           {course.instructorName && (
-            <p className="text-xs text-slate-500 truncate">
-              By <span className="font-medium text-slate-700">{course.instructorName}</span>
+            <p className="text-xs text-[var(--cad-muted)] truncate" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
+              By <span className="font-medium text-[var(--cad-ink)]">{course.instructorName}</span>
             </p>
           )}
           {typeof course.enrollmentCount === "number" && course.enrollmentCount > 0 && (
-            <p className="text-xs text-slate-500 flex items-center gap-1 shrink-0">
+            <p className="text-xs text-[var(--cad-muted)] flex items-center gap-1 shrink-0" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
               <Users className="h-3 w-3" />
               {course.enrollmentCount.toLocaleString("en-IN")} enrolled
             </p>
           )}
         </div>
-      </CardHeader>
+      </div>
 
       {/* ─── Content: Description + Features ─── */}
-      <CardContent className="flex-1 pt-6">
+      <div className="flex-1 p-5 space-y-4">
         {/* Short Description */}
         {course.shortDescription && (
-          <p className="text-slate-600 text-sm leading-relaxed mb-6">
+          <p className="text-sm text-[var(--cad-muted)] leading-relaxed" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
             {course.shortDescription}
           </p>
         )}
 
         {/* Key Features */}
         {course.keyFeatures && course.keyFeatures.length > 0 && (
-          <div className="space-y-2 mb-6">
-            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">
+          <div className="space-y-2">
+            <h4 className="cad-text-mono text-[var(--cad-ink)]" style={{ fontSize: '10px' }}>
               Key Features:
             </h4>
-            <ul className="text-sm text-slate-600 space-y-1">
+            <ul className="space-y-1.5">
               {course.keyFeatures.map((feature, idx) => (
-                <li key={idx} className="flex items-start group/item">
-                  <Check className="h-3 w-3 text-green-500 mr-2 mt-0.5 transition-transform duration-300 group-hover/item:scale-125 shrink-0" />
+                <li key={idx} className="flex items-start text-sm text-[var(--cad-muted)]" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
+                  <Check className="h-3 w-3 text-[var(--cad-success)] mr-2 mt-0.5 shrink-0" />
                   {feature}
                 </li>
               ))}
@@ -188,22 +164,22 @@ export function PublicCourseCard({
         )}
 
         {/* Certificate badge */}
-        <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-auto">
-          <Award className="h-3.5 w-3.5 text-amber-500" />
+        <div className="flex items-center gap-1.5 text-xs text-[var(--cad-muted)] mt-auto">
+          <Award className="h-3.5 w-3.5 text-[var(--cad-amber)]" />
           Certificate of Completion
         </div>
 
         {/* Price */}
         {!isFree && (course.price != null || course.originalPrice != null) && (
-          <div className="flex items-baseline gap-2 mt-3">
+          <div className="flex items-baseline gap-2 mt-2">
             {course.price != null && (
-              <span className="text-lg font-bold text-slate-900">
+              <span className="text-lg font-bold text-[var(--cad-ink)]" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
                 {formatPrice(course.price)}
               </span>
             )}
             {course.originalPrice != null && (
               <>
-                <span className="text-sm text-slate-400 line-through" aria-hidden="true">
+                <span className="text-sm text-[var(--cad-muted)] line-through" aria-hidden="true">
                   {formatPrice(course.originalPrice)}
                 </span>
                 <span className="sr-only">
@@ -213,40 +189,44 @@ export function PublicCourseCard({
             )}
           </div>
         )}
-      </CardContent>
+      </div>
 
       {/* ─── Footer: CTA + Download ─── */}
-      <CardFooter className="pt-0 pb-6">
-        <div className="w-full flex gap-3">
+      <div className="p-5 pt-0">
+        <div className="flex gap-3">
           {/* Primary CTA Button */}
           {isContactUs ? (
             isPreview ? (
-              <Button className="flex-1 bg-primary hover:bg-primary/90 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20">
+              <button className="cad-btn cad-btn-dark flex-1">
                 Contact Us
-              </Button>
+                <ArrowUpRight className="h-3.5 w-3.5 cad-arrow" />
+              </button>
             ) : (
               <Link href="/contact" className="flex-1">
-                <Button className="w-full bg-primary hover:bg-primary/90 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20">
+                <button className="cad-btn cad-btn-dark w-full">
                   Contact Us
-                </Button>
+                  <ArrowUpRight className="h-3.5 w-3.5 cad-arrow" />
+                </button>
               </Link>
             )
           ) : isComingSoon ? (
-            <Button
-              className="flex-1 bg-slate-300 text-slate-500 cursor-not-allowed"
+            <button
+              className="cad-btn cad-btn-dark flex-1"
               disabled
             >
               Coming Soon…
-            </Button>
+            </button>
           ) : isPreview ? (
-            <Button className="flex-1 bg-primary hover:bg-primary/90 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20">
+            <button className="cad-btn cad-btn-dark flex-1">
               Enroll Now
-            </Button>
+              <ArrowUpRight className="h-3.5 w-3.5 cad-arrow" />
+            </button>
           ) : (
             <Link href={`/courses/${course.slug}`} className="flex-1">
-              <Button className="w-full bg-primary hover:bg-primary/90 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20">
+              <button className="cad-btn cad-btn-dark w-full">
                 View Course
-              </Button>
+                <ArrowUpRight className="h-3.5 w-3.5 cad-arrow" />
+              </button>
             </Link>
           )}
 
@@ -254,14 +234,12 @@ export function PublicCourseCard({
           {!isContactUs &&
             (hasBrochure && !isComingSoon ? (
               isPreview ? (
-                <Button
-                  variant="outline"
-                  size="icon"
+                <button
                   title="Download Brochure"
-                  className="hover:scale-110 transition-transform duration-300"
+                  className="cad-btn cad-btn-outline text-[var(--cad-ink)] border-[var(--cad-hairline)] px-3"
                 >
                   <Download className="h-4 w-4" />
-                </Button>
+                </button>
               ) : (
                 <a
                   href={course.brochureUrl!}
@@ -269,31 +247,27 @@ export function PublicCourseCard({
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <Button
-                    variant="outline"
-                    size="icon"
+                  <button
                     title="Download Brochure"
                     aria-label="Download course brochure"
-                    className="hover:scale-110 transition-transform duration-300"
+                    className="cad-btn cad-btn-outline text-[var(--cad-ink)] border-[var(--cad-hairline)] px-3"
                   >
                     <Download className="h-4 w-4" />
-                  </Button>
+                  </button>
                 </a>
               )
             ) : (
-              <Button
-                variant="outline"
-                size="icon"
+              <button
                 title={isComingSoon ? "Coming Soon" : "No brochure"}
                 aria-label={isComingSoon ? "Brochure coming soon" : "No brochure available"}
                 disabled
-                className="opacity-40 cursor-not-allowed"
+                className="cad-btn cad-btn-outline text-[var(--cad-muted)] border-[var(--cad-hairline)] px-3"
               >
                 <Download className="h-4 w-4" />
-              </Button>
+              </button>
             ))}
         </div>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }

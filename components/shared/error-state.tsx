@@ -1,8 +1,6 @@
 "use client"
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { AlertCircle, RefreshCw } from "lucide-react"
+import { ErrorState as BlueprintErrorState } from "@/components/shared/state/error-state"
 
 interface ErrorStateProps {
   title?: string
@@ -18,30 +16,11 @@ export function ErrorState({
   className,
 }: ErrorStateProps) {
   return (
-    <div
-      className={cn(
-        "flex flex-col items-center justify-center py-12 px-6 text-center",
-        className
-      )}
-    >
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-destructive/10">
-        <AlertCircle className="h-6 w-6 text-destructive" />
-      </div>
-      <h3 className="mt-4 text-sm font-semibold">{title}</h3>
-      <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-        {description}
-      </p>
-      {onRetry && (
-        <Button
-          variant="outline"
-          size="sm"
-          className="mt-4"
-          onClick={onRetry}
-        >
-          <RefreshCw className="mr-2 h-3.5 w-3.5" />
-          Retry
-        </Button>
-      )}
-    </div>
+    <BlueprintErrorState
+      title={title}
+      error={description}
+      onRetry={onRetry}
+      className={className}
+    />
   )
 }

@@ -15,6 +15,20 @@ interface StatCardProps {
   loading?: boolean
 }
 
+/** Map iconColor prop to the two-color system: blue (primary), teal (success), amber (warning). */
+function getIconChipClasses(iconColor: string) {
+  switch (iconColor) {
+    case "text-success":
+      return { bg: "bg-[hsl(175,70%,40%)]/10", fg: "text-success" }
+    case "text-warning":
+      return { bg: "bg-warning/10", fg: "text-warning" }
+    case "text-info":
+    case "text-primary":
+    default:
+      return { bg: "bg-primary/8", fg: "text-primary" }
+  }
+}
+
 export function StatCard({
   title,
   value,
@@ -26,42 +40,40 @@ export function StatCard({
 }: StatCardProps) {
   if (loading) {
     return (
-      <div className="rounded-[var(--radius-card)] border border-border bg-card p-6">
+      <div className="rounded-[2px] border border-[var(--cad-hairline,rgba(14,22,36,0.15))] bg-card p-6 shadow-sm">
         <div className="flex items-start justify-between">
           <div className="flex-1 space-y-3">
-            <div className="h-4 w-24 rounded skeleton-shimmer" />
-            <div className="h-8 w-20 rounded skeleton-shimmer" />
+            <div className="h-3 w-24 rounded-[2px] skeleton-shimmer" />
+            <div className="h-9 w-20 rounded-[2px] skeleton-shimmer" />
             <div className="flex items-center gap-2">
-              <div className="h-5 w-16 rounded-full skeleton-shimmer" />
-              <div className="h-3 w-20 rounded skeleton-shimmer" />
+              <div className="h-5 w-16 rounded-[2px] skeleton-shimmer" />
+              <div className="h-3 w-20 rounded-[2px] skeleton-shimmer" />
             </div>
           </div>
-          <div className="h-12 w-12 rounded-xl skeleton-shimmer" />
+          <div className="h-10 w-10 rounded-[2px] skeleton-shimmer" />
         </div>
       </div>
     )
   }
 
   const isPositive = change !== undefined && change >= 0
+  const chip = getIconChipClasses(iconColor)
 
   return (
-    <div className="group relative overflow-hidden rounded-[var(--radius-card)] border border-border bg-card p-6 transition-all hover:shadow-md hover:border-primary/20">
-      {/* Background glow on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/3 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-
+    <div className="group relative overflow-hidden rounded-[2px] border border-[var(--cad-hairline,rgba(14,22,36,0.15))] bg-card p-6 shadow-sm transition-all hover:shadow-md hover:border-[#183F7F]/30 hover:-translate-y-0.5">
       <div className="relative flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-caption text-muted-foreground">{title}</p>
-          <p className="mt-2 text-display tabular-nums">{value}</p>
+          <p className="font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-[#5B6B7F]">{title}</p>
+          <p className="mt-2 font-mono text-3xl font-bold tabular-nums text-[#0E1624] tracking-tight">{value}</p>
 
           {change !== undefined && changeLabel && (
             <div className="mt-3 flex items-center gap-2">
               <span
                 className={cn(
-                  "flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+                  "flex items-center gap-1 rounded-[2px] px-2 py-0.5 font-mono text-[10px] font-semibold",
                   isPositive
-                    ? "bg-success/10 text-success"
-                    : "bg-destructive/10 text-destructive"
+                    ? "bg-[#eaf6ed] text-[#2E8B57]"
+                    : "bg-[#fde8e8] text-[#D64545]"
                 )}
               >
                 {isPositive ? (
@@ -71,22 +83,18 @@ export function StatCard({
                 )}
                 {Math.abs(change)}%
               </span>
-              <span className="text-xs text-muted-foreground">{changeLabel}</span>
+              <span className="font-mono text-[11px] text-[#5B6B7F]">{changeLabel}</span>
             </div>
           )}
         </div>
 
         <div
           className={cn(
-            "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl",
-            iconColor === "text-success" ? "bg-success/10" :
-            iconColor === "text-warning" ? "bg-warning/10" :
-            iconColor === "text-info" ? "bg-info/10" :
-            iconColor === "text-destructive" ? "bg-destructive/10" :
-            "bg-primary/10"
+            "flex h-10 w-10 shrink-0 items-center justify-center rounded-[2px] border border-border/40",
+            chip.bg
           )}
         >
-          <Icon className={cn("h-6 w-6", iconColor)} />
+          <Icon className={cn("h-5 w-5", chip.fg)} />
         </div>
       </div>
     </div>

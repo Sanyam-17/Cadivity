@@ -22,16 +22,29 @@
 
 # misc
 .DS_Store
+Thumbs.db
 *.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
 
-# debug
+# debug & temporary scripts
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
+test-*.js
+test-*.ts
+check-*.js
+temp_*.sql
+temp_*.js
 
-# env files (can opt-in for committing if needed)
+# env files (allow .env.example)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -40,24 +53,22 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# prisma generated client
 /lib/generated/prisma
-
-/lib/generated/prisma
-
-/lib/generated/prisma
-
-/lib/generated/prisma
-
-/lib/generated/prisma
-
-/lib/generated/prisma
-
-/lib/generated/prisma
+/lib/generated/
 
 # Playwright
-node_modules/
 /test-results/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# AI Agent & local dev tooling
+.agents/
+.claude/
+.superpowers/
+skills-lock.json
+
+# Screenshots & visual test assets
+screenshots/

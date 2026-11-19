@@ -8,6 +8,7 @@ import { NotificationProvider } from "./notification-provider"
 import { useAdminStore } from "@/stores/admin-store"
 import { Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { OfflineBanner } from "@/components/shared/state/offline-banner"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -27,6 +28,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <NotificationProvider>
       <div className={cn("theme-admin min-h-screen bg-background text-foreground", resolvedTheme === "dark" && "dark")}>
+        <OfflineBanner />
         <Sidebar
           isMobileOpen={sidebarMobileOpen}
           setIsMobileOpen={setSidebarMobileOpen}
@@ -47,10 +49,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <main
           className={cn(
             "min-h-screen pt-16 transition-all duration-300",
-            sidebarCollapsed ? "lg:pl-16" : "lg:pl-60"
+            sidebarCollapsed ? "lg:pl-16" : "lg:pl-64"
           )}
         >
-          <div className="animate-page-enter p-4 lg:p-6">
+          <div className="animate-page-enter mx-auto max-w-[1600px] p-4 lg:p-6">
             {children}
           </div>
         </main>

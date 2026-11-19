@@ -72,16 +72,13 @@ export function InstructorSidebar({ isMobileOpen, setIsMobileOpen }: InstructorS
       <Link
         href={item.href}
         className={cn(
-          "group/nav flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all relative",
+          "group/nav flex items-center gap-3 rounded-[2px] px-3 py-2.5 text-sm font-medium transition-all relative font-mono text-[13px]",
           active
-            ? "bg-sidebar-primary text-sidebar-primary-foreground"
-            : "text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            ? "bg-[#183F7F]/40 text-[#4AB8EA] font-semibold border-l-2 border-[#4AB8EA]"
+            : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-white"
         )}
         onClick={() => setIsMobileOpen(false)}
       >
-        {active && (
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-sidebar-primary-foreground rounded-r-full transition-all" />
-        )}
         <item.icon className="h-5 w-5 shrink-0" />
         <span
           className={cn(
@@ -131,14 +128,14 @@ export function InstructorSidebar({ isMobileOpen, setIsMobileOpen }: InstructorS
         <aside
           className={cn(
             "fixed left-0 top-0 z-50 flex h-full flex-col bg-sidebar text-sidebar-foreground sidebar-transition",
-            sidebarCollapsed ? "lg:w-16" : "lg:w-60",
+            sidebarCollapsed ? "lg:w-16" : "lg:w-64",
             isMobileOpen
-              ? "w-60 translate-x-0"
+              ? "w-64 translate-x-0"
               : "-translate-x-full lg:translate-x-0"
           )}
         >
           {/* Logo Section */}
-          <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
+          <div className="flex h-16 items-center justify-between px-5">
             <Link href="/dashboard/instructor" className="flex items-center gap-3 min-w-0">
               <Image
                 src="/Cadivity.png"
@@ -165,26 +162,26 @@ export function InstructorSidebar({ isMobileOpen, setIsMobileOpen }: InstructorS
           </div>
 
           {/* Main Navigation */}
-          <nav className="flex-1 overflow-y-auto px-3 py-4">
-            <ul className="space-y-1">
+          <nav className="flex-1 overflow-y-auto px-4 py-5">
+            <ul className="space-y-1.5">
               {mainNavItems.map(renderNavItem)}
             </ul>
 
             {/* Separator */}
-            <div className="my-4 border-t border-sidebar-border" />
+            <div className="my-4" />
 
             {/* Bottom nav items */}
-            <ul className="space-y-1">
+            <ul className="space-y-1.5">
               {bottomNavItems.map(renderNavItem)}
             </ul>
           </nav>
 
           {/* Footer: Collapse Toggle + Logout */}
-          <div className="border-t border-sidebar-border p-3 space-y-1">
+          <div className="p-4 space-y-1">
             {/* Collapse toggle (desktop only) */}
             <button
               onClick={toggleSidebar}
-              className="hidden lg:flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+              className="hidden lg:flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
               aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               {sidebarCollapsed ? (
@@ -203,7 +200,7 @@ export function InstructorSidebar({ isMobileOpen, setIsMobileOpen }: InstructorS
                 <TooltipTrigger asChild>
                   <button
                     onClick={handleLogout}
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-muted hover:bg-destructive/20 hover:text-destructive transition-colors"
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/60 hover:bg-destructive/20 hover:text-destructive transition-colors"
                     aria-label="Logout"
                   >
                     <LogOut className="h-5 w-5 shrink-0" />

@@ -4,7 +4,7 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { useApi } from "@/hooks/use-api"
 import { useDebounce } from "@/hooks/use-debounce"
-import { PageHeader } from "@/components/shared/page-header"
+import { DashboardHero } from "@/components/shared/dashboard-hero"
 import { EmptyState } from "@/components/shared/empty-state"
 import { ErrorState } from "@/components/shared/error-state"
 import { SkeletonTable } from "@/components/shared/skeleton-table"
@@ -34,15 +34,10 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
-  Info,
+  ArrowUpRight,
 } from "lucide-react"
 import Link from "next/link"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+
 
 interface CourseItem {
   id: string
@@ -96,28 +91,22 @@ export function CourseList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <PageHeader
-          title="My Courses"
-          description="Manage your assigned courses"
-        />
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" disabled className="gap-2 opacity-60">
-                <BookOpen className="h-4 w-4" />
-                Create Course
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Course creation is managed by your admin.</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
+      <DashboardHero
+        eyebrow="Teaching studio"
+        title="Give every course a clear next step."
+        description="Review assigned courses, track learner progress, and move from planning to delivery with less friction."
+        className="py-6 sm:py-7"
+        actions={
+          <Button asChild className="bg-[#F2A63B] text-[#070B14] hover:bg-[#e0952e] rounded-[2px] font-mono text-[11px] font-bold uppercase tracking-[0.12em] shadow-sm">
+            <Link href="/dashboard/instructor/students">View learners <ArrowUpRight className="ml-2 h-4 w-4" /></Link>
+          </Button>
+        }
+      >
+        <p className="text-sm text-white/75">{loading ? "Loading your courses..." : `${total} assigned course${total === 1 ? "" : "s"}`}</p>
+      </DashboardHero>
 
       {/* Filters */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-3 rounded-[2px] border border-[var(--cad-hairline,rgba(14,22,36,0.15))] bg-card p-4 shadow-sm sm:flex-row sm:items-center">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input

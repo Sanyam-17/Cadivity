@@ -7,16 +7,16 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { authClient } from "@/lib/auth-client"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useScrollReveal } from "@/hooks/use-scroll-reveal"
 import { cn } from "@/lib/utils"
 import {
   ShieldCheck,
   Loader2,
   Lock,
-  ArrowRight,
+  ArrowUpRight,
   CheckCircle2,
   Award,
+  AlertCircle,
+  ArrowLeft,
 } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -56,7 +56,6 @@ export default function CheckoutPage() {
   const slug = params.slug as string
 
   const { data: session } = authClient.useSession()
-  const reveal = useScrollReveal()
 
   const [course, setCourse] = React.useState<CourseDetail | null>(null)
   const [loading, setLoading] = React.useState(true)
@@ -146,24 +145,34 @@ export default function CheckoutPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center gap-4">
-        <Loader2 className="h-8 w-8 text-primary animate-spin" />
-        <p className="text-slate-500 text-sm">Preparing secure checkout gateway...</p>
+      <div className="min-h-screen bg-[var(--cad-cream)] flex flex-col justify-center items-center gap-4 p-4">
+        <Loader2 className="h-8 w-8 text-[var(--cad-cobalt)] animate-spin" />
+        <p className="cad-text-mono text-xs uppercase tracking-wider text-[var(--cad-muted)]">
+          Preparing secure checkout gateway...
+        </p>
       </div>
     )
   }
 
   if (error || !course) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center gap-4">
-        <h2 className="text-2xl font-bold text-rose-600">Checkout Error</h2>
-        <p className="text-slate-600">{error || "Course details not found."}</p>
-        <button
-          onClick={() => router.push("/courses")}
-          className="px-6 py-2 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors"
-        >
-          Browse Courses
-        </button>
+      <div className="min-h-screen bg-[var(--cad-cream)] flex flex-col justify-center items-center p-4">
+        <div className="w-full max-w-md bg-[var(--cad-cream)] border border-[var(--cad-hairline)] rounded-sm p-8 text-center space-y-6">
+          <div className="w-12 h-12 rounded-full border-2 border-[var(--cad-error)]/40 flex items-center justify-center mx-auto">
+            <AlertCircle className="h-6 w-6 text-[var(--cad-error)]" />
+          </div>
+          <div className="space-y-2">
+            <p className="cad-eyebrow text-[var(--cad-error)]">CHECKOUT ERROR</p>
+            <h1 className="cad-text-h3 text-[var(--cad-ink)]">Course not found</h1>
+            <p className="text-sm text-[var(--cad-muted)]" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
+              {error || "We couldn't retrieve details for this course."}
+            </p>
+          </div>
+          <Link href="/courses" className="cad-btn cad-btn-outline border-[var(--cad-hairline)] text-[var(--cad-ink)] w-full">
+            <ArrowLeft className="h-4 w-4 mr-1.5" />
+            Browse Courses
+          </Link>
+        </div>
       </div>
     )
   }
@@ -171,101 +180,117 @@ export default function CheckoutPage() {
   const finalPrice = course.price || 0
   const originalPrice = course.originalPrice || finalPrice
   const discount = originalPrice - finalPrice
-  const taxes = Math.round(finalPrice * 0.18 / 1.18)
+  const taxes = Math.round((finalPrice * 0.18) / 1.18)
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 font-sans flex flex-col-reverse lg:flex-row">
+    <div className="min-h-screen bg-[var(--cad-cream)] text-[var(--cad-ink)] flex flex-col-reverse lg:flex-row">
       {/* ── Left Column: Form ── */}
-      <div className="flex-1 lg:max-w-[55%] xl:max-w-[60%] flex flex-col justify-center items-center py-16 px-6 sm:px-12 lg:px-20">
+      <div className="flex-1 lg:max-w-[55%] xl:max-w-[60%] flex flex-col justify-center items-center py-12 px-6 sm:px-12 lg:px-16 border-r border-[var(--cad-hairline)]">
         <div className="w-full max-w-xl">
-          <div className="mb-12">
+          <div className="mb-8">
             <Link href="/" className="inline-block hover:opacity-80 transition-opacity">
-              <img src="/Cadivity.png" alt="Cadivity" className="h-10 object-contain" />
+              <img src="/Cadivity.png" alt="Cadivity" className="h-9 object-contain" />
             </Link>
           </div>
 
-          <h1 className="font-display text-5xl font-extrabold text-[#0f172a] mb-3 tracking-tight">Complete enrollment</h1>
-          <p className="text-base text-slate-500 mb-10">Provide your details to secure your spot in the professional program.</p>
+          <div className="mb-8">
+            <p className="cad-eyebrow text-[var(--cad-cobalt)] mb-2">CHECKOUT & ENROLLMENT</p>
+            <h1 className="cad-text-h2 text-[var(--cad-ink)]">Complete enrollment</h1>
+            <p className="text-sm text-[var(--cad-muted)] mt-1.5" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
+              Provide your details to secure your spot in the professional engineering program.
+            </p>
+          </div>
 
           <form id={formId} onSubmit={onSubmit} className="space-y-8">
-
             {/* Step 1 – Your Details */}
             <div className="space-y-4">
-              <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-3 border-b border-slate-100 pb-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#1e3a8a] text-white text-xs font-bold">
-                  1
+              <div className="flex items-center justify-between border-b border-[var(--cad-hairline)] pb-2.5">
+                <span className="cad-eyebrow text-[var(--cad-ink)]">
+                  01. YOUR DETAILS
                 </span>
-                Your Details
-              </h2>
+                {session && (
+                  <span className="cad-text-mono text-[10px] uppercase text-[var(--cad-cobalt)] tracking-wider">
+                    Verified Account
+                  </span>
+                )}
+              </div>
 
               {session ? (
-                <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 space-y-1">
-                  <p className="text-[11px] text-slate-500 uppercase tracking-wide font-medium">Logged in as</p>
-                  <p className="text-sm font-bold text-slate-900">{session.user.name}</p>
-                  <p className="text-xs text-slate-600">{session.user.email}</p>
+                <div className="bg-[var(--cad-sand)]/40 border border-[var(--cad-hairline)] rounded-sm p-4 space-y-1">
+                  <p className="cad-text-mono text-[11px] text-[var(--cad-muted)] uppercase tracking-wider">
+                    LOGGED IN AS
+                  </p>
+                  <p className="text-sm font-semibold text-[var(--cad-ink)]">{session.user.name}</p>
+                  <p className="cad-text-mono text-xs text-[var(--cad-muted)]">{session.user.email}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {/* Full name */}
                   <div className="space-y-1.5">
-                    <Label htmlFor="guestName" className="text-xs text-slate-600 font-medium">
+                    <label htmlFor="guestName" className="cad-input-label">
                       Full name
-                    </Label>
+                    </label>
                     <Input
                       id="guestName"
                       placeholder="Rohan Sharma"
-                      className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#1e3a8a] focus-visible:border-[#1e3a8a] h-11 rounded-lg"
+                      className="bg-transparent border-[var(--cad-hairline)] text-[var(--cad-ink)] focus:border-[var(--cad-sky)] focus:ring-2 focus:ring-[var(--cad-sky)]/20 h-12 rounded-sm text-sm"
                       {...guestForm.register("guestName")}
                     />
                     {guestForm.formState.errors.guestName && (
-                      <p className="text-xs text-rose-500">{guestForm.formState.errors.guestName.message}</p>
+                      <p className="cad-text-mono text-xs text-[var(--cad-error)] mt-1">
+                        {guestForm.formState.errors.guestName.message}
+                      </p>
                     )}
                   </div>
 
                   {/* Email address */}
                   <div className="space-y-1.5">
-                    <Label htmlFor="guestEmail" className="text-xs text-slate-600 font-medium">
+                    <label htmlFor="guestEmail" className="cad-input-label">
                       Email address
-                    </Label>
+                    </label>
                     <Input
                       id="guestEmail"
                       type="email"
                       placeholder="rohan@example.com"
-                      className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#1e3a8a] focus-visible:border-[#1e3a8a] h-11 rounded-lg"
+                      className="bg-transparent border-[var(--cad-hairline)] text-[var(--cad-ink)] focus:border-[var(--cad-sky)] focus:ring-2 focus:ring-[var(--cad-sky)]/20 h-12 rounded-sm text-sm"
                       {...guestForm.register("guestEmail")}
                     />
                     {guestForm.formState.errors.guestEmail && (
-                      <p className="text-xs text-rose-500">{guestForm.formState.errors.guestEmail.message}</p>
+                      <p className="cad-text-mono text-xs text-[var(--cad-error)] mt-1">
+                        {guestForm.formState.errors.guestEmail.message}
+                      </p>
                     )}
                   </div>
 
                   {/* Phone number */}
                   <div className="space-y-1.5">
-                    <Label htmlFor="guestPhone" className="text-xs text-slate-600 font-medium">
+                    <label htmlFor="guestPhone" className="cad-input-label">
                       Phone number
-                    </Label>
+                    </label>
                     <div className="flex gap-0">
-                      <div className="flex items-center px-4 rounded-l-lg border border-r-0 border-slate-300 bg-slate-50 text-slate-500 text-sm font-medium select-none h-11">
+                      <div className="flex items-center px-4 border border-r-0 border-[var(--cad-hairline)] bg-[var(--cad-sand)]/40 text-[var(--cad-muted)] cad-text-mono text-xs select-none h-12 rounded-l-sm">
                         +91
                       </div>
                       <Input
                         id="guestPhone"
                         type="tel"
                         placeholder="98765 43210"
-                        className="rounded-l-none bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-[#1e3a8a] focus-visible:border-[#1e3a8a] h-11"
+                        className="rounded-l-none bg-transparent border-[var(--cad-hairline)] text-[var(--cad-ink)] focus:border-[var(--cad-sky)] focus:ring-2 focus:ring-[var(--cad-sky)]/20 h-12 rounded-r-sm text-sm"
                         {...guestForm.register("guestPhone")}
                       />
                     </div>
                     {guestForm.formState.errors.guestPhone && (
-                      <p className="text-xs text-rose-500">{guestForm.formState.errors.guestPhone.message}</p>
+                      <p className="cad-text-mono text-xs text-[var(--cad-error)] mt-1">
+                        {guestForm.formState.errors.guestPhone.message}
+                      </p>
                     )}
                   </div>
 
-                  <p className="text-[11px] text-slate-500 leading-relaxed pt-1">
+                  <p className="text-xs text-[var(--cad-muted)] pt-1" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
                     We&apos;ll create your account automatically after payment.{" "}
                     <Link
                       href={`/login?redirect=${encodeURIComponent(`/checkout/${slug}`)}`}
-                      className="text-[#1e3a8a] font-semibold hover:underline"
+                      className="cad-text-mono text-xs text-[var(--cad-cobalt)] hover:text-[var(--cad-sky)] underline ml-1"
                     >
                       Already have an account? Sign in
                     </Link>
@@ -276,56 +301,52 @@ export default function CheckoutPage() {
 
             {/* Step 2 – Payment Method */}
             <div className="space-y-4">
-              <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-3 border-b border-slate-100 pb-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#1e3a8a] text-white text-xs font-bold">
-                  2
+              <div className="flex items-center justify-between border-b border-[var(--cad-hairline)] pb-2.5">
+                <span className="cad-eyebrow text-[var(--cad-ink)]">
+                  02. PAYMENT METHOD
                 </span>
-                Payment Method
-              </h2>
+                <span className="cad-text-mono text-[10px] uppercase text-[var(--cad-muted)] tracking-wider">
+                  256-Bit Encrypted
+                </span>
+              </div>
 
-              <div className="flex items-center gap-4 bg-white border-2 border-[#1e3a8a] rounded-xl p-4 shadow-[0_0_0_1px_rgba(30,58,138,0.1)] relative">
-                {/* PhonePe logo placeholder */}
-                <div className="h-10 w-10 rounded-lg bg-[#1e3a8a] flex items-center justify-center shrink-0">
-                  <svg viewBox="0 0 40 40" className="h-6 w-6" fill="none">
-                    <circle cx="20" cy="20" r="20" fill="#1e3a8a" />
-                    <text x="50%" y="55%" textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="14" fontWeight="bold" fontFamily="sans-serif">P</text>
-                  </svg>
+              <div className="flex items-center gap-4 bg-[var(--cad-ice)]/30 border border-[var(--cad-cobalt)] rounded-sm p-4 relative">
+                <div className="h-10 w-10 bg-[var(--cad-cobalt)] text-white flex items-center justify-center shrink-0 rounded-sm font-bold font-mono">
+                  P
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900">PhonePe Secure Checkout</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
+                  <p className="text-sm font-semibold text-[var(--cad-ink)]">PhonePe Secure Gateway</p>
+                  <p className="cad-text-mono text-[11px] text-[var(--cad-muted)] mt-0.5">
                     UPI, Credit/Debit Cards, Netbanking
                   </p>
                 </div>
-                <div className="bg-[#1e3a8a] rounded-full p-0.5">
-                  <CheckCircle2 className="h-4 w-4 text-white shrink-0" />
+                <div className="text-[var(--cad-cobalt)]">
+                  <CheckCircle2 className="h-5 w-5" />
                 </div>
               </div>
             </div>
 
-            <p className="text-[11px] text-slate-500 leading-relaxed">
-              By proceeding, you agree to our <a href="#" className="font-medium text-slate-700 underline underline-offset-2">Terms of Service</a> and <a href="#" className="font-medium text-slate-700 underline underline-offset-2">Refund Policy</a>.
+            <p className="text-[11px] text-[var(--cad-muted)]" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
+              By proceeding, you agree to our{" "}
+              <a href="#" className="underline text-[var(--cad-ink)]">Terms of Service</a>{" "}
+              and{" "}
+              <a href="#" className="underline text-[var(--cad-ink)]">Refund Policy</a>.
             </p>
 
             <button
               type="submit"
               disabled={isProcessing}
-              className={cn(
-                "w-full flex items-center justify-center gap-2 py-4 px-6 rounded-xl text-sm font-bold transition-all duration-200",
-                "bg-[#254291] text-white shadow-md hover:bg-[#1e3575] hover:shadow-lg",
-                "disabled:opacity-60 disabled:cursor-not-allowed",
-                "active:scale-[0.99]"
-              )}
+              className="cad-btn cad-btn-amber w-full py-4 text-sm font-semibold flex items-center justify-center gap-2"
             >
               {isProcessing ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Processing...
+                  <span>Processing Gateway...</span>
                 </>
               ) : (
                 <>
-                  Complete Secure Payment
-                  <ArrowRight className="h-4 w-4" />
+                  <span>Complete Secure Payment</span>
+                  <ArrowUpRight className="h-4 w-4" />
                 </>
               )}
             </button>
@@ -334,79 +355,85 @@ export default function CheckoutPage() {
       </div>
 
       {/* ── Right Column: Order Summary ── */}
-      <div className="lg:flex-1 bg-[#284a9e] text-white p-6 sm:p-12 lg:p-20 flex flex-col justify-center">
-        <div className="max-w-md w-full mx-auto">
+      <div className="lg:flex-1 bg-[var(--cad-navy-950)] text-white p-6 sm:p-12 lg:p-16 flex flex-col justify-center relative">
+        {/* Subtle grid decor */}
+        <div className="cad-grid-bg absolute inset-0 opacity-15 pointer-events-none" />
+
+        <div className="max-w-md w-full mx-auto relative z-10">
           {/* Course Thumbnail */}
-          <div className="rounded-xl overflow-hidden mb-8 shadow-xl relative aspect-video bg-slate-800">
+          <div className="rounded-sm overflow-hidden mb-6 border border-white/10 relative aspect-video bg-black/40">
             {course.thumbnail ? (
               <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full bg-[#1e3a8a] flex items-center justify-center">
-                 <span className="text-white/50 text-xl font-bold">{course.title.charAt(0)}</span>
+              <div className="w-full h-full bg-[var(--cad-cobalt)]/40 flex items-center justify-center">
+                <span className="text-white/60 text-2xl font-mono font-bold">{course.title.charAt(0)}</span>
               </div>
             )}
-            <div className="absolute bottom-3 left-3 bg-white/10 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1.5 uppercase tracking-wide">
-               <CheckCircle2 className="h-3 w-3 text-emerald-400" />
-               OFFICIAL CERTIFICATION
+            <div className="absolute bottom-3 left-3 bg-[var(--cad-navy-950)]/90 backdrop-blur-sm border border-white/20 text-white cad-text-mono text-[10px] px-2.5 py-1 rounded-sm flex items-center gap-1.5 uppercase tracking-wider">
+              <CheckCircle2 className="h-3 w-3 text-[var(--cad-sky)]" />
+              OFFICIAL CERTIFICATION
             </div>
           </div>
 
-          <h2 className="text-3xl font-display font-bold mb-3 leading-tight">{course.title}</h2>
-          
-          {course.shortDescription && (
-            <p className="text-[#a4bcf0] text-sm leading-relaxed mb-10">
-              {course.shortDescription}
-            </p>
-          )}
+          <div className="mb-6">
+            <p className="cad-eyebrow text-[var(--cad-sky)] mb-2">COURSE OVERVIEW</p>
+            <h2 className="cad-text-h3 text-white leading-tight">{course.title}</h2>
+            {course.shortDescription && (
+              <p className="text-slate-300 text-sm leading-relaxed mt-2" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
+                {course.shortDescription}
+              </p>
+            )}
+          </div>
 
           {/* Pricing breakdown */}
-          <div className="space-y-4 text-sm mb-6 pb-6 border-b border-white/10">
-            <div className="flex justify-between items-center text-[#c6d7f8]">
+          <div className="space-y-3 text-sm mb-6 pb-6 border-b border-white/10" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
+            <div className="flex justify-between items-center text-slate-300">
               <span>Course Enrollment</span>
-              <span>{formatPrice(originalPrice)}</span>
+              <span className="cad-text-mono">{formatPrice(originalPrice)}</span>
             </div>
 
             {discount > 0 && (
-              <div className="flex justify-between items-center text-emerald-400 font-medium">
+              <div className="flex justify-between items-center text-[var(--cad-sky)]">
                 <span>Limited Time Discount</span>
-                <span>−{formatPrice(discount)}</span>
+                <span className="cad-text-mono">−{formatPrice(discount)}</span>
               </div>
             )}
 
-            <div className="flex justify-between items-center text-[#c6d7f8]">
-              <span>GST (18%)</span>
-              <span>{formatPrice(taxes)}</span>
+            <div className="flex justify-between items-center text-slate-400 text-xs">
+              <span>GST Included (18%)</span>
+              <span className="cad-text-mono">{formatPrice(taxes)}</span>
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 flex justify-between items-center shadow-lg border border-white/10 mb-8">
-            <span className="font-bold text-lg">Total Amount</span>
-            <span className="font-bold text-4xl">{formatPrice(finalPrice)}</span>
+          {/* Total */}
+          <div className="bg-white/5 border border-white/10 rounded-sm p-5 flex justify-between items-center mb-8">
+            <span className="cad-eyebrow text-slate-300">TOTAL PAYABLE</span>
+            <span className="cad-text-mono text-3xl font-bold text-white">{formatPrice(finalPrice)}</span>
           </div>
 
           <div className="space-y-3">
-             <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex gap-3">
-                <Lock className="h-5 w-5 text-emerald-400 shrink-0 mt-0.5" />
-                <div>
-                   <p className="font-bold text-sm mb-1">Secure Transaction</p>
-                   <p className="text-[11px] text-[#a4bcf0] leading-relaxed">256-bit SSL encrypted connection. Your data is never stored on our servers.</p>
-                </div>
-             </div>
-             
-             <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex gap-3">
-                <Award className="h-5 w-5 text-emerald-400 shrink-0 mt-0.5" />
-                <div>
-                   <p className="font-bold text-sm mb-1">Lifetime Access</p>
-                   <p className="text-[11px] text-[#a4bcf0] leading-relaxed">Includes all future course updates and a verifiable digital certificate upon completion.</p>
-                </div>
-             </div>
+            <div className="bg-white/[0.03] border border-white/10 rounded-sm p-3.5 flex gap-3">
+              <Lock className="h-4 w-4 text-[var(--cad-sky)] shrink-0 mt-0.5" />
+              <div>
+                <p className="cad-text-mono text-xs uppercase tracking-wider text-white">SECURE TRANSACTION</p>
+                <p className="text-xs text-slate-400 leading-relaxed mt-0.5">256-bit SSL encrypted. Payment details processed directly via regulated banking gateway.</p>
+              </div>
+            </div>
+
+            <div className="bg-white/[0.03] border border-white/10 rounded-sm p-3.5 flex gap-3">
+              <Award className="h-4 w-4 text-[var(--cad-sky)] shrink-0 mt-0.5" />
+              <div>
+                <p className="cad-text-mono text-xs uppercase tracking-wider text-white">LIFETIME ACCESS</p>
+                <p className="text-xs text-slate-400 leading-relaxed mt-0.5">Includes full curriculum, code projects, future module updates, and verifiable certificate.</p>
+              </div>
+            </div>
           </div>
 
           {/* Bottom encryption badges */}
-          <div className="flex items-center justify-center gap-6 text-[10px] text-[#8ca8e8] mt-10 uppercase tracking-widest font-semibold">
-            <span className="flex items-center gap-1.5"><ShieldCheck className="h-3 w-3" /> PCI-DSS</span>
-            <span className="flex items-center gap-1.5"><Lock className="h-3 w-3" /> SSL SECURE</span>
-            <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3 w-3" /> 256-BIT</span>
+          <div className="flex items-center justify-center gap-6 cad-text-mono text-[10px] text-slate-500 mt-8 uppercase tracking-widest">
+            <span className="flex items-center gap-1.5"><ShieldCheck className="h-3 w-3 text-[var(--cad-sky)]" /> PCI-DSS</span>
+            <span className="flex items-center gap-1.5"><Lock className="h-3 w-3 text-[var(--cad-sky)]" /> SSL SECURE</span>
+            <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3 w-3 text-[var(--cad-sky)]" /> 256-BIT</span>
           </div>
         </div>
       </div>

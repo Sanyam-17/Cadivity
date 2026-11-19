@@ -8,6 +8,7 @@ import { InstructorNotificationProvider } from "./notification-provider"
 import { useInstructorStore } from "@/stores/instructor-store"
 import { Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { OfflineBanner } from "@/components/shared/state/offline-banner"
 
 interface InstructorLayoutProps {
   children: React.ReactNode
@@ -27,6 +28,7 @@ export function InstructorLayout({ children }: InstructorLayoutProps) {
   return (
     <InstructorNotificationProvider>
       <div className={cn("theme-instructor min-h-screen bg-background text-foreground", resolvedTheme === "dark" && "dark")}>
+        <OfflineBanner />
         <InstructorSidebar
           isMobileOpen={sidebarMobileOpen}
           setIsMobileOpen={setSidebarMobileOpen}
@@ -47,10 +49,10 @@ export function InstructorLayout({ children }: InstructorLayoutProps) {
         <main
           className={cn(
             "min-h-screen pt-16 transition-all duration-300",
-            sidebarCollapsed ? "lg:pl-16" : "lg:pl-60"
+            sidebarCollapsed ? "lg:pl-16" : "lg:pl-64"
           )}
         >
-          <div className="animate-page-enter p-4 lg:p-6">
+          <div className="animate-page-enter mx-auto max-w-[1600px] p-4 lg:p-6">
             {children}
           </div>
         </main>

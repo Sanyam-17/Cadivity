@@ -1,29 +1,19 @@
 "use client";
 
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   X,
   Loader2,
-  ArrowRight,
   Mail,
   Lock,
   Eye,
   EyeOff,
   UserPlus,
   ArrowLeft,
+  ArrowUpRight,
 } from "lucide-react";
 import { useAuthModal } from "@/hooks/use-auth-modal";
 import { useState, useEffect, useCallback } from "react";
-
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
@@ -32,7 +22,7 @@ type AuthMode = "login" | "register" | "forgot";
 
 /* ─── Shared input class tokens ─── */
 const INPUT_CLS =
-  "bg-[#f8fafc] border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-1 focus-visible:ring-[#0c2357] focus-visible:border-[#0c2357] h-11";
+  "bg-transparent border-[var(--cad-hairline)] text-[var(--cad-ink)] placeholder:text-[var(--cad-muted)] focus:border-[var(--cad-sky)] focus:ring-2 focus:ring-[var(--cad-sky)]/20 h-12 rounded-sm text-sm";
 
 export function LoginForm() {
   const router = useRouter();
@@ -53,14 +43,12 @@ export function LoginForm() {
   /* ── Mode switcher: preserves email, clears everything else ── */
   const switchMode = useCallback((next: AuthMode) => {
     setMode(next);
-    // Clear mode-specific UI state
     setPassword("");
     setName("");
     setPhoneNumber("");
     setShowPassword(false);
     setLoading(false);
     setError(null);
-    // email is intentionally NOT cleared
   }, []);
 
   /* ── Lock body scroll while modal is open ── */
@@ -77,8 +65,7 @@ export function LoginForm() {
       switchMode("login");
       setEmail("");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+  }, [isOpen, switchMode]);
 
   if (!isOpen) return null;
 
@@ -99,6 +86,12 @@ export function LoginForm() {
           onSuccess: (ctx) => {
             toast.success("Signed in successfully!");
             close();
+            const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+            const redirect = searchParams?.get("redirect");
+            if (redirect && redirect.startsWith("/")) {
+              router.push(redirect);
+              return;
+            }
             const user = ctx.data.user;
             if (user.role === "admin") router.push("/dashboard/admin");
             else if (user.role === "instructor") router.push("/dashboard/instructor");
@@ -181,274 +174,265 @@ export function LoginForm() {
      Per-mode content config
      ═══════════════════════════════════════════ */
 
-  const headings: Record<AuthMode, { title: string; description: string }> = {
+  const config: Record<AuthMode, { eyebrow: string; title: string; description: string }> = {
     login: {
-      title: "Welcome Back to Cadivity!",
-      description: "Join Cadivity and advance your technical career.",
+      eyebrow: "AUTHENTICATION",
+      title: "Welcome Back",
+      description: "Join Cadivity and advance your technical engineering career.",
     },
     register: {
-      title: "SIGN UP TO CADIVITY!",
-      description: "Join our community and create your account to get started on Cadivity.",
+      eyebrow: "NEW ENROLLMENT",
+      title: "Create Account",
+      description: "Join our community and build production-grade CAD automation skills.",
     },
     forgot: {
-      title: "GET A BRAND NEW PASSWORD!",
+      eyebrow: "ACCOUNT RECOVERY",
+      title: "Reset Password",
       description: "Enter your email address below and we'll send you instructions to reset your password.",
     },
   };
 
-  const { title, description } = headings[mode];
+  const { eyebrow, title, description } = config[mode];
 
   /* ═══════════════════════════════════════════
      Render
      ═══════════════════════════════════════════ */
 
   return (
-    <div className="fixed inset-0 z-[100]">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-[#0c2357]/40 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-[var(--cad-navy-950)]/75 backdrop-blur-sm transition-opacity"
         onClick={close}
       />
 
-      {/* Modal */}
-      <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6">
-        <Card className="w-full max-w-[420px] bg-white text-slate-900 border-0 shadow-2xl rounded-2xl relative animate-in fade-in zoom-in-95 duration-200">
-          {/* Close button */}
-          <button
-            onClick={close}
-            className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 transition-colors z-10"
-          >
-            <X className="h-5 w-5" />
-          </button>
+      {/* Modal Card */}
+      <div className="relative w-full max-w-[460px] bg-[var(--cad-cream)] text-[var(--cad-ink)] border border-[var(--cad-hairline)] rounded-sm p-6 sm:p-8 z-10 animate-in fade-in zoom-in-95 duration-200">
+        {/* Blueprint corner mark */}
+        <div className="absolute top-2 left-2 w-2 h-2 border-t border-l border-[var(--cad-hairline)] pointer-events-none" />
+        <div className="absolute top-2 right-2 w-2 h-2 border-t border-r border-[var(--cad-hairline)] pointer-events-none" />
+        <div className="absolute bottom-2 left-2 w-2 h-2 border-b border-l border-[var(--cad-hairline)] pointer-events-none" />
+        <div className="absolute bottom-2 right-2 w-2 h-2 border-b border-r border-[var(--cad-hairline)] pointer-events-none" />
 
-          {/* ── Header ── */}
-          <CardHeader className="text-center space-y-3 pt-8 pb-4">
-            <CardTitle className="text-[28px] font-bold text-[#0c2357] leading-tight">
-              {title}
-            </CardTitle>
-            <CardDescription className="text-sm text-slate-500 px-6">
-              {description}
-            </CardDescription>
-          </CardHeader>
+        {/* Close button */}
+        <button
+          onClick={close}
+          className="absolute right-4 top-4 text-[var(--cad-muted)] hover:text-[var(--cad-ink)] transition-colors p-1"
+          aria-label="Close dialog"
+        >
+          <X className="h-5 w-5" />
+        </button>
 
-          {/* ── Form ── */}
-          <CardContent className="space-y-6 px-6 pb-8">
-            <form onSubmit={onSubmit} className="space-y-4">
+        {/* ── Header ── */}
+        <div className="text-center space-y-2 mb-6">
+          <p className="cad-eyebrow text-[var(--cad-cobalt)]">{eyebrow}</p>
+          <h2 className="cad-text-h3 text-[var(--cad-ink)]">
+            {title}
+          </h2>
+          <p className="text-sm text-[var(--cad-muted)]" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
+            {description}
+          </p>
+        </div>
 
-              {/* Name — register only */}
-              {mode === "register" && (
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-[#1a2b4b]">
-                    What&apos;s your name?
-                  </Label>
-                  <Input
-                    type="text"
-                    placeholder="Name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className={INPUT_CLS}
-                  />
+        {/* ── Form ── */}
+        <form onSubmit={onSubmit} className="space-y-4">
+          {/* Name — register only */}
+          {mode === "register" && (
+            <div className="space-y-1.5">
+              <label className="cad-input-label">
+                Full Name
+              </label>
+              <Input
+                type="text"
+                placeholder="First and last name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className={INPUT_CLS}
+              />
+            </div>
+          )}
+
+          {/* Email — always visible */}
+          <div className="space-y-1.5">
+            <label className="cad-input-label">
+              Email Address
+            </label>
+            <div className="relative">
+              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--cad-muted)]">
+                <Mail className="h-4 w-4" />
+              </div>
+              <Input
+                type="email"
+                placeholder="name@example.com"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={`${INPUT_CLS} pl-10`}
+              />
+            </div>
+          </div>
+
+          {/* Password — login & register only */}
+          {mode !== "forgot" && (
+            <div className="space-y-1.5">
+              <label className="cad-input-label">
+                Password
+              </label>
+              <div className="relative">
+                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--cad-muted)]">
+                  <Lock className="h-4 w-4" />
                 </div>
-              )}
-
-              {/* Email — always visible */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-[#1a2b4b]">
-                  What&apos;s your e-mail?
-                </Label>
-                <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                    <Mail className="h-4 w-4" />
-                  </div>
-                  <Input
-                    type="email"
-                    placeholder="E-mail"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className={`${INPUT_CLS} pl-10`}
-                  />
-                </div>
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  required
+                  minLength={8}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={`${INPUT_CLS} pl-10 pr-10`}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--cad-muted)] hover:text-[var(--cad-ink)] transition-colors"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
               </div>
 
-              {/* Password — login & register only */}
-              {mode !== "forgot" && (
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-[#1a2b4b]">
-                    Your password?
-                  </Label>
-                  <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                      <Lock className="h-4 w-4" />
-                    </div>
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Password"
-                      required
-                      minLength={8}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className={`${INPUT_CLS} pl-10 pr-10`}
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Forgot link — login only, right below password */}
-                  {mode === "login" && (
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => switchMode("forgot")}
-                        className="text-xs text-[#3b82f6] hover:text-[#2563eb] font-medium transition-colors"
-                      >
-                        Forgot your password?
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Phone — register only */}
-              {mode === "register" && (
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-[#1a2b4b]">
-                    Phone Number
-                  </Label>
-                  <Input
-                    type="tel"
-                    placeholder="98xxxxxxxx"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    className={INPUT_CLS}
-                  />
-                </div>
-              )}
-
-              {/* Error alert */}
-              {error && (
-                <p className="text-sm text-red-500 text-center font-medium bg-red-50 p-2.5 rounded-lg">
-                  {error}
-                </p>
-              )}
-
-              {/* ── CTA buttons ── */}
-              {mode === "forgot" ? (
-                <div className="flex gap-3 pt-2">
-                  <Button
-                    type="submit"
-                    disabled={loading}
-                    className="flex-1 bg-[#0c2357] hover:bg-[#091a42] text-white h-11 text-base shadow-sm"
-                  >
-                    {loading ? (
-                      <Loader2 className="size-4 animate-spin" />
-                    ) : (
-                      <>
-                        OK <ArrowRight className="ml-2 h-4 w-4" />
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => switchMode("login")}
-                    className="flex-1 border-slate-200 bg-[#f8fafc] text-slate-600 hover:bg-slate-100 h-11 text-base shadow-sm"
-                  >
-                    cancel
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-[#0c2357] hover:bg-[#091a42] text-white h-12 text-base font-medium shadow-md mt-2 transition-all hover:-translate-y-0.5"
-                >
-                  {loading ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : mode === "register" ? (
-                    <span className="flex items-center gap-2">
-                      Create Account{" "}
-                      <ArrowRight className="h-4 w-4" />
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      Login <ArrowRight className="h-4 w-4" />
-                    </span>
-                  )}
-                </Button>
-              )}
-            </form>
-
-            {/* ── Mode switch footer ── */}
-            {mode !== "forgot" && (
-              <div className="mt-6">
-                <div className="relative mb-6">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-slate-200" />
-                  </div>
-                  <div className="relative flex justify-center text-xs font-semibold uppercase tracking-wider">
-                    <span className="bg-white px-3 text-slate-400">
-                      Account Options
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between px-1">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      switchMode(mode === "register" ? "login" : "register")
-                    }
-                    className="text-[#3b82f6] hover:text-[#2563eb] font-medium text-sm flex items-center gap-1.5 transition-colors"
-                  >
-                    {mode === "register" ? (
-                      <span className="flex items-center gap-1">
-                        <ArrowLeft className="h-4 w-4" /> Sign In
-                      </span>
-                    ) : (
-                      <>
-                        <UserPlus className="h-4 w-4" />
-                        Create Account
-                      </>
-                    )}
-                  </button>
-
-                  {/* Show forgot-password shortcut on register too */}
+              {/* Forgot link — login only */}
+              {mode === "login" && (
+                <div className="flex justify-end pt-0.5">
                   <button
                     type="button"
                     onClick={() => switchMode("forgot")}
-                    className="text-[#3b82f6] hover:text-[#2563eb] font-medium text-sm transition-colors"
+                    className="cad-text-mono text-xs text-[var(--cad-muted)] hover:text-[var(--cad-cobalt)] transition-colors"
                   >
-                    Forgot your password?
+                    Forgot password?
                   </button>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+          )}
 
-            {/* Forgot mode: back-to-login link */}
-            {mode === "forgot" && (
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={() => switchMode("login")}
-                  className="text-[#3b82f6] hover:text-[#2563eb] font-medium text-sm flex items-center gap-1 mx-auto transition-colors"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" />
-                  Back to login
-                </button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          {/* Phone — register only */}
+          {mode === "register" && (
+            <div className="space-y-1.5">
+              <label className="cad-input-label">
+                Phone Number
+              </label>
+              <Input
+                type="tel"
+                placeholder="98xxxxxxxx"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                className={INPUT_CLS}
+              />
+            </div>
+          )}
+
+          {/* Error alert */}
+          {error && (
+            <div className="cad-card bg-[var(--cad-error)]/5 px-4 py-3 text-sm text-[var(--cad-error)] border-[var(--cad-error)]/20" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
+              {error}
+            </div>
+          )}
+
+          {/* ── CTA buttons ── */}
+          {mode === "forgot" ? (
+            <div className="flex gap-3 pt-2">
+              <button
+                type="submit"
+                disabled={loading}
+                className="cad-btn cad-btn-cobalt flex-1"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    Send Link <ArrowUpRight className="h-4 w-4 ml-1.5" />
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => switchMode("login")}
+                className="cad-btn cad-btn-outline text-[var(--cad-ink)] border-[var(--cad-hairline)] flex-1"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              type="submit"
+              disabled={loading}
+              className="cad-btn cad-btn-cobalt w-full mt-2"
+            >
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : mode === "register" ? (
+                <>
+                  Create Account <ArrowUpRight className="h-4 w-4 ml-1.5" />
+                </>
+              ) : (
+                <>
+                  Sign In <ArrowUpRight className="h-4 w-4 ml-1.5" />
+                </>
+              )}
+            </button>
+          )}
+        </form>
+
+        {/* ── Mode switch footer ── */}
+        {mode !== "forgot" && (
+          <div className="mt-6 pt-5 border-t border-[var(--cad-hairline)]">
+            <div className="flex items-center justify-between text-xs">
+              <button
+                type="button"
+                onClick={() =>
+                  switchMode(mode === "register" ? "login" : "register")
+                }
+                className="cad-text-mono text-[var(--cad-muted)] hover:text-[var(--cad-cobalt)] uppercase tracking-wider flex items-center gap-1.5 transition-colors"
+              >
+                {mode === "register" ? (
+                  <span className="flex items-center gap-1">
+                    <ArrowLeft className="h-3.5 w-3.5" /> Sign In
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1">
+                    <UserPlus className="h-3.5 w-3.5" /> Create Account
+                  </span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => switchMode("forgot")}
+                className="cad-text-mono text-[var(--cad-muted)] hover:text-[var(--cad-cobalt)] uppercase tracking-wider transition-colors"
+              >
+                Forgot Password
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Forgot mode: back-to-login link */}
+        {mode === "forgot" && (
+          <div className="text-center mt-6 pt-5 border-t border-[var(--cad-hairline)]">
+            <button
+              type="button"
+              onClick={() => switchMode("login")}
+              className="cad-text-mono text-xs uppercase tracking-wider text-[var(--cad-muted)] hover:text-[var(--cad-cobalt)] inline-flex items-center gap-1.5 transition-colors"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Back to login
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

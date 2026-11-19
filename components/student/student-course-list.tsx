@@ -2,8 +2,9 @@
 
 import * as React from "react"
 import { StudentCourseCard } from "./course-card"
-import { BookOpen, LayoutGrid, List } from "lucide-react"
-import Link from "next/link"
+import { LayoutGrid, List } from "lucide-react"
+import { EmptyState } from "@/components/shared/state/empty-state"
+import { useRouter } from "next/navigation"
 
 interface CourseData {
   id: string
@@ -29,28 +30,17 @@ interface StudentCourseListProps {
 
 export function StudentCourseList({ courses }: StudentCourseListProps) {
   const [view, setView] = React.useState<"grid" | "list">("grid")
+  const router = useRouter()
 
   if (courses.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 px-6 py-16 text-center">
-        <div className="flex size-14 items-center justify-center rounded-full bg-primary/10">
-          <BookOpen className="size-6 text-primary" strokeWidth={1.5} />
-        </div>
-        <h3 className="mt-4 text-base font-semibold text-foreground">
-          You&apos;re not enrolled in any courses
-        </h3>
-        <p className="mt-1.5 max-w-sm text-sm text-muted-foreground">
-          Browse our course catalog to find the right program for you and
-          start your learning journey today.
-        </p>
-        <Link
-          href="/courses"
-          className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-md transition-all hover:bg-primary/90 hover:scale-105 hover:shadow-lg"
-        >
-          <BookOpen className="size-4" aria-hidden="true" />
-          Browse Courses
-        </Link>
-      </div>
+      <EmptyState
+        eyebrow="NO ENROLLMENTS YET"
+        title="Start Your CAD Automation Journey"
+        description="Browse our hands-on course catalog to learn Creo Toolkit development, SolidWorks API programming, and CAD automation."
+        actionLabel="Explore Programs"
+        onAction={() => router.push("/courses")}
+      />
     )
   }
 
@@ -63,10 +53,10 @@ export function StudentCourseList({ courses }: StudentCourseListProps) {
           onClick={() => setView("grid")}
           aria-label="Grid view"
           aria-pressed={view === "grid"}
-          className={`h-8 w-8 flex items-center justify-center rounded border transition-colors ${
+          className={`h-8 w-8 flex items-center justify-center rounded-[2px] border transition-colors cursor-pointer ${
             view === "grid"
-              ? "border-primary bg-primary/10 text-primary"
-              : "border-border/60 bg-white text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+              ? "border-[#183F7F] bg-[#183F7F]/10 text-[#183F7F]"
+              : "border-[var(--cad-hairline,rgba(14,22,36,0.15))] bg-card text-[#5B6B7F] hover:text-[#0E1624] hover:bg-muted"
           }`}
         >
           <LayoutGrid className="h-4 w-4" aria-hidden="true" />
@@ -76,10 +66,10 @@ export function StudentCourseList({ courses }: StudentCourseListProps) {
           onClick={() => setView("list")}
           aria-label="List view"
           aria-pressed={view === "list"}
-          className={`h-8 w-8 flex items-center justify-center rounded border transition-colors ${
+          className={`h-8 w-8 flex items-center justify-center rounded-[2px] border transition-colors cursor-pointer ${
             view === "list"
-              ? "border-primary bg-primary/10 text-primary"
-              : "border-border/60 bg-white text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+              ? "border-[#183F7F] bg-[#183F7F]/10 text-[#183F7F]"
+              : "border-[var(--cad-hairline,rgba(14,22,36,0.15))] bg-card text-[#5B6B7F] hover:text-[#0E1624] hover:bg-muted"
           }`}
         >
           <List className="h-4 w-4" aria-hidden="true" />

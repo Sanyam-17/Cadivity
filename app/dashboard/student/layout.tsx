@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { requireExactRole } from '@/lib/server/auth-guard'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
+import { OfflineBanner } from "@/components/shared/state/offline-banner"
 import "@/app/styles/student.css"
 
 export const metadata: Metadata = {
@@ -25,6 +26,7 @@ export default async function StudentLayout({
 
   return (
     <div className="theme-student min-h-screen flex flex-col">
+      <OfflineBanner />
       <Navbar />
       {children}
       <Footer />

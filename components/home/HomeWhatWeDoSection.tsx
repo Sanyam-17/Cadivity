@@ -1,97 +1,105 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { CheckCircle2, Factory, Target, ArrowRight } from "lucide-react";
+import { Layout, Target, ArrowUpRight } from "lucide-react";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 
 /**
- * "What We Do" section with scroll-reveal animations and hover effects.
+ * "What We Do" section — cream bg, asymmetric header, flat color-blocked cards.
  */
 export function HomeWhatWeDoSection() {
   const whatWeDoReveal = useScrollReveal();
 
   return (
-    <section className="py-24 bg-white overflow-hidden">
-      <div ref={whatWeDoReveal.ref} className="container mx-auto px-4">
-        <div className={`text-center mb-16 transition-all duration-700 ${whatWeDoReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
-          <h2 className="font-display text-3xl font-bold text-slate-900 mb-4">
-            What We Do
-          </h2>
-          <p className="text-slate-600 max-w-2xl mx-auto">
-            Cadivity helps engineers and organizations automate repetitive
-            design workflows, develop custom CAD applications, and master
-            engineering API programming.
-          </p>
+    <section className="cad-bg-cream cad-section overflow-hidden">
+      <div ref={whatWeDoReveal.ref} className="cad-container">
+        {/* Asymmetric two-column header */}
+        <div className={`grid md:grid-cols-2 gap-8 md:gap-16 mb-16 items-start transition-all duration-700 ${whatWeDoReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
+          <div>
+            <p className="cad-eyebrow text-[var(--cad-cobalt)] mb-4">WHAT WE DO</p>
+            <h2 className="cad-text-h2 text-[var(--cad-ink)]">
+              More building.{" "}
+              <span className="cad-accent-teal font-bold">Less repetition.</span>
+            </h2>
+          </div>
+          <div className="md:pt-8">
+            <p className="cad-text-body">
+              Cadivity helps engineers and organizations automate repetitive
+              design workflows, develop custom CAD applications, and master
+              engineering API programming.
+            </p>
+          </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-12 lg:gap-24">
-          {/* Services */}
-          <div className={`space-y-6 p-8 bg-slate-50 rounded-2xl border border-slate-100 hover:shadow-xl transition-all duration-500 hover:-translate-y-1 group ${whatWeDoReveal.visible ? "animate-fade-in-up delay-200" : "opacity-0"}`}>
-            <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <Factory className="h-7 w-7 text-primary" />
+        {/* Cards */}
+        <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+          {/* Services Card — sand */}
+          <div className={`cad-card cad-card-sand group p-8 lg:p-10 space-y-6 transition-all duration-700 ${whatWeDoReveal.visible ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: '200ms' }}>
+            <div className="flex items-start justify-between">
+              <p className="cad-eyebrow text-[var(--cad-cobalt)]">AUTOMATION</p>
+              <ArrowUpRight className="h-5 w-5 text-[var(--cad-muted)] group-hover:text-[var(--cad-cobalt)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200" strokeWidth={1.5} />
             </div>
-            <h3 className="text-2xl font-display font-bold text-slate-900">
+            <div className="h-12 w-12 flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
+              <Layout className="h-7 w-7 text-[var(--cad-cobalt)]" strokeWidth={1.5} />
+            </div>
+            <h3 className="cad-text-h3 text-[var(--cad-ink)]">
               Custom Automation Services
             </h3>
-            <p className="text-lg text-slate-600 leading-relaxed">
+            <p className="cad-text-body">
               We build custom software solutions to automate your design
               workflows. From simple macros to complex enterprise plugins.
             </p>
-            <ul className="space-y-3">
+            <ul className="space-y-2 pt-2">
               {[
                 "Drawing & Model Automation",
                 "Custom Plugin Development",
                 "ERP Integration",
                 "Batch Processing",
               ].map((item) => (
-                <li key={item} className="flex items-center text-slate-700 group/item">
-                  <CheckCircle2 className="h-5 w-5 text-accent mr-3 transition-transform duration-300 group-hover/item:scale-110" />
+                <li key={item} className="flex items-center text-sm text-[var(--cad-ink)]" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--cad-cobalt)] mr-3 shrink-0" />
                   {item}
                 </li>
               ))}
             </ul>
-            <Link href="/services">
-              <Button className="w-full mt-4 bg-primary text-white hover:bg-primary/90 group/btn transition-all duration-300 hover:shadow-lg hover:shadow-primary/20">
-                Explore Services
-                <ArrowRight className="ml-2 h-4 w-4 opacity-0 -translate-x-2 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all duration-300" />
-              </Button>
+            <Link href="/services" className="cad-btn cad-btn-dark w-full mt-4">
+              Explore Services
+              <ArrowUpRight className="h-3.5 w-3.5 cad-arrow" />
             </Link>
           </div>
 
-          {/* Training */}
-          <div className={`space-y-6 p-8 bg-slate-50 rounded-2xl border border-slate-100 hover:shadow-xl transition-all duration-500 hover:-translate-y-1 group ${whatWeDoReveal.visible ? "animate-fade-in-up delay-400" : "opacity-0"}`}>
-            <div className="h-14 w-14 rounded-xl bg-accent/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <Target className="h-7 w-7 text-accent" />
+          {/* Training Card — ice */}
+          <div className={`cad-card cad-card-ice group p-8 lg:p-10 space-y-6 transition-all duration-700 ${whatWeDoReveal.visible ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: '400ms' }}>
+            <div className="flex items-start justify-between">
+              <p className="cad-eyebrow text-[var(--cad-teal)]">TRAINING</p>
+              <ArrowUpRight className="h-5 w-5 text-[var(--cad-muted)] group-hover:text-[var(--cad-teal)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200" strokeWidth={1.5} />
             </div>
-            <h3 className="text-2xl font-display font-bold text-slate-900">
+            <div className="h-12 w-12 flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
+              <Target className="h-7 w-7 text-[var(--cad-teal)]" strokeWidth={1.5} />
+            </div>
+            <h3 className="cad-text-h3 text-[var(--cad-ink)]">
               Professional Training
             </h3>
-            <p className="text-lg text-slate-600 leading-relaxed">
+            <p className="cad-text-body">
               Master the skills that the industry demands. Practical,
               project-based courses on CAD API programming.
             </p>
-            <ul className="space-y-3">
+            <ul className="space-y-2 pt-2">
               {[
                 "Creo ProToolkit & C++",
                 "SolidWorks API (C# / VB.NET)",
                 "NX Open Programming",
                 "Corporate Training",
               ].map((item) => (
-                <li key={item} className="flex items-center text-slate-700 group/item">
-                  <CheckCircle2 className="h-5 w-5 text-primary mr-3 transition-transform duration-300 group-hover/item:scale-110" />
+                <li key={item} className="flex items-center text-sm text-[var(--cad-ink)]" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--cad-teal)] mr-3 shrink-0" />
                   {item}
                 </li>
               ))}
             </ul>
-            <Link href="/courses">
-              <Button
-                variant="outline"
-                className="w-full mt-4 border-primary text-primary hover:bg-primary/5 group/btn transition-all duration-300"
-              >
-                View Courses
-                <ArrowRight className="ml-2 h-4 w-4 opacity-0 -translate-x-2 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all duration-300" />
-              </Button>
+            <Link href="/courses" className="cad-btn cad-btn-outline text-[var(--cad-ink)] border-[var(--cad-ink)] w-full mt-4 hover:bg-[var(--cad-ink)] hover:text-white">
+              View Courses
+              <ArrowUpRight className="h-3.5 w-3.5 cad-arrow" />
             </Link>
           </div>
         </div>

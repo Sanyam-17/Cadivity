@@ -274,7 +274,7 @@ import type { StateCreator } from "zustand";
 
 // ─── Exported Types ──────────────────────────────────────────────────────────
 
-export type ThemePreference = "light" | "dark" | "system";
+export type ThemePreference = "light" | "dark";
 export type ResolvedTheme = "light" | "dark";
 
 /** The state + actions shared by every dashboard UI store. */
@@ -331,11 +331,7 @@ export function setStoredValue(key: string, value: unknown): void {
  * Falls back to `"light"` on the server.
  */
 export function getResolvedTheme(theme: ThemePreference): ResolvedTheme {
-  if (theme !== "system") return theme;
-  if (typeof window === "undefined") return "light";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+  return theme;
 }
 
 // ─── Store Factory ───────────────────────────────────────────────────────────
@@ -361,7 +357,7 @@ export function createDashboardUISlice(
   const themeKey = `${keyPrefix}-theme`;
 
   return (set, get) => {
-    const initialTheme = getStoredValue<ThemePreference>(themeKey, "system");
+    const initialTheme = getStoredValue<ThemePreference>(themeKey, "light");
 
     return {
       // ── Sidebar ──────────────────────────────────────────────────────

@@ -24,8 +24,8 @@ const eventIcons = {
 }
 
 const eventColors = {
-  enrollment: "bg-info/10 text-info",
-  completion: "bg-success/10 text-success",
+  enrollment: "bg-primary/10 text-primary",
+  completion: "bg-[hsl(175,70%,40%)]/10 text-success",
 }
 
 export function RecentActivity() {
@@ -36,10 +36,10 @@ export function RecentActivity() {
   const events = data?.events || []
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-border bg-card flex flex-col">
-      <div className="flex items-center justify-between border-b border-border p-6">
+    <div className="rounded-[2px] border border-[var(--cad-hairline,rgba(14,22,36,0.15))] bg-card shadow-sm flex flex-col">
+      <div className="flex items-center justify-between border-b border-border/50 p-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+          <div className="flex h-9 w-9 items-center justify-center rounded-[2px] bg-[#183F7F]/10 text-[#183F7F]">
             <Activity className="h-4 w-4 text-primary" />
           </div>
           <div>

@@ -1,124 +1,137 @@
-// AboutPage
 "use client";
 
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
-import {
-  Target,
-  Wrench,
-  Lightbulb,
-  TrendingUp,
-  LifeBuoy,
-} from "lucide-react";
+import Image from "next/image";
+import { Eye, Target, Compass, Shield, Users, Lightbulb, ArrowUpRight } from "lucide-react";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
+import Link from "next/link";
 
 export default function AboutPage() {
-  const headerReveal = useScrollReveal();
+  const heroReveal = useScrollReveal();
   const missionReveal = useScrollReveal();
   const principlesReveal = useScrollReveal();
 
-  const features = [
-    { title: "Precision", icon: Target },
-    { title: "Practicality", icon: Wrench },
-    { title: "Innovation", icon: Lightbulb },
-    { title: "Scalability", icon: TrendingUp },
-    { title: "Support", icon: LifeBuoy },
-  ];
-
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col">
 
-      <main className="grow">
-        {/* Header */}
-        <section className="bg-slate-50 py-24 border-b border-slate-100 overflow-hidden">
-          <div
-            ref={headerReveal.ref}
-            className={`container mx-auto px-4 text-center max-w-4xl transition-all duration-700 ${headerReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}
-          >
-            <h1 className="font-display text-4xl md:text-5xl font-bold text-slate-900 mb-8">
-              We Enable Industry to Transform <br />
-              <span className="text-primary">
-                Manual Design into Intelligent Automation
-              </span>
+      {/* ─── Hero ─── */}
+      <section className="relative cad-bg-navy cad-section pt-32 pb-16 md:pb-20 overflow-hidden">
+        <div ref={heroReveal.ref} className={`cad-container relative z-10 transition-all duration-700 ${heroReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
+          <div className="max-w-3xl">
+            <p className="cad-eyebrow text-[var(--cad-sky)] mb-3">WHO WE ARE</p>
+            <h1 className="cad-text-display text-white mb-6">
+              Built for{" "}
+              <span className="cad-accent-sky">Engineers.</span>
             </h1>
-
-            <p className="text-xl text-slate-600 leading-relaxed max-w-2xl mx-auto">
-              CADIVITY is an engineering solutions provider specializing in CAD
-              automation, workflow optimization, custom plugin development, and
-              professional training.
+            <p className="cad-text-body max-w-2xl text-white/70">
+              Cadivity is a technology-driven company specializing in CAD
+              automation and engineering education. We combine deep domain
+              expertise with clean engineering to help organizations optimize
+              their design processes.
             </p>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Mission / Vision */}
-        <section className="py-24 bg-white overflow-hidden">
-          <div ref={missionReveal.ref} className="container mx-auto px-4">
-            <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
-              {/* Mission */}
-              <div className={`bg-blue-50/50 p-10 rounded-2xl border border-blue-100 hover:shadow-xl transition-all duration-500 hover:-translate-y-1 group ${missionReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
-                <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <Target className="h-6 w-6 text-primary" />
-                </div>
-
-                <h2 className="font-display text-2xl font-bold text-slate-900 mb-4">
-                  Our Mission
-                </h2>
-
-                <p className="text-slate-700 leading-relaxed text-lg">
-                  Enable industry and individuals to transform manual
-                  engineering design into intelligent, automated workflows.
-                </p>
-              </div>
-
-              {/* Vision */}
-              <div className={`bg-green-50/50 p-10 rounded-2xl border border-green-100 hover:shadow-xl transition-all duration-500 hover:-translate-y-1 group ${missionReveal.visible ? "animate-fade-in-up delay-200" : "opacity-0"}`}>
-                <div className="h-12 w-12 bg-green-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <Lightbulb className="h-6 w-6 text-green-600" />
-                </div>
-
-                <h2 className="font-display text-2xl font-bold text-slate-900 mb-4">
-                  Our Vision
-                </h2>
-
-                <p className="text-slate-700 leading-relaxed text-lg">
-                  Become a global leader in CAD automation skill development and
-                  customized engineering software solutions.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Core Principles */}
-        <section className="py-24 bg-slate-900 text-white overflow-hidden">
-          <div ref={principlesReveal.ref} className="container mx-auto px-4 text-center">
-            <h2 className={`font-display text-3xl font-bold mb-16 transition-all duration-700 ${principlesReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
-              Core Principles
+      {/* ─── Mission / Vision ─── */}
+      <section className="cad-bg-sand cad-section overflow-hidden">
+        <div ref={missionReveal.ref} className="cad-container">
+          <div className={`mb-16 transition-all duration-700 ${missionReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
+            <p className="cad-eyebrow text-[var(--cad-cobalt)] mb-4">OUR PURPOSE</p>
+            <h2 className="cad-text-h2 text-[var(--cad-ink)]">
+              Mission &{" "}
+              <span className="cad-accent-cobalt font-bold">Vision.</span>
             </h2>
+          </div>
 
-            <div className="flex flex-wrap justify-center gap-8 md:gap-16">
-              {features.map((feature, i) => {
-                const Icon = feature.icon;
-                return (
-                  <div
-                    key={feature.title}
-                    className={`flex flex-col items-center gap-4 group transition-all duration-700 ${principlesReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}
-                    style={{ animationDelay: `${i * 120 + 200}ms` }}
-                  >
-                    <div className="h-16 w-16 rounded-full bg-white/10 flex items-center justify-center border border-white/20 group-hover:bg-white/20 group-hover:scale-110 transition-all duration-300">
-                      <Icon className="h-8 w-8 text-accent" />
-                    </div>
+          <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+            {/* Mission */}
+            <div className={`cad-card cad-card-ice p-8 lg:p-10 space-y-5 transition-all duration-700 ${missionReveal.visible ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: '200ms' }}>
+              <div className="flex items-start justify-between">
+                <p className="cad-eyebrow text-[var(--cad-teal)]">MISSION</p>
+                <Target className="h-5 w-5 text-[var(--cad-teal)]" strokeWidth={1.5} />
+              </div>
+              <h3 className="cad-text-h3 text-[var(--cad-ink)]">
+                What Drives Us
+              </h3>
+              <p className="text-sm leading-relaxed text-[var(--cad-muted)]" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
+                To make engineering workflows faster, smarter, and more
+                reliable through intelligent CAD automation and practical,
+                high-impact training programs.
+              </p>
+            </div>
 
-                    <span className="font-display text-xl font-bold">
-                      {feature.title}
-                    </span>
-                  </div>
-                );
-              })}
+            {/* Vision */}
+            <div className={`cad-card cad-card-cobalt p-8 lg:p-10 space-y-5 transition-all duration-700 ${missionReveal.visible ? "animate-fade-in-up" : "opacity-0"}`} style={{ animationDelay: '400ms' }}>
+              <div className="flex items-start justify-between">
+                <p className="cad-eyebrow text-[var(--cad-sky)]">VISION</p>
+                <Eye className="h-5 w-5 text-[var(--cad-sky)]" strokeWidth={1.5} />
+              </div>
+              <h3 className="cad-text-h3 text-white">
+                Where We&apos;re Going
+              </h3>
+              <p className="text-sm leading-relaxed text-white/60" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
+                To become the global standard for CAD automation excellence and
+                engineering education — where every design process is optimized,
+                and every engineer has access to world-class training.
+              </p>
             </div>
           </div>
-        </section>
-      </main>
+        </div>
+      </section>
+
+      {/* ─── Core Principles ─── */}
+      <section className="cad-bg-cream cad-section overflow-hidden">
+        <div ref={principlesReveal.ref} className="cad-container">
+          <div className={`mb-16 transition-all duration-700 ${principlesReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
+            <p className="cad-eyebrow text-[var(--cad-cobalt)] mb-4">HOW WE WORK</p>
+            <h2 className="cad-text-h2 text-[var(--cad-ink)]">
+              Core <span className="cad-accent-amber font-bold">Principles.</span>
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { icon: Compass, title: "Precision First", desc: "Every solution is measured, tested, and optimized. No shortcuts." },
+              { icon: Shield, title: "Reliability", desc: "Build automation that works every time. Enterprise-grade, production-ready." },
+              { icon: Users, title: "Community", desc: "Knowledge shared is knowledge multiplied. We grow together." },
+              { icon: Lightbulb, title: "Innovation", desc: "Push boundaries. Find better ways. Never stop improving." },
+            ].map((principle, i) => {
+              const Icon = principle.icon;
+              return (
+                <div
+                  key={i}
+                  className={`cad-card cad-card-sand p-6 space-y-4 transition-all duration-500 ${principlesReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}
+                  style={{ animationDelay: `${i * 100 + 200}ms` }}
+                >
+                  <Icon className="h-6 w-6 text-[var(--cad-cobalt)]" strokeWidth={1.5} />
+                  <h3 className="cad-text-h3 text-[var(--cad-ink)]" style={{ fontSize: '1.125rem' }}>
+                    {principle.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-[var(--cad-muted)]" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
+                    {principle.desc}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── CTA ─── */}
+      <section className="cad-bg-cobalt cad-section-sm overflow-hidden">
+        <div className="cad-container text-center space-y-6">
+          <h2 className="cad-text-h2-bold text-white">
+            Ready to <span className="cad-accent-amber">collaborate?</span>
+          </h2>
+          <p className="cad-text-body mx-auto text-center" style={{ color: 'rgba(255,255,255,0.55)' }}>
+            Whether you need automation services or training, let&apos;s talk.
+          </p>
+          <Link href="/contact" className="cad-btn cad-btn-primary">
+            Get in Touch
+            <ArrowUpRight className="h-3.5 w-3.5 cad-arrow" />
+          </Link>
+        </div>
+      </section>
 
     </div>
   );

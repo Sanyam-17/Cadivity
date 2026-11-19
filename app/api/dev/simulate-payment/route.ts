@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/server/db";
-import { env } from "@/lib/env";
+import { completeOrder } from "@/lib/server/payments/complete-order";
+
+// ─── Dev-only payment simulation ─────────────────────────────────────────────
+// Bypasses the real Razorpay checkout + webhook so the checkout flow can be
+// tested locally without a live transaction. Delegates to the same
+// completeOrder() function the real webhook uses, so this now exercises the
+// exact same path: idempotency check, guest account resolution/creation,
+// enrollment creation, confirmation email, and sign-in OTP for new accounts.
 
 export async function POST(request: NextRequest) {
   if (process.env.NODE_ENV !== "development") {
@@ -13,37 +19,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "orderId is required" }, { status: 400 });
   }
 
-  const payment = await prisma.payment.findUnique({
-    where: { merchantOrderId: orderId },
-    include: { course: true },
+  const result = await completeOrder({
+    merchantOrderId: orderId,
+    transactionId: `dev_sim_${Date.now()}`,
   });
 
-  if (!payment) {
-    return NextResponse.json({ error: "Payment not found" }, { status: 404 });
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
   }
 
-  // Mark payment as completed
-  await prisma.payment.update({
-    where: { id: payment.id },
-    data: { status: "completed" },
+  if (result.alreadyProcessed) {
+    return NextResponse.json({ success: true, alreadyProcessed: true });
+  }
+
+  return NextResponse.json({
+    success: true,
+    courseSlug: result.courseSlug,
+    enrollmentId: result.enrollmentId,
+    newAccountCreated: result.newAccountCreated,
   });
-
-  // Create enrollment
-  if (payment.studentId) {
-    await prisma.enrollment.upsert({
-      where: {
-        studentId_courseId: {
-          studentId: payment.studentId,
-          courseId: payment.courseId,
-        },
-      },
-      update: {},
-      create: {
-        studentId: payment.studentId,
-        courseId: payment.courseId,
-      },
-    });
-  }
-
-  return NextResponse.json({ success: true, courseSlug: payment.course.slug });
 }

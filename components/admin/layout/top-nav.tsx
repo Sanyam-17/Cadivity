@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Bell, Search, Moon, Sun, User, ChevronDown, Monitor } from "lucide-react"
+import { Bell, Search, Moon, Sun, User, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -53,45 +53,32 @@ export function TopNav() {
     .toUpperCase()
     .slice(0, 2)
 
-  const cycleTheme = () => {
-    const order: Array<"light" | "dark" | "system"> = ["light", "dark", "system"]
-    const currentIndex = order.indexOf(theme)
-    const nextTheme = order[(currentIndex + 1) % order.length]
-    setTheme(nextTheme)
+  const toggleTheme = () => {
+    setTheme(resolvedTheme === "dark" ? "light" : "dark")
   }
 
-  const ThemeIcon = theme === "system" ? Monitor : resolvedTheme === "dark" ? Sun : Moon
+  const ThemeIcon = resolvedTheme === "dark" ? Sun : Moon
 
   return (
     <>
       <header
         className={cn(
-          "fixed right-0 top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-card/80 backdrop-blur-md px-4 lg:px-6 transition-all duration-300",
-          sidebarCollapsed ? "lg:left-16" : "lg:left-60",
+          "fixed right-0 top-0 z-20 flex h-16 items-center justify-between bg-background px-4 lg:px-6 transition-all duration-300",
+          sidebarCollapsed ? "lg:left-16" : "lg:left-64",
           "left-0"
         )}
       >
-        {/* Search */}
-        <div className="hidden md:flex items-center gap-2 flex-1 max-w-md ml-12 lg:ml-0">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search students, courses..."
-              className="pl-10 bg-secondary border-0 focus-visible:ring-primary input-focus-ring"
-            />
-            <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden xl:inline-flex h-5 items-center gap-1 rounded border border-border bg-muted px-1.5 text-[10px] font-medium text-muted-foreground">
-              ⌘K
-            </kbd>
-          </div>
-        </div>
+        {/* Spacer for mobile hamburger */}
+        <div className="w-10 lg:hidden" />
 
         {/* Actions */}
-        <div className="flex items-center gap-1.5 ml-auto">
+        <div className="flex items-center gap-2.5">
+
           {/* Theme Toggle */}
           <Button
             variant="ghost"
             size="icon"
-            onClick={cycleTheme}
+            onClick={toggleTheme}
             className="text-muted-foreground hover:text-foreground h-9 w-9 btn-transition"
             aria-label={`Theme: ${theme}. Click to change.`}
           >
@@ -165,6 +152,17 @@ export function TopNav() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+        </div>
+
+        {/* Search (right-aligned, card-style) */}
+        <div className="hidden md:flex items-center ml-auto max-w-lg w-full">
+          <div className="relative w-full">
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search students, courses..."
+              className="pl-11 h-10 bg-card border-0 rounded-full shadow-[var(--shadow-card)] focus-visible:ring-primary input-focus-ring"
+            />
+          </div>
         </div>
       </header>
 

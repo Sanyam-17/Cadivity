@@ -80,11 +80,11 @@ export function EnrollmentChart() {
   const hasData = chartData.some((d) => d.count > 0)
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-border bg-card">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-6">
+    <div className="rounded-[2px] border border-[var(--cad-hairline,rgba(14,22,36,0.15))] bg-card shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 p-6">
         <div>
-          <h3 className="text-sm font-semibold">Enrollment Trend</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <h3 className="font-display text-base font-bold text-[#0E1624]">Enrollment Trend</h3>
+          <p className="font-mono text-[11px] text-[#5B6B7F] mt-0.5">
             Daily enrollments in your courses
           </p>
         </div>
@@ -94,7 +94,7 @@ export function EnrollmentChart() {
             <select
               value={selectedCourse}
               onChange={(e) => setSelectedCourse(e.target.value)}
-              className="h-8 rounded-md border border-border bg-secondary px-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="h-8 rounded-[2px] border border-[var(--cad-hairline,rgba(14,22,36,0.15))] bg-muted/40 px-2 font-mono text-[11px] font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-[#4AB8EA]"
             >
               <option value="">All Courses</option>
               {courses.map((c) => (
@@ -105,13 +105,13 @@ export function EnrollmentChart() {
             </select>
           )}
           {/* Days toggle */}
-          <div className="flex items-center rounded-lg border border-border bg-secondary p-0.5">
+          <div className="flex items-center rounded-[2px] border border-border/60 bg-muted/40 p-0.5">
             <button
               onClick={() => setDays(7)}
               className={cn(
-                "rounded-md px-3 py-1 text-xs font-medium transition-colors",
+                "rounded-[2px] px-3 py-1 font-mono text-[10px] uppercase font-bold tracking-wider transition-colors cursor-pointer",
                 days === 7
-                  ? "bg-card text-foreground shadow-sm"
+                  ? "bg-card text-[#0E1624] shadow-xs"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -120,9 +120,9 @@ export function EnrollmentChart() {
             <button
               onClick={() => setDays(30)}
               className={cn(
-                "rounded-md px-3 py-1 text-xs font-medium transition-colors",
+                "rounded-[2px] px-3 py-1 font-mono text-[10px] uppercase font-bold tracking-wider transition-colors cursor-pointer",
                 days === 30
-                  ? "bg-card text-foreground shadow-sm"
+                  ? "bg-card text-[#0E1624] shadow-xs"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -171,9 +171,9 @@ export function EnrollmentChart() {
               />
               <Bar
                 dataKey="count"
-                fill="hsl(var(--primary))"
-                radius={[4, 4, 0, 0]}
-                maxBarSize={40}
+                fill="hsl(175, 70%, 40%)"
+                radius={[6, 6, 0, 0]}
+                maxBarSize={36}
               />
             </BarChart>
           </ResponsiveContainer>

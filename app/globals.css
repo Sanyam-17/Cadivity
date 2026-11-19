@@ -4,9 +4,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: 'Inter', 'Geist', sans-serif;
-  --font-display: 'Space Grotesk', sans-serif;
-
+  --font-sans: var(--font-manrope), 'Manrope', sans-serif;
+  --font-display: var(--font-manrope), 'Manrope', sans-serif;
+  --font-mono: var(--font-jetbrains), 'JetBrains Mono', monospace;
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
 
@@ -438,3 +438,480 @@
 .delay-500 { animation-delay: 500ms; }
 .delay-700 { animation-delay: 700ms; }
 .delay-1000 { animation-delay: 1000ms; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   CADIVITY PUBLIC DESIGN SYSTEM
+   Blueprint / Engineering-Editorial Visual Layer
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Color Tokens ─── */
+:root {
+  --cad-navy-950: #070B14;
+  --cad-cobalt: #183F7F;
+  --cad-sky: #4AB8EA;
+  --cad-teal: #2A7A9B;
+  --cad-amber: #F2A63B;
+  --cad-cream: #F4F0E8;
+  --cad-sand: #E5E1DA;
+  --cad-ice: #D3E9EF;
+  --cad-ink: #0E1624;
+  --cad-muted: #5B6B7F;
+  --cad-hairline: rgba(14, 22, 36, 0.15);
+  --cad-error: #D64545;
+  --cad-success: #2E8B57;
+
+  /* Dark section hairline */
+  --cad-hairline-dark: rgba(255, 255, 255, 0.14);
+}
+
+/* ─── Fluid Typography Scale ─── */
+
+.cad-text-display {
+  font-family: var(--font-manrope), 'Manrope', sans-serif;
+   font-size: clamp(2.375rem, 1.225rem + 3.75vw, 5.375rem);
+line-height: 1.015;
+letter-spacing: -0.035em;
+  font-weight: 800;
+}
+
+.cad-text-h2 {
+  font-family: var(--font-manrope), 'Manrope', sans-serif;
+  font-size: clamp(1.875rem, 1rem + 3vw, 4rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  font-weight: 300;
+}
+
+.cad-text-h2-bold {
+  font-family: var(--font-manrope), 'Manrope', sans-serif;
+  font-size: clamp(1.875rem, 1rem + 3vw, 4rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+}
+
+.cad-text-h3 {
+  font-family: var(--font-manrope), 'Manrope', sans-serif;
+  font-size: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+.cad-text-body {
+  font-family: var(--font-manrope), 'Manrope', sans-serif;
+  font-size: clamp(0.9375rem, 0.9rem + 0.2vw, 1.125rem);
+  line-height: 1.65;
+  font-weight: 300;
+  color: var(--cad-muted);
+  max-width: 60ch;
+}
+
+.cad-text-mono {
+  font-family: var(--font-jetbrains), 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.cad-text-mono-12 {
+  font-family: var(--font-jetbrains), 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+/* ─── Layout System ─── */
+
+.cad-container {
+  width: 100%;
+  max-width: 1440px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+@media (min-width: 640px) {
+  .cad-container { padding-left: 32px; padding-right: 32px; }
+}
+@media (min-width: 1024px) {
+  .cad-container { padding-left: 48px; padding-right: 48px; }
+}
+@media (min-width: 1280px) {
+  .cad-container { padding-left: 64px; padding-right: 64px; }
+}
+@media (min-width: 1920px) {
+  .cad-container { max-width: 1680px; }
+}
+
+.cad-section {
+  padding-top: clamp(64px, 8vw, 144px);
+  padding-bottom: clamp(64px, 8vw, 144px);
+}
+
+.cad-section-sm {
+  padding-top: clamp(40px, 5vw, 80px);
+  padding-bottom: clamp(40px, 5vw, 80px);
+}
+
+/* ─── 12-Column Grid ─── */
+.cad-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .cad-grid { gap: 32px; }
+}
+
+/* ─── Section Backgrounds ─── */
+
+.cad-bg-cream { background-color: var(--cad-cream); }
+.cad-bg-navy { background-color: var(--cad-navy-950); color: #fff; }
+.cad-bg-cobalt { background-color: var(--cad-cobalt); color: #fff; }
+.cad-bg-sand { background-color: var(--cad-sand); }
+.cad-bg-ice { background-color: var(--cad-ice); }
+
+/* ─── Eyebrow Label ─── */
+
+.cad-eyebrow {
+  font-family: var(--font-jetbrains), 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cad-eyebrow::before {
+  content: '—';
+  font-weight: 400;
+}
+
+/* Eyebrow on dark backgrounds */
+.cad-bg-navy .cad-eyebrow,
+.cad-bg-cobalt .cad-eyebrow {
+  color: var(--cad-sky);
+}
+
+/* Eyebrow on light backgrounds */
+.cad-bg-cream .cad-eyebrow,
+.cad-bg-sand .cad-eyebrow {
+  color: var(--cad-cobalt);
+}
+
+/* ─── Accent Color Helpers ─── */
+.cad-accent-sky { color: var(--cad-sky); }
+.cad-accent-amber { color: var(--cad-amber); }
+.cad-accent-teal { color: var(--cad-teal); }
+.cad-accent-cobalt { color: var(--cad-cobalt); }
+
+/* ─── Hairline Dividers ─── */
+.cad-hairline {
+  border-color: var(--cad-hairline);
+}
+.cad-hairline-dark {
+  border-color: var(--cad-hairline-dark);
+}
+
+/* ─── Button Primitives ─── */
+
+.cad-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 12px 24px;
+  border-radius: 2px;
+  font-family: var(--font-jetbrains), 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms ease;
+  text-decoration: none;
+  border: 1px solid transparent;
+  line-height: 1;
+}
+
+.cad-btn:focus-visible {
+  outline: 2px solid var(--cad-sky);
+  outline-offset: 2px;
+}
+
+.cad-btn .cad-arrow {
+  transition: transform 200ms ease;
+}
+
+.cad-btn:hover .cad-arrow {
+  transform: translateX(2px);
+}
+
+/* Primary: amber fill, navy text */
+.cad-btn-primary,
+.cad-btn-amber {
+  background-color: var(--cad-amber) !important;
+  color: var(--cad-navy-950) !important;
+  border-color: var(--cad-amber) !important;
+  font-weight: 700;
+}
+.cad-btn-primary:hover,
+.cad-btn-amber:hover {
+  background-color: #e0952e !important;
+  border-color: #e0952e !important;
+  color: var(--cad-navy-950) !important;
+}
+
+/* Secondary: 1px outline with white fill on hover */
+.cad-btn-outline {
+  background-color: transparent;
+  border-color: currentColor;
+}
+.cad-btn-outline:hover {
+  background-color: #ffffff !important;
+  color: var(--cad-navy-950) !important;
+  border-color: #ffffff !important;
+}
+
+/* Dark variant: navy fill, white text (for cream backgrounds) */
+.cad-btn-dark {
+  background-color: var(--cad-navy-950);
+  color: #fff;
+  border-color: var(--cad-navy-950);
+}
+.cad-btn-dark:hover {
+  background-color: #0d1526;
+  border-color: #0d1526;
+}
+
+/* Cobalt variant */
+.cad-btn-cobalt {
+  background-color: var(--cad-cobalt);
+  color: #fff;
+  border-color: var(--cad-cobalt);
+}
+.cad-btn-cobalt:hover {
+  background-color: #153770;
+  border-color: #153770;
+}
+
+.cad-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ─── Card Primitive with Hover Effects ─── */
+.cad-card {
+  border: 1px solid var(--cad-hairline);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 280ms cubic-bezier(0.16, 1, 0.3, 1), border-color 280ms ease;
+}
+
+.cad-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px -6px rgba(7, 11, 20, 0.12), 0 4px 10px -2px rgba(7, 11, 20, 0.04);
+  border-color: rgba(24, 63, 127, 0.35);
+}
+
+.cad-card-sand { background-color: var(--cad-sand); }
+.cad-card-sand:hover {
+  border-color: var(--cad-cobalt);
+}
+
+.cad-card-cobalt { background-color: var(--cad-cobalt); color: #fff; }
+.cad-card-cobalt:hover {
+  border-color: var(--cad-sky);
+  box-shadow: 0 16px 36px -8px rgba(7, 11, 20, 0.35);
+}
+
+.cad-card-ice { background-color: var(--cad-ice); }
+.cad-card-ice:hover {
+  border-color: var(--cad-teal);
+}
+
+.cad-card-cream { background-color: var(--cad-cream); }
+.cad-card-cream:hover {
+  border-color: var(--cad-cobalt);
+}
+
+/* ─── Tag / Chip ─── */
+.cad-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-family: var(--font-jetbrains), 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* ─── Input Primitive ─── */
+.cad-input {
+  height: 48px;
+  border: 1px solid var(--cad-hairline);
+  border-radius: 2px;
+  padding: 0 16px;
+  background-color: transparent;
+  font-family: var(--font-manrope), 'Manrope', sans-serif;
+  font-size: 15px;
+  color: var(--cad-ink);
+  width: 100%;
+  transition: border-color 200ms ease;
+}
+
+.cad-input:focus {
+  border-color: var(--cad-sky);
+  border-width: 2px;
+  padding: 0 15px; /* compensate 2px border */
+  outline: none;
+}
+
+.cad-input::placeholder {
+  color: var(--cad-muted);
+  opacity: 0.6;
+}
+
+.cad-input-label {
+  font-family: var(--font-jetbrains), 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--cad-ink);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.cad-input-error {
+  font-family: var(--font-jetbrains), 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--cad-error);
+  margin-top: 6px;
+}
+
+/* ─── Badge Primitives ─── */
+.cad-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 2px;
+  font-family: var(--font-jetbrains), 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.cad-badge-discount {
+  background-color: var(--cad-amber);
+  color: var(--cad-navy-950);
+}
+
+.cad-badge-level {
+  background-color: transparent;
+  border: 1px solid var(--cad-ice);
+  color: var(--cad-teal);
+}
+
+/* ─── Scroll Reveal Animation ─── */
+@keyframes cad-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cad-reveal {
+  opacity: 0;
+}
+
+.cad-reveal.cad-visible {
+  animation: cad-fade-up 500ms ease-out forwards;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .cad-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+}
+
+/* ─── Thin Line Spinner ─── */
+@keyframes cad-spin {
+  to { transform: rotate(360deg); }
+}
+
+.cad-spinner {
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid var(--cad-hairline);
+  border-top-color: var(--cad-cobalt);
+  border-radius: 50%;
+  animation: cad-spin 800ms linear infinite;
+}
+
+.cad-bg-navy .cad-spinner,
+.cad-bg-cobalt .cad-spinner {
+  border-color: var(--cad-hairline-dark);
+  border-top-color: var(--cad-sky);
+}
+
+/* ─── HUD / Blueprint Decorative Elements ─── */
+.cad-hud-caption {
+  font-family: var(--font-jetbrains), 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+  font-weight: 400;
+}
+
+/* Concentric circle decoration */
+.cad-circle-deco {
+  position: absolute;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Rotated square decoration */
+.cad-square-deco {
+  position: absolute;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+
+/* ─── Scale-up for ≥1920px (23" monitors) ─── */
+@media (min-width: 1920px) {
+  :root {
+    --cad-scale: 1.1;
+  }
+  .cad-section {
+    padding-top: calc(clamp(64px, 8vw, 144px) * 1.1);
+    padding-bottom: calc(clamp(64px, 8vw, 144px) * 1.1);
+  }
+}
+

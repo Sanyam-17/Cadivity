@@ -36,6 +36,23 @@ model User {
   @@map("user")
 }
 
+
+
+
+model RateLimit {
+  id          String   @id
+  key         String   @unique
+  count       Int      @default(0)
+  lastRequest BigInt
+  expiresAt   DateTime @default(now())
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([key])
+  @@map("rate_limit")
+}
+
 model Session {
   id        String   @id
   expiresAt DateTime
@@ -206,30 +223,40 @@ model Enrollment {
 }
 
 model Payment {
-  id                   String      @id @default(cuid())
-  phonepeOrderId       String      @unique
-  phonepeTransactionId String?
-  merchantOrderId      String      @unique
-  amount               Int
-  currency             String      @default("INR")
-  status               String      @default("created")
-  courseId             String
-  studentId            String?                                    // ← was required, now nullable
-  guestEmail           String?                                    // ← NEW
-  guestPhone           String?                                    // ← NEW
-  guestName            String?                                    // ← NEW
-  enrollmentId         String?     @unique
-  course               Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  student              User?       @relation("StudentPayments", fields: [studentId], references: [id], onDelete: SetNull) // ← User? + SetNull
-  enrollment           Enrollment? @relation(fields: [enrollmentId], references: [id], onDelete: SetNull)
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
+  id                 String      @id @default(cuid())
+
+  razorpayOrderId    String      @unique
+  razorpayPaymentId  String?
+  razorpaySignature  String?
+
+  merchantOrderId    String      @unique
+
+  amount             Int
+  currency           String      @default("INR")
+  status             String      @default("created")
+
+  courseId           String
+  studentId          String?
+
+  guestEmail         String?
+  guestPhone         String?
+  guestName          String?
+
+  enrollmentId       String?     @unique
+
+  course             Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student            User?       @relation("StudentPayments", fields: [studentId], references: [id], onDelete: SetNull)
+  enrollment         Enrollment? @relation(fields: [enrollmentId], references: [id], onDelete: SetNull)
+
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
 
   @@index([merchantOrderId])
-  @@index([phonepeOrderId])
+  @@index([razorpayOrderId])
   @@index([studentId])
   @@index([courseId])
-  @@index([guestEmail])                                           // ← NEW
+  @@index([guestEmail])
+
   @@map("payment")
 }
 
@@ -383,3 +410,5 @@ model QuizResult {
   @@index([studentId])
   @@map("quiz_result")
 }
+
+

@@ -2,9 +2,6 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import {
   Award,
@@ -20,6 +17,7 @@ import {
   ShieldCheck,
   Users,
   Eye,
+  ArrowUpRight,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -76,25 +74,7 @@ interface CourseDetailData {
   currentUserId: string | null;
 }
 
-
 /* ─── Helpers ─── */
-function getDifficultyColor(badge: string | null | undefined): string {
-  switch (badge) {
-    case "Beginner/Inter":
-      return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
-    case "Intermediate":
-      return "bg-sky-500/10 text-sky-500 border-sky-500/20";
-    case "Advanced":
-      return "bg-amber-500/10 text-amber-500 border-amber-500/20";
-    case "Expert":
-      return "bg-rose-500/10 text-rose-500 border-rose-500/20";
-    case "Custom":
-      return "bg-violet-500/10 text-violet-500 border-violet-500/20";
-    default:
-      return "bg-primary/10 text-primary border-primary/20";
-  }
-}
-
 function formatPrice(price: number): string {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -141,114 +121,108 @@ export default function CourseDetailClient({ course }: { course: CourseDetailDat
     : 0;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen flex flex-col">
 
       {/* ─── Hero Section ─── */}
-      <section className="relative overflow-hidden bg-slate-900 border-b border-slate-800/60 py-20 sm:py-24">
-        {/* Background Gradients */}
-        <div className="absolute inset-0 z-0 opacity-30">
-          <div className="absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full bg-primary/20 blur-[120px]" />
-          <div className="absolute top-20 right-10 h-[400px] w-[400px] rounded-full bg-accent/20 blur-[100px]" />
+      <section className="relative overflow-hidden cad-bg-navy cad-section pt-28 sm:pt-32">
+        {/* Blueprint decorative elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
+          <div className="cad-circle-deco w-[250px] h-[250px] top-[10%] right-[5%] hidden lg:block" />
+          <div className="cad-circle-deco w-[150px] h-[150px] top-[calc(10%+50px)] right-[calc(5%+50px)] hidden lg:block" />
         </div>
 
-        {/* Floating Shapes */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20" aria-hidden="true">
-          <div className="absolute top-12 right-[10%] w-14 h-14 rounded-2xl bg-white/5 border border-white/10 animate-float" style={{ animationDuration: "12s" }} />
-          <div className="absolute bottom-16 left-[8%] w-10 h-10 rounded-full bg-white/5 border border-white/10 animate-float delay-1000" style={{ animationDuration: "15s" }} />
-        </div>
-
-        <div ref={heroReveal.ref} className={cn("container relative z-10 mx-auto max-w-6xl px-4 transition-all duration-700", heroReveal.visible ? "animate-fade-in-up" : "opacity-0")}>
+        <div ref={heroReveal.ref} className={cn("cad-container relative z-10 transition-all duration-700", heroReveal.visible ? "animate-fade-in-up" : "opacity-0")}>
 
           {/* ── Breadcrumb ── */}
-          <nav aria-label="Breadcrumb" className="mb-6">
-            <ol className="flex items-center gap-1.5 text-xs text-slate-400">
+          <nav aria-label="Breadcrumb" className="mb-8">
+            <ol className="flex items-center gap-1.5 cad-text-mono text-white/40">
               <li>
-                <Link href="/" className="flex items-center gap-1 hover:text-slate-200 transition-colors">
+                <Link href="/" className="flex items-center gap-1 hover:text-white/70 transition-colors">
                   <Home className="h-3 w-3" />
                   Home
                 </Link>
               </li>
               <li aria-hidden="true"><ChevronRight className="h-3 w-3" /></li>
               <li>
-                <Link href="/courses" className="hover:text-slate-200 transition-colors">
-                  Courses
+                <Link href="/courses" className="hover:text-white/70 transition-colors">
+                  Programs
                 </Link>
               </li>
               <li aria-hidden="true"><ChevronRight className="h-3 w-3" /></li>
-              <li className="text-slate-200 font-medium truncate max-w-[200px]" aria-current="page">
+              <li className="text-white/70 truncate max-w-[200px]" aria-current="page">
                 {course.title}
               </li>
             </ol>
           </nav>
 
-          <div className="grid lg:grid-cols-[1fr_320px] gap-8 items-center">
+          <div className="grid lg:grid-cols-[1fr_320px] gap-12 items-start">
             <div className="space-y-6">
               {/* Category & Badge */}
               <div className="flex flex-wrap items-center gap-3">
                 {course.category && (
-                  <span className="text-xs font-semibold tracking-wider text-accent uppercase bg-accent/10 px-3 py-1 rounded-full border border-accent/20">
+                  <span className="cad-tag text-[var(--cad-sky)] border-[var(--cad-sky)]/30" style={{ fontSize: '10px' }}>
                     {course.category.name}
                   </span>
                 )}
                 {course.difficultyBadge && (
-                  <Badge variant="outline" className={cn("rounded-full border font-medium px-3 py-0.5", getDifficultyColor(course.difficultyBadge))}>
+                  <span className="cad-badge cad-badge-level">
                     {course.difficultyBadge}
-                  </Badge>
+                  </span>
                 )}
               </div>
 
               {/* Title */}
-              <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
+              <h1 className="cad-text-display text-white" style={{ fontSize: 'clamp(2rem, 1rem + 4vw, 3.5rem)' }}>
                 {course.title}
               </h1>
 
               {/* Tags */}
               {course.tags && (
-                <p className="text-sm font-semibold tracking-wide text-primary">
-                  Tech Stack: <span className="text-slate-300 font-medium">{course.tags}</span>
+                <p className="cad-text-mono text-[var(--cad-sky)]" style={{ fontSize: '12px' }}>
+                  Tech Stack: <span className="text-white/60">{course.tags}</span>
                 </p>
               )}
 
               {/* Short Description */}
               {course.shortDescription && (
-                <p className="text-lg text-slate-300 leading-relaxed max-w-2xl font-light">
+                <p className="cad-text-body" style={{ color: 'rgba(255,255,255,0.55)' }}>
                   {course.shortDescription}
                 </p>
               )}
 
               {/* Stats Bar */}
-              <div className="flex flex-wrap items-center gap-6 pt-4 border-t border-slate-800/40 text-sm text-slate-400">
+              <div className="flex flex-wrap items-center gap-6 pt-4 border-t border-[var(--cad-hairline-dark)] cad-text-mono text-white/40">
                 {course.instructor && (
                   <span className="flex items-center gap-2">
-                    <span className="h-6 w-6 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-white uppercase border border-slate-700">
+                    <span className="h-6 w-6 rounded-full bg-[var(--cad-cobalt)] flex items-center justify-center text-[9px] font-bold text-white uppercase">
                       {course.instructor.name.slice(0, 2)}
                     </span>
-                    Instructor: <strong className="text-slate-200 font-medium">{course.instructor.name}</strong>
+                    <span className="text-white/60">{course.instructor.name}</span>
                   </span>
                 )}
                 <span className="flex items-center gap-1.5">
-                  <Users className="h-4 w-4 text-primary" />
-                  <strong>{course.enrolledStudents.toLocaleString("en-IN")}</strong> students enrolled
+                  <Users className="h-3.5 w-3.5 text-[var(--cad-sky)]" />
+                  <strong className="text-white/70">{course.enrolledStudents.toLocaleString("en-IN")}</strong> enrolled
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <BookOpen className="h-4 w-4 text-primary" />
-                  <strong>{course.sections.length}</strong> sections · <strong>{course.totalLessons}</strong> lessons
+                  <BookOpen className="h-3.5 w-3.5 text-[var(--cad-sky)]" />
+                  <strong className="text-white/70">{course.sections.length}</strong> sections · <strong className="text-white/70">{course.totalLessons}</strong> lessons
                 </span>
                 {totalDurationMinutes > 0 && (
                   <span className="flex items-center gap-1.5">
-                    <Clock className="h-4 w-4 text-primary" />
-                    <strong>{totalDurationMinutes}</strong> mins total
+                    <Clock className="h-3.5 w-3.5 text-[var(--cad-sky)]" />
+                    <strong className="text-white/70">{totalDurationMinutes}</strong> mins
                   </span>
                 )}
               </div>
             </div>
 
-            {/* Logo / Icon on the right */}
-            <div className="hidden lg:flex items-center justify-center bg-slate-950/40 border border-slate-800 rounded-3xl p-8 backdrop-blur shadow-2xl h-56 w-full">
+            {/* Logo on the right */}
+            <div className="hidden lg:flex items-center justify-center cad-card bg-white/5 border-[var(--cad-hairline-dark)] p-8 h-52 w-full">
               {course.logo ? (
-                <img src={course.logo} alt={`${course.title} - course logo`} className="h-32 object-contain select-none max-w-full" />
+                <img src={course.logo} alt={`${course.title} - course logo`} className="h-28 object-contain select-none max-w-full" />
               ) : (
-                <div className="text-slate-600 font-bold font-display text-4xl">CAD</div>
+                <div className="cad-text-mono text-white/20 text-2xl">CAD</div>
               )}
             </div>
           </div>
@@ -256,30 +230,30 @@ export default function CourseDetailClient({ course }: { course: CourseDetailDat
       </section>
 
       {/* ─── Main Content Grid ─── */}
-      <section className="py-12 sm:py-16 bg-white text-slate-900 flex-1 border-t border-slate-200">
-        <div ref={contentReveal.ref} className={cn("container mx-auto max-w-6xl px-4 transition-all duration-700", contentReveal.visible ? "animate-fade-in-up" : "opacity-0")}>
-          <div className="grid lg:grid-cols-[1fr_360px] gap-8 items-start">
+      <section className="cad-bg-cream cad-section flex-1">
+        <div ref={contentReveal.ref} className={cn("cad-container transition-all duration-700", contentReveal.visible ? "animate-fade-in-up" : "opacity-0")}>
+          <div className="grid lg:grid-cols-[1fr_360px] gap-12 items-start">
 
             {/* ── Left Side ── */}
-            <div className="space-y-12">
+            <div className="space-y-16">
 
               {/* 1. Curriculum Accordion */}
               <div className="space-y-6">
-                <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-slate-200 pb-3">
-                  <h2 className="text-2xl font-bold font-display tracking-tight text-slate-900">
+                <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-[var(--cad-hairline)] pb-3">
+                  <h2 className="cad-text-h2-bold text-[var(--cad-ink)]" style={{ fontSize: 'clamp(1.5rem, 1rem + 1.5vw, 2rem)' }}>
                     Course Curriculum
                   </h2>
-                  <p className="text-sm text-slate-500">
-                    {course.sections.length} sections · {course.totalLessons} lessons · {totalDurationMinutes} mins total
+                  <p className="cad-text-mono text-[var(--cad-muted)]">
+                    {course.sections.length} sections · {course.totalLessons} lessons · {totalDurationMinutes} mins
                   </p>
                 </div>
 
                 {course.sections.length === 0 ? (
-                  <div className="text-center py-10 bg-slate-50 rounded-2xl border border-slate-200 border-dashed text-slate-500">
+                  <div className="text-center py-10 border border-dashed border-[var(--cad-hairline)] text-[var(--cad-muted)] cad-text-mono">
                     No curriculum uploaded yet. Check back soon!
                   </div>
                 ) : (
-                  <div className="space-y-4" role="list">
+                  <div className="space-y-0" role="list">
                     {course.sections
                       .sort((a, b) => a.order - b.order)
                       .map((section) => {
@@ -289,19 +263,19 @@ export default function CourseDetailClient({ course }: { course: CourseDetailDat
                         );
                         const panelId = `section-panel-${section.id}`;
                         return (
-                          <div key={section.id} className="rounded-2xl border border-slate-200 bg-slate-50 hover:bg-slate-100/50 overflow-hidden transition-all duration-300 shadow-sm" role="listitem">
+                          <div key={section.id} className="border border-[var(--cad-hairline)] border-b-0 last:border-b overflow-hidden" role="listitem">
                             <button
                               type="button"
                               onClick={() => toggleSection(section.id)}
                               aria-expanded={isExpanded}
                               aria-controls={panelId}
-                              className="flex w-full items-center justify-between p-5 hover:bg-slate-100/60 text-left transition-colors"
+                              className="flex w-full items-center justify-between p-5 hover:bg-[var(--cad-sand)]/50 text-left transition-colors"
                             >
                               <div className="flex items-center gap-3">
-                                <ChevronRight className={cn("h-4 w-4 text-slate-500 transition-transform duration-300", isExpanded && "rotate-90 text-primary")} aria-hidden="true" />
+                                <ChevronRight className={cn("h-4 w-4 text-[var(--cad-muted)] transition-transform duration-200", isExpanded && "rotate-90 text-[var(--cad-cobalt)]")} aria-hidden="true" />
                                 <div>
-                                  <h3 className="font-semibold text-slate-900 text-base md:text-lg">{section.title}</h3>
-                                  <p className="text-xs text-slate-500 mt-1 font-light">
+                                  <h3 className="font-semibold text-[var(--cad-ink)] text-base" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>{section.title}</h3>
+                                  <p className="cad-text-mono text-[var(--cad-muted)] mt-1" style={{ fontSize: '10px' }}>
                                     {section.lessons.length} lessons · {sectionMinutes} mins
                                   </p>
                                 </div>
@@ -311,10 +285,10 @@ export default function CourseDetailClient({ course }: { course: CourseDetailDat
                             <div
                               id={panelId}
                               hidden={!isExpanded}
-                              className="border-t border-slate-200 bg-white divide-y divide-slate-100"
+                              className="border-t border-[var(--cad-hairline)] bg-white divide-y divide-[var(--cad-hairline)]"
                             >
                               {section.lessons.length === 0 ? (
-                                <div className="p-5 text-center text-sm text-slate-400 font-light italic">
+                                <div className="p-5 text-center cad-text-mono text-[var(--cad-muted)]">
                                   No lessons inside this section yet.
                                 </div>
                               ) : (
@@ -324,18 +298,18 @@ export default function CourseDetailClient({ course }: { course: CourseDetailDat
                                     const isVideo = lesson.type === "video";
                                     const isQuiz = lesson.type === "quiz";
                                     return (
-                                      <div key={lesson.id} className="flex items-center justify-between px-6 py-4 pl-12 hover:bg-slate-50 transition-colors">
+                                      <div key={lesson.id} className="flex items-center justify-between px-6 py-4 pl-12 hover:bg-[var(--cad-cream)]/50 transition-colors">
                                         <div className="flex items-center gap-3">
                                           {isVideo ? (
-                                            <PlayCircle className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
+                                            <PlayCircle className="h-4 w-4 text-[var(--cad-cobalt)] shrink-0" aria-hidden="true" />
                                           ) : isQuiz ? (
-                                            <QuizIcon className="h-4 w-4 text-accent shrink-0" aria-hidden="true" />
+                                            <QuizIcon className="h-4 w-4 text-[var(--cad-teal)] shrink-0" aria-hidden="true" />
                                           ) : (
-                                            <FileText className="h-4 w-4 text-slate-400 shrink-0" aria-hidden="true" />
+                                            <FileText className="h-4 w-4 text-[var(--cad-muted)] shrink-0" aria-hidden="true" />
                                           )}
-                                          <span className="text-slate-700 text-sm md:text-base font-light">{lesson.title}</span>
+                                          <span className="text-[var(--cad-ink)] text-sm font-light" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>{lesson.title}</span>
                                           {lesson.isPreviewable && (
-                                            <span className="text-[10px] bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold px-1.5 py-0.5 rounded uppercase tracking-wide flex items-center gap-1">
+                                            <span className="cad-badge bg-[var(--cad-success)]/10 text-[var(--cad-success)] flex items-center gap-1">
                                               <Eye className="h-2.5 w-2.5" aria-hidden="true" />
                                               Preview
                                             </span>
@@ -343,13 +317,13 @@ export default function CourseDetailClient({ course }: { course: CourseDetailDat
                                         </div>
                                         <div className="flex items-center gap-3 shrink-0">
                                           {lesson.duration && (
-                                            <span className="text-xs text-slate-500 flex items-center gap-1 font-mono font-light">
+                                            <span className="cad-text-mono text-[var(--cad-muted)] flex items-center gap-1" style={{ fontSize: '10px' }}>
                                               <Clock className="h-3 w-3" aria-hidden="true" />
                                               {Math.floor(lesson.duration / 60)}:{String(lesson.duration % 60).padStart(2, "0")}
                                             </span>
                                           )}
                                           <span
-                                            className="text-[10px] uppercase font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded tracking-wide scale-90 select-none"
+                                            className="cad-badge bg-[var(--cad-sand)] text-[var(--cad-muted)]"
                                             aria-label={`${lesson.type} lesson`}
                                           >
                                             {lesson.type}
@@ -370,17 +344,20 @@ export default function CourseDetailClient({ course }: { course: CourseDetailDat
               {/* 2. About Course */}
               {course.description && (
                 <div className="space-y-4">
-                  <h2 className="text-2xl font-bold font-display tracking-tight text-slate-900 border-l-4 border-primary pl-4">
-                    About This Course
-                  </h2>
-                  <div className="bg-slate-50 text-slate-800 border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm leading-relaxed text-base md:text-lg font-normal">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-1 h-8 bg-[var(--cad-cobalt)]" />
+                    <h2 className="cad-text-h2-bold text-[var(--cad-ink)]" style={{ fontSize: 'clamp(1.5rem, 1rem + 1.5vw, 2rem)' }}>
+                      About This Course
+                    </h2>
+                  </div>
+                  <div className="cad-card cad-card-sand p-6 md:p-8 text-[var(--cad-ink)] leading-relaxed text-base">
                     {course.description.includes("<") && course.description.includes(">") ? (
                       <div
                         className="prose-slate max-w-none space-y-4 [&>p]:leading-relaxed [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:list-decimal [&>ol]:pl-5 [&>h1]:text-2xl [&>h1]:font-bold [&>h2]:text-xl [&>h2]:font-bold [&>h3]:text-lg [&>h3]:font-bold"
                         dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(course.description) }}
                       />
                     ) : (
-                      <div className="whitespace-pre-wrap space-y-4">{course.description}</div>
+                      <div className="whitespace-pre-wrap space-y-4" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>{course.description}</div>
                     )}
                   </div>
                 </div>
@@ -388,14 +365,14 @@ export default function CourseDetailClient({ course }: { course: CourseDetailDat
 
               {/* 3. What You'll Learn */}
               {course.whatYouWillLearn && course.whatYouWillLearn.length > 0 && (
-                <div className="space-y-4 bg-slate-50 border border-slate-200 rounded-2xl p-6">
-                  <h2 className="text-2xl font-bold font-display tracking-tight text-slate-900">
+                <div className="cad-card cad-card-ice p-6 md:p-8 space-y-4">
+                  <h2 className="cad-text-h2-bold text-[var(--cad-ink)]" style={{ fontSize: 'clamp(1.5rem, 1rem + 1.5vw, 2rem)' }}>
                     What You&apos;ll Learn
                   </h2>
                   <div className="grid md:grid-cols-2 gap-4 pt-2">
                     {course.whatYouWillLearn.map((outcome, idx) => (
-                      <div key={idx} className="flex items-start gap-2.5 text-slate-700 text-sm md:text-base font-light">
-                        <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" aria-hidden="true" />
+                      <div key={idx} className="flex items-start gap-2.5 text-[var(--cad-ink)] text-sm font-light" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
+                        <CheckCircle2 className="h-4 w-4 text-[var(--cad-success)] shrink-0 mt-0.5" aria-hidden="true" />
                         <span>{outcome}</span>
                       </div>
                     ))}
@@ -406,13 +383,16 @@ export default function CourseDetailClient({ course }: { course: CourseDetailDat
               {/* 4. Requirements */}
               {course.requirements && course.requirements.length > 0 && (
                 <div className="space-y-4">
-                  <h2 className="text-2xl font-bold font-display tracking-tight text-slate-900 border-l-4 border-primary pl-4">
-                    Course Prerequisites
-                  </h2>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-1 h-8 bg-[var(--cad-cobalt)]" />
+                    <h2 className="cad-text-h2-bold text-[var(--cad-ink)]" style={{ fontSize: 'clamp(1.5rem, 1rem + 1.5vw, 2rem)' }}>
+                      Course Prerequisites
+                    </h2>
+                  </div>
                   <div className="space-y-2.5 pt-2">
                     {course.requirements.map((req, idx) => (
-                      <div key={idx} className="flex items-start gap-3 text-slate-700 font-light text-base">
-                        <span className="h-5 w-5 rounded-full bg-slate-100 text-primary text-xs font-semibold flex items-center justify-center border border-slate-200 shrink-0 mt-0.5 select-none">
+                      <div key={idx} className="flex items-start gap-3 text-[var(--cad-ink)] font-light text-base" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
+                        <span className="cad-badge bg-[var(--cad-cobalt)] text-white w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">
                           {idx + 1}
                         </span>
                         <span>{req}</span>
@@ -425,13 +405,16 @@ export default function CourseDetailClient({ course }: { course: CourseDetailDat
               {/* 5. Who Is This For */}
               {course.whoIsThisFor && course.whoIsThisFor.length > 0 && (
                 <div className="space-y-4">
-                  <h2 className="text-2xl font-bold font-display tracking-tight text-slate-900 border-l-4 border-primary pl-4">
-                    Who Is This Course For?
-                  </h2>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-1 h-8 bg-[var(--cad-cobalt)]" />
+                    <h2 className="cad-text-h2-bold text-[var(--cad-ink)]" style={{ fontSize: 'clamp(1.5rem, 1rem + 1.5vw, 2rem)' }}>
+                      Who Is This Course For?
+                    </h2>
+                  </div>
                   <div className="space-y-3 pt-2">
                     {course.whoIsThisFor.map((audience, idx) => (
-                      <div key={idx} className="flex items-start gap-2.5 text-slate-700 font-light text-base">
-                        <span className="text-primary text-md shrink-0 mt-0.5" aria-hidden="true">→</span>
+                      <div key={idx} className="flex items-start gap-2.5 text-[var(--cad-ink)] font-light text-base" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
+                        <span className="text-[var(--cad-cobalt)] shrink-0 mt-0.5" aria-hidden="true">→</span>
                         <span>{audience}</span>
                       </div>
                     ))}
@@ -469,29 +452,29 @@ export default function CourseDetailClient({ course }: { course: CourseDetailDat
       </section>
 
       {/* ── Mobile sticky bottom pricing bar ── */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-2xl px-4 py-3 flex items-center gap-3">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-[var(--cad-hairline)] shadow-lg px-4 py-3 flex items-center gap-3">
         {course.price != null && (
           <div className="flex items-baseline gap-2 shrink-0">
-            <span className="text-lg font-bold text-slate-900">{formatPrice(course.price)}</span>
+            <span className="text-lg font-bold text-[var(--cad-ink)]" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>{formatPrice(course.price)}</span>
             {course.originalPrice != null && (
-              <span className="text-sm text-slate-400 line-through" aria-hidden="true">{formatPrice(course.originalPrice)}</span>
+              <span className="text-sm text-[var(--cad-muted)] line-through" aria-hidden="true">{formatPrice(course.originalPrice)}</span>
             )}
           </div>
         )}
         <div className="flex-1">
           {course.isEnrolled ? (
             <Link href="/dashboard/student" className="block w-full">
-              <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl">Go to Dashboard</Button>
+              <button className="cad-btn cad-btn-primary w-full">Go to Dashboard</button>
             </Link>
           ) : isContactUs ? (
             <Link href="/contact" className="block w-full">
-              <Button className="w-full bg-primary hover:bg-primary/95 text-white rounded-xl">Contact Us</Button>
+              <button className="cad-btn cad-btn-cobalt w-full">Contact Us</button>
             </Link>
           ) : isComingSoon ? (
-            <Button className="w-full bg-slate-300 text-slate-500 cursor-not-allowed rounded-xl" disabled>Coming Soon</Button>
+            <button className="cad-btn cad-btn-dark w-full" disabled>Coming Soon</button>
           ) : (
             <Link href={`/checkout/${course.slug}`} className="block w-full">
-              <Button className="w-full bg-primary hover:bg-primary/95 text-white rounded-xl">Enroll Now</Button>
+              <button className="cad-btn cad-btn-primary w-full">Enroll Now <ArrowUpRight className="h-3.5 w-3.5 cad-arrow" /></button>
             </Link>
           )}
         </div>
@@ -515,39 +498,39 @@ function PricingCard({
   discountPct: number;
 }) {
   return (
-    <Card className="border-slate-200 bg-white shadow-2xl overflow-hidden rounded-3xl animate-fade-in-up">
-      {/* Visual accent top bar */}
-      <div className="h-1.5 w-full bg-gradient-to-r from-primary to-accent" />
+    <div className="cad-card cad-card-sand overflow-hidden">
+      {/* Top accent line */}
+      <div className="h-1 w-full bg-[var(--cad-amber)]" />
 
-      <CardContent className="p-6 space-y-6">
+      <div className="p-6 space-y-6">
         {/* Pricing */}
         {(course.price != null || course.originalPrice != null) && (
           <div className="space-y-1">
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Course Tuition:</p>
+            <p className="cad-text-mono text-[var(--cad-muted)]" style={{ fontSize: '10px' }}>Course Tuition:</p>
             <div className="flex items-baseline gap-3 flex-wrap">
               {course.price != null && (
-                <span className="text-3xl font-extrabold text-slate-900 font-display">
-                  {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(course.price)}
+                <span className="text-3xl font-extrabold text-[var(--cad-ink)]" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
+                  {formatPrice(course.price)}
                 </span>
               )}
               {course.originalPrice != null && (
                 <>
-                  <span className="text-base text-slate-400 line-through" aria-hidden="true">
-                    {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(course.originalPrice)}
+                  <span className="text-base text-[var(--cad-muted)] line-through" aria-hidden="true">
+                    {formatPrice(course.originalPrice)}
                   </span>
                   <span className="sr-only">
-                    Original price: {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(course.originalPrice)}
+                    Original price: {formatPrice(course.originalPrice)}
                   </span>
                 </>
               )}
               {discountPct > 0 && (
-                <span className="text-xs bg-red-100 text-red-600 font-bold px-2 py-0.5 rounded-full">
+                <span className="cad-badge cad-badge-discount">
                   {discountPct}% OFF
                 </span>
               )}
             </div>
             {discountPct > 0 && (
-              <p className="text-xs text-emerald-600 font-semibold mt-1">
+              <p className="cad-text-mono text-[var(--cad-success)] mt-1" style={{ fontSize: '10px' }}>
                 You save {discountPct}% on this program
               </p>
             )}
@@ -556,12 +539,12 @@ function PricingCard({
 
         {/* Key features checklist */}
         {course.keyFeatures && course.keyFeatures.length > 0 && (
-          <div className="border-t border-b border-slate-100 py-4 space-y-2">
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">This course includes:</p>
+          <div className="border-t border-b border-[var(--cad-hairline)] py-4 space-y-2">
+            <p className="cad-text-mono text-[var(--cad-muted)] mb-3" style={{ fontSize: '10px' }}>This course includes:</p>
             <ul className="space-y-2.5">
               {course.keyFeatures.map((feat, idx) => (
-                <li key={idx} className="flex items-start text-xs md:text-sm text-slate-700 font-light">
-                  <ShieldCheck className="h-4 w-4 text-primary mr-2 shrink-0 mt-0.5" aria-hidden="true" />
+                <li key={idx} className="flex items-start text-sm text-[var(--cad-ink)] font-light" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
+                  <ShieldCheck className="h-4 w-4 text-[var(--cad-cobalt)] mr-2 shrink-0 mt-0.5" aria-hidden="true" />
                   {feat}
                 </li>
               ))}
@@ -573,25 +556,27 @@ function PricingCard({
         <div className="space-y-3">
           {course.isEnrolled ? (
             <Link href="/dashboard/student" className="block w-full">
-              <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg transition-all duration-300">
+              <button className="cad-btn cad-btn-primary w-full">
                 Go to Dashboard (Enrolled)
-              </Button>
+              </button>
             </Link>
           ) : isContactUs ? (
             <Link href="/contact" className="block w-full">
-              <Button className="w-full bg-primary hover:bg-primary/95 text-white rounded-xl shadow-lg transition-all duration-300 hover:scale-[1.02]">
+              <button className="cad-btn cad-btn-cobalt w-full">
                 Contact Us
-              </Button>
+                <ArrowUpRight className="h-3.5 w-3.5 cad-arrow" />
+              </button>
             </Link>
           ) : isComingSoon ? (
-            <Button className="w-full bg-slate-800 text-slate-500 cursor-not-allowed rounded-xl" disabled>
+            <button className="cad-btn cad-btn-dark w-full" disabled>
               Coming Soon…
-            </Button>
+            </button>
           ) : (
             <Link href={`/checkout/${course.slug}`} className="block w-full">
-              <Button className="w-full bg-primary hover:bg-primary/95 text-white rounded-xl shadow-lg transition-all duration-300 hover:scale-[1.02]">
+              <button className="cad-btn cad-btn-primary w-full">
                 Enroll Now
-              </Button>
+                <ArrowUpRight className="h-3.5 w-3.5 cad-arrow" />
+              </button>
             </Link>
           )}
 
@@ -604,23 +589,23 @@ function PricingCard({
               rel="noopener noreferrer"
               className="block"
             >
-              <Button variant="outline" className="w-full border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl">
+              <button className="cad-btn cad-btn-outline text-[var(--cad-ink)] border-[var(--cad-hairline)] w-full">
                 <Download className="mr-2 h-4 w-4" aria-hidden="true" />
                 Download Brochure
-              </Button>
+              </button>
             </a>
           )}
         </div>
 
-        {/* Trust badge — removed "sandbox" word */}
-        <div className="flex items-center justify-center gap-2 text-[10px] text-slate-400 font-light select-none pt-1">
-          <Award className="h-3 w-3 text-amber-400" aria-hidden="true" />
+        {/* Trust badge */}
+        <div className="flex items-center justify-center gap-2 cad-text-mono text-[var(--cad-muted)] pt-1" style={{ fontSize: '10px' }}>
+          <Award className="h-3 w-3 text-[var(--cad-amber)]" aria-hidden="true" />
           <span>Certificate of Completion included</span>
         </div>
-        <p className="text-center text-[10px] text-slate-400 font-light select-none -mt-3">
+        <p className="text-center cad-text-mono text-[var(--cad-muted)] -mt-3" style={{ fontSize: '9px' }}>
           Instant access · Secure checkout · Life-time access
         </p>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

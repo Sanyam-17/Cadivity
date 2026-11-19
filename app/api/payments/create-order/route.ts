@@ -9,12 +9,12 @@ import {
 } from "@/lib/server/api-utils";
 import { withRateLimit } from "@/lib/server/arcjet";
 import { logger } from "@/lib/server/logger";
-import { createOrder } from "@/lib/server/phonepe";
+import { createOrder } from "@/lib/server/razorpay";
 import { z } from "zod";
 
 // ── Rate limiters ─────────────────────────────────────────────────────────
 // Authenticated checkouts get a more generous limit; anonymous guest
-// checkouts are stricter to avoid PhonePe order spam from unauthenticated traffic.
+// checkouts are stricter to avoid Razorpay order spam from unauthenticated traffic.
 const authenticatedLimiter = withRateLimit(10, 60);
 const guestLimiter = withRateLimit(5, 60);
 
@@ -31,13 +31,19 @@ const createOrderSchema = z.object({
 });
 
 // ─── POST /api/payments/create-order ─────────────────────────────────────────
-// Initiates a PhonePe Standard Checkout payment for a published, paid course.
+// Initiates a Razorpay order for a published, paid course.
 //
 // Supports TWO callers:
 //  1. Authenticated students (existing behaviour)
 //  2. Anonymous guests (NEW) — they supply guestName/guestEmail/guestPhone.
 //     studentId stays null on the Payment record until the webhook resolves
 //     (or creates) the account on successful payment.
+//
+// NOTE: Unlike PhonePe's hosted-redirect checkout, Razorpay Standard Checkout
+// runs client-side via Checkout.js. This route returns razorpayOrderId,
+// amount, currency, and keyId — the frontend uses these to open the Razorpay
+// widget, then posts the resulting razorpay_payment_id/signature back (or
+// simply waits for the webhook) before navigating to redirectUrl.
 
 export async function POST(request: NextRequest) {
   // 1. Detect session presence first — determines rate limit + flow branch
@@ -136,15 +142,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 8. Generate unique merchant order ID
+    // 8. Generate unique merchant order ID (stored as Razorpay's `receipt`)
     const merchantOrderId = crypto.randomUUID();
 
-    // 9. Build redirect URL — PhonePe sends the student back here after payment
+    // 9. Build redirect URL — frontend sends the student back here after the
+    // Razorpay Checkout widget completes (success, dismiss, or failure)
     const origin = request.headers.get("origin") || request.headers.get("host") || "";
     const protocol = origin.startsWith("http") ? "" : "https://";
     const redirectUrl = `${protocol}${origin}/api/payments/redirect?merchantOrderId=${merchantOrderId}`;
 
-    // 10. Call PhonePe
+    // 10. Call Razorpay
     const result = await createOrder({
       merchantOrderId,
       amount: course.price,
@@ -155,7 +162,7 @@ export async function POST(request: NextRequest) {
     await prisma.payment.create({
       data: {
         merchantOrderId,
-        phonepeOrderId: result.phonepeOrderId,
+        razorpayOrderId: result.razorpayOrderId,
         amount: course.price,
         currency: "INR",
         status: "created",
@@ -169,18 +176,21 @@ export async function POST(request: NextRequest) {
 
     logger.info("payment.created", {
       merchantOrderId,
-      phonepeOrderId: result.phonepeOrderId,
+      razorpayOrderId: result.razorpayOrderId,
       amount: course.price,
       courseId: course.id,
       studentId,
       isGuestCheckout,
     });
 
-    // 12. Return to frontend — it will redirect the browser to PhonePe checkout
+    // 12. Return to frontend — it uses these fields to open Razorpay
+    // Checkout.js (key, order_id, amount, currency), then navigates to
+    // redirectUrl once the widget's handler fires or the user is polled back.
     return successResponse(
       {
         merchantOrderId,
-        phonepeOrderId: result.phonepeOrderId,
+        razorpayOrderId: result.razorpayOrderId,
+        razorpayKeyId: result.keyId,
         redirectUrl: result.redirectUrl,
         amount: course.price,
         currency: "INR",

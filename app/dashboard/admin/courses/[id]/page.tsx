@@ -346,7 +346,7 @@ export default function CourseDetailPage() {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <Link href={`/admin/instructors/${course.instructor.id}`} className="text-sm font-medium hover:text-primary transition-colors">
+                      <Link href={`/dashboard/admin/instructors/${course.instructor.id}`} className="text-sm font-medium hover:text-primary transition-colors">
                         {course.instructor.name}
                       </Link>
                       <p className="text-xs text-muted-foreground">Instructor</p>

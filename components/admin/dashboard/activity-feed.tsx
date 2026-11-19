@@ -28,8 +28,8 @@ const activityIcons = {
 }
 
 const activityColors = {
-  enrollment: "bg-success/10 text-success",
-  registration: "bg-info/10 text-info",
+  enrollment: "bg-[hsl(175,70%,40%)]/10 text-success",
+  registration: "bg-primary/10 text-primary",
   course_published: "bg-primary/10 text-primary",
   instructor_assigned: "bg-warning/10 text-warning",
 }
@@ -40,10 +40,10 @@ export function ActivityFeed() {
   })
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-border bg-card flex flex-col">
-      <div className="flex items-center justify-between border-b border-border p-6">
+    <div className="rounded-[2px] border border-[var(--cad-hairline,rgba(14,22,36,0.15))] bg-card shadow-sm flex flex-col">
+      <div className="flex items-center justify-between border-b border-border/50 p-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+          <div className="flex h-9 w-9 items-center justify-center rounded-[2px] bg-[#183F7F]/10 text-[#183F7F]">
             <Bell className="h-4 w-4 text-primary" />
           </div>
           <div>

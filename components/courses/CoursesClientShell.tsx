@@ -58,36 +58,20 @@ const SORT_OPTIONS = [
   { label: "Price: High → Low", value: "price_desc" },
 ];
 
-/* ─── Animated hero section ─── */
+/* ─── Hero section ─── */
 export function CoursesHeroClient() {
   const heroReveal = useScrollReveal();
 
   return (
-    <section className="relative bg-slate-900 text-white py-20 overflow-hidden">
-      <div
-        className="absolute inset-0 z-0 opacity-20"
-        style={{
-          backgroundImage: "linear-gradient(135deg, rgba(30,64,175,0.3), rgba(15,23,42,0.8))",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      />
-      {/* Floating shapes */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-        <div className="absolute top-12 right-[10%] w-14 h-14 rounded-2xl bg-white/5 border border-white/10 animate-float" style={{ animationDuration: "10s" }} />
-        <div className="absolute bottom-16 left-[12%] w-10 h-10 rounded-full bg-white/5 border border-white/10 animate-float delay-500" style={{ animationDuration: "12s" }} />
-      </div>
-
-      <div ref={heroReveal.ref} className={`container relative z-10 mx-auto px-4 transition-all duration-700 ${heroReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
+    <section className="relative cad-bg-navy cad-section pt-32 pb-16 md:pb-20 overflow-hidden">
+      <div ref={heroReveal.ref} className={`cad-container relative z-10 transition-all duration-700 ${heroReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
         <div className="max-w-3xl">
-          {/* eyebrow — using <p> not <h5> for correct heading hierarchy */}
-          <p className="text-accent font-semibold tracking-wide uppercase mb-4 text-sm">
-            Training Programs
-          </p>
-          <h1 className="font-display text-4xl md:text-5xl font-bold mb-6">
-            Master CAD Automation
+          <p className="cad-eyebrow text-[var(--cad-sky)] mb-3">TRAINING PROGRAMS</p>
+          <h1 className="cad-text-display text-white mb-6">
+            Master CAD{" "}
+            <span className="cad-accent-amber">Automation.</span>
           </h1>
-          <p className="text-xl text-slate-300 leading-relaxed max-w-2xl">
+          <p className="cad-text-body max-w-2xl text-white/70">
             Practical, industry-oriented training. Move beyond basic modeling
             and learn to build tools that automate the design process.
           </p>
@@ -97,7 +81,7 @@ export function CoursesHeroClient() {
   );
 }
 
-/* ─── Animated course cards grid with search + filter + sort ─── */
+/* ─── Course cards grid with search + filter + sort ─── */
 export function CoursesGridClient({ courses }: { courses: PublicCourseWithMeta[] }) {
   const programsReveal = useScrollReveal();
 
@@ -166,32 +150,32 @@ export function CoursesGridClient({ courses }: { courses: PublicCourseWithMeta[]
     setSort("newest");
   }
 
+  const selectClasses = "h-10 pl-3 pr-8 border-0 bg-transparent cad-text-mono text-[var(--cad-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--cad-sky)]/30 appearance-none cursor-pointer";
+
   return (
-    <section className="py-20 bg-white overflow-hidden">
-      <div ref={programsReveal.ref} className="container mx-auto px-4">
+    <section className="cad-bg-cream cad-section overflow-hidden">
+      <div ref={programsReveal.ref} className="cad-container">
         {/* Section heading */}
-        <div className={`text-center mb-10 transition-all duration-700 ${programsReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
-          <h2 className="font-display text-3xl font-bold text-slate-900 mb-4">
-            Our Training Programs
+        <div className={`mb-12 transition-all duration-700 ${programsReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
+          <p className="cad-eyebrow text-[var(--cad-cobalt)] mb-4">AVAILABLE PROGRAMS</p>
+          <h2 className="cad-text-h2 text-[var(--cad-ink)]">
+            Our Training <span className="cad-accent-teal font-bold">Programs.</span>
           </h2>
-          <p className="text-slate-600 max-w-2xl mx-auto">
-            Our training focuses on practical implementation, automation
-            thinking, and real-world engineering tasks.
-          </p>
         </div>
 
-        {/* ── Search + Filter bar ── */}
+        {/* ── Search + Filter toolbar ── */}
         <div className={`mb-8 transition-all duration-700 delay-100 ${programsReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
-          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+          <div className="border border-[var(--cad-hairline)] bg-white/50 flex flex-col sm:flex-row items-stretch">
             {/* Search */}
-            <div className="relative flex-1 max-w-lg">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+            <div className="relative flex-1 border-b sm:border-b-0 sm:border-r border-[var(--cad-hairline)]">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--cad-muted)] pointer-events-none" />
               <input
                 type="search"
                 placeholder="Search courses, topics, instructors…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full h-10 pl-9 pr-4 rounded-lg border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                className="w-full h-12 pl-11 pr-4 bg-transparent text-sm text-[var(--cad-ink)] placeholder:text-[var(--cad-muted)]/50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--cad-sky)]/30"
+                style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}
               />
             </div>
 
@@ -199,19 +183,20 @@ export function CoursesGridClient({ courses }: { courses: PublicCourseWithMeta[]
             <button
               type="button"
               onClick={() => setShowFilters(!showFilters)}
-              className="sm:hidden flex items-center gap-2 h-10 px-4 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+              className="sm:hidden flex items-center gap-2 h-12 px-4 cad-text-mono text-[var(--cad-muted)] hover:text-[var(--cad-ink)] transition-colors border-b border-[var(--cad-hairline)]"
             >
               <SlidersHorizontal className="h-4 w-4" />
-              Filters {hasActiveFilters && <span className="ml-1 h-2 w-2 rounded-full bg-primary" />}
+              Filters {hasActiveFilters && <span className="ml-1 h-2 w-2 rounded-full bg-[var(--cad-amber)]" />}
             </button>
 
             {/* Desktop filters */}
-            <div className={`hidden sm:flex items-center gap-3`}>
+            <div className="hidden sm:flex items-center">
               <Filters
                 level={level} setLevel={setLevel}
                 category={category} setCategory={setCategory}
                 categories={categories}
                 sort={sort} setSort={setSort}
+                selectClasses={selectClasses}
               />
             </div>
 
@@ -220,7 +205,7 @@ export function CoursesGridClient({ courses }: { courses: PublicCourseWithMeta[]
               <button
                 type="button"
                 onClick={clearFilters}
-                className="hidden sm:flex items-center gap-1 text-xs text-slate-500 hover:text-red-500 transition-colors"
+                className="hidden sm:flex items-center gap-1 px-4 cad-text-mono text-[var(--cad-muted)] hover:text-[var(--cad-error)] transition-colors border-l border-[var(--cad-hairline)]"
               >
                 <X className="h-3.5 w-3.5" /> Clear
               </button>
@@ -229,15 +214,16 @@ export function CoursesGridClient({ courses }: { courses: PublicCourseWithMeta[]
 
           {/* Mobile filter panel */}
           {showFilters && (
-            <div className="sm:hidden mt-3 flex flex-wrap gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+            <div className="sm:hidden mt-0 flex flex-wrap gap-3 p-4 border border-t-0 border-[var(--cad-hairline)] bg-white/50">
               <Filters
                 level={level} setLevel={setLevel}
                 category={category} setCategory={setCategory}
                 categories={categories}
                 sort={sort} setSort={setSort}
+                selectClasses={selectClasses}
               />
               {hasActiveFilters && (
-                <button onClick={clearFilters} className="flex items-center gap-1 text-xs text-red-500">
+                <button onClick={clearFilters} className="cad-text-mono text-[var(--cad-error)] flex items-center gap-1">
                   <X className="h-3 w-3" /> Clear filters
                 </button>
               )}
@@ -246,11 +232,11 @@ export function CoursesGridClient({ courses }: { courses: PublicCourseWithMeta[]
         </div>
 
         {/* Results count */}
-        <p className="text-sm text-slate-500 mb-6">
+        <p className="cad-text-mono text-[var(--cad-muted)] mb-8">
           {filtered.length} {filtered.length === 1 ? "course" : "courses"} found
           {hasActiveFilters && " — "}
           {hasActiveFilters && (
-            <button onClick={clearFilters} className="text-primary underline underline-offset-2 hover:text-primary/80 transition-colors">
+            <button onClick={clearFilters} className="text-[var(--cad-cobalt)] hover:text-[var(--cad-ink)] transition-colors">
               clear filters
             </button>
           )}
@@ -258,28 +244,28 @@ export function CoursesGridClient({ courses }: { courses: PublicCourseWithMeta[]
 
         {/* ── Grid ── */}
         {filtered.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-6">
-              <BookOpen className="h-8 w-8 text-slate-400" />
+          <div className="text-center py-24">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full border border-[var(--cad-hairline)] mb-6">
+              <BookOpen className="h-7 w-7 text-[var(--cad-muted)]" strokeWidth={1.5} />
             </div>
-            <h3 className="font-display text-xl font-semibold text-slate-900 mb-2">
-              No courses match your search
+            <h3 className="cad-text-h3 text-[var(--cad-ink)] mb-2">
+              0 courses found
             </h3>
-            <p className="text-slate-500 max-w-md mx-auto mb-6">
-              Try different keywords or{" "}
-              <button onClick={clearFilters} className="text-primary underline underline-offset-2">
+            <p className="cad-text-body mx-auto mb-6" style={{ textAlign: 'center' }}>
+              No courses match your current filters. Try different keywords or{" "}
+              <button onClick={clearFilters} className="text-[var(--cad-cobalt)] hover:underline">
                 clear all filters
               </button>{" "}
               to see all programs.
             </p>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
             {filtered.map((course, i) => (
               <div
                 key={course.id}
                 className={`transition-all duration-500 ${programsReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}
-                style={{ animationDelay: `${i * 100 + 100}ms` }}
+                style={{ animationDelay: `${i * 80 + 100}ms` }}
               >
                 <PublicCourseCard course={course} index={i} />
               </div>
@@ -296,10 +282,12 @@ function Filters({
   level, setLevel,
   category, setCategory, categories,
   sort, setSort,
+  selectClasses,
 }: {
   level: string; setLevel: (v: string) => void;
   category: string; setCategory: (v: string) => void; categories: string[];
   sort: string; setSort: (v: string) => void;
+  selectClasses: string;
 }) {
   return (
     <>
@@ -307,7 +295,7 @@ function Filters({
         value={level}
         onChange={(e) => setLevel(e.target.value)}
         aria-label="Filter by difficulty level"
-        className="h-10 pl-3 pr-8 rounded-lg border border-slate-200 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors appearance-none cursor-pointer"
+        className={`${selectClasses} border-r border-[var(--cad-hairline)]`}
       >
         {DIFFICULTY_OPTIONS.map((d) => (
           <option key={d} value={d}>{d}</option>
@@ -319,7 +307,7 @@ function Filters({
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           aria-label="Filter by category"
-          className="h-10 pl-3 pr-8 rounded-lg border border-slate-200 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors appearance-none cursor-pointer"
+          className={`${selectClasses} border-r border-[var(--cad-hairline)]`}
         >
           {categories.map((c) => (
             <option key={c} value={c}>{c}</option>
@@ -331,7 +319,7 @@ function Filters({
         value={sort}
         onChange={(e) => setSort(e.target.value)}
         aria-label="Sort courses"
-        className="h-10 pl-3 pr-8 rounded-lg border border-slate-200 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors appearance-none cursor-pointer"
+        className={selectClasses}
       >
         {SORT_OPTIONS.map((o) => (
           <option key={o.value} value={o.value}>{o.label}</option>
@@ -341,47 +329,50 @@ function Filters({
   );
 }
 
-/* ─── Animated comparison table ─── */
+/* ─── Comparison table ─── */
 export function CoursesComparisonClient() {
   const comparisonReveal = useScrollReveal();
 
   return (
-    <section className="py-20 bg-slate-50 overflow-hidden">
-      <div ref={comparisonReveal.ref} className="container mx-auto px-4">
-        <h2 className={`font-display text-3xl font-bold text-slate-900 mb-12 text-center transition-all duration-700 ${comparisonReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
-          Program Comparison
-        </h2>
-        <div className={`overflow-x-auto bg-white rounded-xl shadow-sm border border-slate-200 transition-all duration-700 ${comparisonReveal.visible ? "animate-fade-in-up delay-200" : "opacity-0"}`}>
+    <section className="cad-bg-sand cad-section overflow-hidden">
+      <div ref={comparisonReveal.ref} className="cad-container">
+        <div className="mb-12">
+          <p className="cad-eyebrow text-[var(--cad-cobalt)] mb-4">COMPARISON</p>
+          <h2 className="cad-text-h2 text-[var(--cad-ink)]">
+            Program <span className="cad-accent-teal font-bold">Comparison.</span>
+          </h2>
+        </div>
+        <div className={`overflow-x-auto border border-[var(--cad-hairline)] transition-all duration-700 ${comparisonReveal.visible ? "animate-fade-in-up" : "opacity-0"}`}>
           <table className="w-full text-sm text-left">
-            <thead className="bg-slate-900 text-white uppercase text-xs font-bold tracking-wider">
-              <tr>
-                <th className="px-6 py-4 rounded-tl-xl">Feature / Criteria</th>
-                <th className="px-6 py-4">Programming Language</th>
-                <th className="px-6 py-4">Difficulty</th>
-                <th className="px-6 py-4">Best For</th>
-                <th className="px-6 py-4 rounded-tr-xl">Industry</th>
+            <thead>
+              <tr className="cad-bg-navy">
+                <th className="px-6 py-4 cad-text-mono text-white/70">Feature / Criteria</th>
+                <th className="px-6 py-4 cad-text-mono text-white/70">Language</th>
+                <th className="px-6 py-4 cad-text-mono text-white/70">Difficulty</th>
+                <th className="px-6 py-4 cad-text-mono text-white/70">Best For</th>
+                <th className="px-6 py-4 cad-text-mono text-white/70">Industry</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[var(--cad-hairline)] bg-white">
               {comparisonData.map((row, i) => (
-                <tr key={i} className="hover:bg-slate-50/50 transition-colors duration-200">
-                  <td className="px-6 py-4 font-bold text-primary">{row.name}</td>
-                  <td className="px-6 py-4 text-slate-600">
-                    <Code2 className="inline h-4 w-4 mr-1 text-slate-400" />
+                <tr key={i} className="hover:bg-[var(--cad-cream)] transition-colors duration-200">
+                  <td className="px-6 py-4 font-semibold text-[var(--cad-cobalt)]" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>{row.name}</td>
+                  <td className="px-6 py-4 text-[var(--cad-muted)]" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
+                    <Code2 className="inline h-3.5 w-3.5 mr-1.5 text-[var(--cad-muted)]" strokeWidth={1.5} />
                     {row.lang}
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex text-yellow-400" aria-label={`Difficulty: ${row.difficulty} out of 5`}>
+                    <div className="flex text-[var(--cad-amber)]" aria-label={`Difficulty: ${row.difficulty} out of 5`}>
                       {[...Array(5)].map((_, starI) => (
                         <Star
                           key={starI}
-                          className={`h-3 w-3 ${starI < row.difficulty ? "fill-current" : "text-slate-200 fill-slate-200"}`}
+                          className={`h-3 w-3 ${starI < row.difficulty ? "fill-current" : "text-[var(--cad-hairline)] fill-[var(--cad-hairline)]"}`}
                         />
                       ))}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-slate-600">{row.bestFor}</td>
-                  <td className="px-6 py-4 text-slate-600">{row.industry}</td>
+                  <td className="px-6 py-4 text-[var(--cad-muted)]" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>{row.bestFor}</td>
+                  <td className="px-6 py-4 text-[var(--cad-muted)]" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>{row.industry}</td>
                 </tr>
               ))}
             </tbody>

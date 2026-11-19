@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/server/db";
-import { getOrderStatus } from "@/lib/server/phonepe";
+import { getOrderStatus } from "@/lib/server/razorpay";
 import { logger } from "@/lib/server/logger";
 
 export async function GET(request: NextRequest) {
@@ -15,23 +15,24 @@ export async function GET(request: NextRequest) {
 
   try {
     const payment = await prisma.payment.findUnique({
-      where: { merchantOrderId },
-      select: {
-        id: true,
-        courseId: true,
-        guestEmail: true,
-        course: { select: { slug: true } },
-      },
-    });
+  where: { merchantOrderId },
+  select: {
+    id: true,
+    courseId: true,
+    guestEmail: true,
+    razorpayOrderId: true,
+    course: { select: { slug: true } },
+  },
+});
 
-    if (!payment) {
-      logger.error("payment.redirect.notFound", { merchantOrderId });
-      redirect("/courses?payment=error");
-    }
+if (!payment) {
+  logger.error("payment.redirect.notFound", { merchantOrderId });
+  redirect("/courses?payment=error");
+}
 
-    const courseSlug = payment.course.slug;
+const courseSlug = payment.course.slug;
 
-    const status = await getOrderStatus(merchantOrderId);
+const status = await getOrderStatus(payment.razorpayOrderId);
 
     logger.info("payment.redirect.status", {
       merchantOrderId,

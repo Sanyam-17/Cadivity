@@ -28,20 +28,20 @@ export function MyCoursesPreview() {
   const courses = data?.courses || []
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-border bg-card">
-      <div className="flex items-center justify-between border-b border-border p-6">
+    <div className="rounded-[2px] border border-[var(--cad-hairline,rgba(14,22,36,0.15))] bg-card shadow-sm">
+      <div className="flex items-center justify-between border-b border-border/50 p-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+          <div className="flex h-9 w-9 items-center justify-center rounded-[2px] bg-[#183F7F]/10 text-[#183F7F]">
             <BookOpen className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold">My Courses</h3>
-            <p className="text-xs text-muted-foreground">Your assigned courses</p>
+            <h3 className="text-sm font-semibold text-[#0E1624]">My Courses</h3>
+            <p className="font-mono text-[11px] text-[#5B6B7F]">Your assigned courses</p>
           </div>
         </div>
         <Link
           href="/dashboard/instructor/courses"
-          className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+          className="flex items-center gap-1 font-mono text-[11px] font-semibold uppercase tracking-wider text-[#183F7F] hover:text-[#4AB8EA] transition-colors"
         >
           View all
           <ArrowRight className="h-3.5 w-3.5" />
@@ -52,12 +52,12 @@ export function MyCoursesPreview() {
         {loading ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="rounded-[var(--radius-card)] border border-border p-4 space-y-3">
-                <div className="h-32 rounded-lg skeleton-shimmer" />
-                <div className="h-4 w-3/4 rounded skeleton-shimmer" />
+              <div key={i} className="rounded-[2px] border border-border p-4 space-y-3">
+                <div className="h-32 rounded-[2px] skeleton-shimmer" />
+                <div className="h-4 w-3/4 rounded-[2px] skeleton-shimmer" />
                 <div className="flex items-center gap-2">
-                  <div className="h-5 w-16 rounded-full skeleton-shimmer" />
-                  <div className="h-3 w-20 rounded skeleton-shimmer" />
+                  <div className="h-5 w-16 rounded-[2px] skeleton-shimmer" />
+                  <div className="h-3 w-20 rounded-[2px] skeleton-shimmer" />
                 </div>
               </div>
             ))}
@@ -66,9 +66,8 @@ export function MyCoursesPreview() {
           <ErrorState description={error} onRetry={refetch} />
         ) : courses.length === 0 ? (
           <EmptyState
-            icon={BookOpen}
             title="No courses assigned yet"
-            description="Contact your admin to get started."
+            description="Contact your admin or explore assigned curricula to get started."
           />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -76,7 +75,7 @@ export function MyCoursesPreview() {
               <Link
                 key={course.id}
                 href={`/dashboard/instructor/courses/${course.id}`}
-                className="group rounded-[var(--radius-card)] border border-border bg-card hover:border-primary/20 hover:shadow-md transition-all overflow-hidden"
+                className="group rounded-[2px] border border-[var(--cad-hairline,rgba(14,22,36,0.15))] bg-card hover:border-[#183F7F]/40 hover:shadow-md transition-all overflow-hidden"
               >
                 {/* Thumbnail */}
                 <div className="relative h-32 bg-muted overflow-hidden">

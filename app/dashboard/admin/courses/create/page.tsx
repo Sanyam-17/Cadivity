@@ -93,7 +93,7 @@ export default function CreateCoursePage() {
   const { mutate, loading: saving } = useMutation({
     onSuccess: (data) => {
       toast.success("Course created successfully")
-      router.push(`/admin/courses/${data.id}`)
+      router.push(`/dashboard/admin/courses/${data.id}`)
     },
     onError: (err) => toast.error(err),
   })

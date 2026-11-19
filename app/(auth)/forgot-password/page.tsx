@@ -2,10 +2,8 @@
 
 import * as React from "react"
 import { authClient } from "@/lib/auth-client"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Loader2, ArrowLeft, MailCheck } from "lucide-react"
+import { Loader2, ArrowLeft, MailCheck, ArrowUpRight } from "lucide-react"
 import Link from "next/link"
 
 export default function ForgotPasswordPage() {
@@ -42,44 +40,43 @@ export default function ForgotPasswordPage() {
     return (
       <div className="space-y-6 text-center">
         <div className="flex justify-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <MailCheck className="h-6 w-6 text-primary" />
+          <div className="w-12 h-12 rounded-full border-2 border-[var(--cad-cobalt)] flex items-center justify-center">
+            <MailCheck className="h-6 w-6 text-[var(--cad-cobalt)]" />
           </div>
         </div>
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold tracking-tight">Check your email</h1>
-          <p className="text-sm text-muted-foreground">
-            We've sent a password reset link to <span className="font-medium text-foreground">{email}</span>.
+          <h1 className="cad-text-h3 text-[var(--cad-ink)]">Check your email</h1>
+          <p className="text-sm text-[var(--cad-muted)]" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
+            We&apos;ve sent a password reset link to <span className="font-medium text-[var(--cad-ink)]">{email}</span>.
           </p>
         </div>
-        <Button variant="outline" className="w-full gap-2" asChild>
-          <Link href="/login">
-            <ArrowLeft className="h-4 w-4" />
-            Back to login
-          </Link>
-        </Button>
+        <Link href="/login" className="cad-btn cad-btn-outline text-[var(--cad-ink)] border-[var(--cad-hairline)] w-full">
+          <ArrowLeft className="h-4 w-4" />
+          Back to login
+        </Link>
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      <div className="text-center space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Forgot password</h1>
-        <p className="text-sm text-muted-foreground">
-          Enter your email and we'll send you a reset link
+      <div className="text-center space-y-2">
+        <p className="cad-eyebrow text-[var(--cad-cobalt)]">ACCOUNT RECOVERY</p>
+        <h1 className="cad-text-h3 text-[var(--cad-ink)]">Forgot password</h1>
+        <p className="text-sm text-[var(--cad-muted)]" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
+          Enter your email and we&apos;ll send you a reset link
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive border border-destructive/20 animate-validation-enter">
+          <div className="cad-card bg-[var(--cad-error)]/5 px-4 py-3 text-sm text-[var(--cad-error)] border-[var(--cad-error)]/20" style={{ fontFamily: "var(--font-manrope), Manrope, sans-serif" }}>
             {error}
           </div>
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <label htmlFor="email" className="cad-input-label">Email</label>
           <Input
             id="email"
             type="email"
@@ -87,20 +84,20 @@ export default function ForgotPasswordPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="input-focus-ring"
+            className="bg-transparent border-[var(--cad-hairline)] text-[var(--cad-ink)] focus:border-[var(--cad-sky)] focus:ring-2 focus:ring-[var(--cad-sky)]/20 h-12 rounded-sm"
           />
         </div>
 
-        <Button type="submit" className="w-full" disabled={loading || !email}>
-          {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+        <button type="submit" className="cad-btn cad-btn-cobalt w-full" disabled={loading || !email}>
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           {loading ? "Sending..." : "Send reset link"}
-        </Button>
+        </button>
       </form>
 
       <div className="text-center">
         <Link
           href="/login"
-          className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-1.5"
+          className="cad-text-mono text-[var(--cad-muted)] hover:text-[var(--cad-cobalt)] transition-colors flex items-center justify-center gap-1.5"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Back to login

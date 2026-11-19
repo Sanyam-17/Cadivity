@@ -1,24 +1,36 @@
 import { NextRequest } from "next/server";
-import { randomBytes } from "crypto";
-import { prisma } from "@/lib/server/db";
-import { auth } from "@/lib/server/auth";
 import { successResponse, errorResponse } from "@/lib/server/api-utils";
 import { withRateLimit } from "@/lib/server/arcjet";
 import { logger } from "@/lib/server/logger";
-import { verifyWebhookSignature } from "@/lib/server/phonepe";
-import { resend } from "@/lib/server/resend";
-import { getEnrollmentConfirmationEmailHtml } from "@/lib/server/emails/enrollment-confirmation-email";
+import { verifyWebhookSignature } from "@/lib/server/razorpay";
+import { completeOrder } from "@/lib/server/payments/complete-order";
+import { prisma } from "@/lib/server/db";
 
 const aj = withRateLimit(20, 60);
 
-interface WebhookPayload {
+// ─── Razorpay Webhook Payload ────────────────────────────────────────────────
+// Razorpay's webhook body shape: { event, payload: { payment: { entity }, order?: { entity } } }
+// The order's `receipt` field carries our merchantOrderId (set at order creation).
+
+interface RazorpayWebhookPayload {
   event: string;
   payload: {
-    merchantOrderId: string;
-    state: string;
-    transactionId?: string;
-    amount?: number;
-    [key: string]: unknown;
+    payment?: {
+      entity: {
+        id: string; // payment id (pay_xxx)
+        order_id: string; // rzp order id (order_xxx)
+        status: string;
+        amount: number;
+        notes?: Record<string, string>;
+      };
+    };
+    order?: {
+      entity: {
+        id: string;
+        receipt?: string;
+        notes?: Record<string, string>;
+      };
+    };
   };
 }
 
@@ -29,10 +41,7 @@ export async function POST(request: NextRequest) {
   }
 
   const rawBody = await request.text();
-  const signatureHeader =
-    request.headers.get("x-phonepe-signature") ||
-    request.headers.get("X-PhonePe-Signature") ||
-    "";
+  const signatureHeader = request.headers.get("x-razorpay-signature") || "";
 
   if (!verifyWebhookSignature(rawBody, signatureHeader)) {
     logger.error("webhook.signatureInvalid", {
@@ -41,28 +50,40 @@ export async function POST(request: NextRequest) {
     return errorResponse("Invalid signature", 401);
   }
 
-  let webhookData: WebhookPayload;
+  let webhookData: RazorpayWebhookPayload;
   try {
-    webhookData = JSON.parse(rawBody) as WebhookPayload;
+    webhookData = JSON.parse(rawBody) as RazorpayWebhookPayload;
   } catch {
     logger.error("webhook.invalidJson");
     return errorResponse("Invalid JSON payload", 400);
   }
 
   const { event, payload } = webhookData;
+  const paymentEntity = payload?.payment?.entity;
+  const orderEntity = payload?.order?.entity;
+
+  // merchantOrderId was stored as the Razorpay order's `receipt` at creation
+  // time, and also mirrored into notes as a fallback.
+  const merchantOrderId =
+    orderEntity?.receipt ??
+    orderEntity?.notes?.merchantOrderId ??
+    paymentEntity?.notes?.merchantOrderId;
 
   logger.info("webhook.received", {
     event,
-    merchantOrderId: payload?.merchantOrderId,
-    state: payload?.state,
+    merchantOrderId,
+    paymentStatus: paymentEntity?.status,
   });
 
   switch (event) {
-    case "checkout.order.completed":
-      return handleOrderCompleted(payload);
+    case "payment.captured":
+      return handleOrderCompleted({
+        merchantOrderId,
+        transactionId: paymentEntity?.id ?? null,
+      });
 
-    case "checkout.order.failed":
-      return handleOrderFailed(payload);
+    case "payment.failed":
+      return handleOrderFailed({ merchantOrderId });
 
     default:
       logger.info("webhook.ignoredEvent", { event });
@@ -70,9 +91,16 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// ─── checkout.order.completed ────────────────────────────────────────────────
+// ─── payment.captured ────────────────────────────────────────────────────────
+// Delegates to the shared completeOrder() function (lib/server/payments/
+// complete-order.ts), which also backs the dev-only simulate-payment route.
+// This keeps guest-account creation, enrollment, and email-sending logic in
+// exactly one place.
 
-async function handleOrderCompleted(payload: WebhookPayload["payload"]) {
+async function handleOrderCompleted(payload: {
+  merchantOrderId: string | undefined;
+  transactionId: string | null;
+}) {
   const { merchantOrderId, transactionId } = payload;
 
   if (!merchantOrderId) {
@@ -80,191 +108,24 @@ async function handleOrderCompleted(payload: WebhookPayload["payload"]) {
     return errorResponse("Missing merchantOrderId", 400);
   }
 
-  try {
-    const payment = await prisma.payment.findUnique({
-      where: { merchantOrderId },
-      include: {
-        course: { select: { id: true, title: true, slug: true } },
-        student: { select: { id: true, name: true, email: true } },
-      },
-    });
+  const result = await completeOrder({ merchantOrderId, transactionId });
 
-    if (!payment) {
-      logger.error("webhook.completed.paymentNotFound", { merchantOrderId });
-      return errorResponse("Payment not found", 404);
-    }
-
-    // ── Idempotency check ────────────────────────────────────────────────
-    if (payment.status === "paid") {
-      logger.info("webhook.completed.alreadyPaid", {
-        merchantOrderId,
-        paymentId: payment.id,
-      });
-      return successResponse({ received: true, alreadyProcessed: true });
-    }
-
-    // ── Resolve the student account ──────────────────────────────────────
-    // Authenticated checkouts already have studentId + student set.
-    // Guest checkouts arrive here with studentId === null and
-    // guestEmail/guestPhone/guestName populated — resolve (or create)
-    // the account now, BEFORE creating the enrollment.
-    let studentId = payment.studentId;
-    let studentEmail = payment.student?.email ?? null;
-    let studentName = payment.student?.name ?? null;
-    let newAccountCreated = false;
-
-    if (!studentId) {
-      if (!payment.guestEmail || !payment.guestName) {
-        logger.error("webhook.completed.missingGuestDetails", { merchantOrderId });
-        return errorResponse("Payment is missing guest account details", 400);
-      }
-
-      const existingUser = await prisma.user.findUnique({
-        where: { email: payment.guestEmail },
-        select: { id: true, name: true, email: true },
-      });
-
-      if (existingUser) {
-        studentId = existingUser.id;
-        studentEmail = existingUser.email;
-        studentName = existingUser.name;
-
-        logger.info("account.linked.existing", {
-          merchantOrderId,
-          userId: existingUser.id,
-        });
-      } else {
-        // Create a new account using a securely generated random password.
-        // The user signs in passwordlessly afterwards via emailOTP "sign-in".
-        const randomPassword = randomBytes(24).toString("hex");
-
-        const signUpResult = await auth.api.signUpEmail({
-          body: {
-            email: payment.guestEmail,
-            password: randomPassword,
-            name: payment.guestName,
-          },
-        });
-
-        const newUserId = signUpResult.user.id;
-
-        // signUpEmail creates the account with emailVerified: false (and may
-        // fire a separate "verify your email" OTP via sendVerificationOnSignUp).
-        // A completed payment to this inbox is strong proof of ownership, so
-        // mark it verified immediately. Also persist the phone number, which
-        // better-auth's signup flow doesn't accept directly.
-        await prisma.user.update({
-          where: { id: newUserId },
-          data: { emailVerified: true, phone: payment.guestPhone ?? null },
-        });
-
-        studentId = newUserId;
-        studentEmail = payment.guestEmail;
-        studentName = payment.guestName;
-        newAccountCreated = true;
-
-        logger.info("account.autocreated", {
-          merchantOrderId,
-          userId: newUserId,
-          email: payment.guestEmail,
-        });
-      }
-    }
-
-    if (!studentEmail || !studentName) {
-      logger.error("webhook.completed.unresolvedStudent", { merchantOrderId });
-      return errorResponse("Unable to resolve student account", 500);
-    }
-
-    // ── Atomic transaction: link payment to student + create enrollment ──
-    const result = await prisma.$transaction(async (tx) => {
-      const enrollment = await tx.enrollment.create({
-        data: {
-          studentId: studentId!,
-          courseId: payment.courseId,
-          progress: 0,
-        },
-      });
-
-      const updatedPayment = await tx.payment.update({
-        where: { id: payment.id },
-        data: {
-          status: "paid",
-          phonepeTransactionId: transactionId ?? null,
-          enrollmentId: enrollment.id,
-          studentId, // backfill for guest checkouts
-        },
-      });
-
-      return { enrollment, updatedPayment };
-    });
-
-    logger.info("payment.completed", {
-      merchantOrderId,
-      paymentId: payment.id,
-      enrollmentId: result.enrollment.id,
-      studentId,
-      courseId: payment.courseId,
-      transactionId: transactionId ?? null,
-    });
-
-    // ── Send enrollment confirmation email ───────────────────────────────
-    try {
-      await resend.emails.send({
-        from: "Cadivity <noreply@cadivity.com>",
-        to: studentEmail,
-        subject: `Enrollment Confirmed — ${payment.course.title}`,
-        html: getEnrollmentConfirmationEmailHtml({
-          studentName,
-          courseTitle: payment.course.title,
-          courseSlug: payment.course.slug,
-          amountPaise: payment.amount,
-          merchantOrderId,
-        }),
-      });
-      logger.info("payment.enrollmentEmailSent", {
-        studentEmail,
-        merchantOrderId,
-      });
-    } catch (emailError) {
-      logger.error("payment.enrollmentEmailFailed", {
-        error:
-          emailError instanceof Error
-            ? emailError.message
-            : String(emailError),
-        merchantOrderId,
-      });
-    }
-
-    // ── New guest account: send a passwordless sign-in code ───────────────
-    if (newAccountCreated) {
-      try {
-        await auth.api.sendVerificationOTP({
-          body: { email: studentEmail, type: "sign-in" },
-        });
-        logger.info("payment.signInOtpSent", { studentEmail, merchantOrderId });
-      } catch (otpError) {
-        logger.error("payment.signInOtpFailed", {
-          error:
-            otpError instanceof Error ? otpError.message : String(otpError),
-          merchantOrderId,
-        });
-      }
-    }
-
-    return successResponse({ received: true });
-  } catch (error) {
-    logger.error("webhook.completed.error", {
-      merchantOrderId,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return errorResponse("Failed to process payment completion", 500);
+  if (!result.ok) {
+    return errorResponse(result.error, result.status);
   }
+
+  if (result.alreadyProcessed) {
+    return successResponse({ received: true, alreadyProcessed: true });
+  }
+
+  return successResponse({ received: true });
 }
 
-// ─── checkout.order.failed ───────────────────────────────────────────────────
+// ─── payment.failed ──────────────────────────────────────────────────────────
 
-async function handleOrderFailed(payload: WebhookPayload["payload"]) {
+async function handleOrderFailed(payload: {
+  merchantOrderId: string | undefined;
+}) {
   const { merchantOrderId } = payload;
 
   if (!merchantOrderId) {

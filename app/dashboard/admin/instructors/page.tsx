@@ -118,7 +118,7 @@ export default function InstructorsPage() {
           title="Instructors"
           description="Manage instructor accounts and course assignments"
           actions={
-            <Button onClick={() => setShowAddModal(true)}>
+            <Button onClick={() => setShowAddModal(true)} className="bg-[#F2A63B] text-[#070B14] hover:bg-[#e0952e] rounded-[2px] font-mono text-[11px] font-bold uppercase tracking-[0.12em] shadow-sm">
               <Plus className="mr-2 h-4 w-4" />
               Add Instructor
             </Button>
@@ -126,7 +126,7 @@ export default function InstructorsPage() {
         />
 
         {/* Filters & Search */}
-        <div className="rounded-[var(--radius-card)] border border-border bg-card">
+        <div className="rounded-[2px] border border-[var(--cad-hairline,rgba(14,22,36,0.15))] bg-card shadow-sm">
           <div className="flex flex-col gap-3 border-b border-border p-4 sm:p-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative flex-1 sm:max-w-xs">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -216,7 +216,7 @@ export default function InstructorsPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="animate-dropdown-enter">
                               <DropdownMenuItem asChild>
-                                <Link href={`/admin/instructors/${instructor.id}`}>
+                                <Link href={`/dashboard/admin/instructors/${instructor.id}`}>
                                   <Eye className="mr-2 h-4 w-4" />
                                   View Profile
                                 </Link>
@@ -250,7 +250,7 @@ export default function InstructorsPage() {
               {/* Mobile Card List */}
               <div className="lg:hidden divide-y divide-border">
                 {instructors.map((instructor) => (
-                  <Link key={instructor.id} href={`/admin/instructors/${instructor.id}`} className="flex items-center justify-between p-4 row-hover hover:bg-muted/50">
+                  <Link key={instructor.id} href={`/dashboard/admin/instructors/${instructor.id}`} className="flex items-center justify-between p-4 row-hover hover:bg-muted/50">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10">
                         <AvatarImage src={instructor.image || ""} />

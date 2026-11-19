@@ -72,7 +72,7 @@ export default function StudentDetailPage() {
     if (confirmAction === "delete") {
       await mutate(`/api/admin/students/${studentId}`, { method: "DELETE" })
       toast.success("Student removed")
-      router.push("/admin/students")
+      router.push("/dashboard/admin/students")
     } else {
       const active = confirmAction === "reactivate"
       await mutate(`/api/admin/students/${studentId}`, {
@@ -245,7 +245,7 @@ export default function StudentDetailPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <Link
-                        href={`/admin/courses/${enrollment.course.id}`}
+                        href={`/dashboard/admin/courses/${enrollment.course.id}`}
                         className="text-sm font-medium hover:text-primary transition-colors truncate block"
                       >
                         {enrollment.course.title}
