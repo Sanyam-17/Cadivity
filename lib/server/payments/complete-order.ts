@@ -113,6 +113,7 @@ export async function completeOrder(
             password: randomPassword,
             name: payment.guestName,
           },
+          asResponse: false,
         });
 
         const newUserId = signUpResult.user.id;
